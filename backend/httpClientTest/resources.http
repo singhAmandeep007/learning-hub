@@ -1,0 +1,181 @@
+@baseUrl = http://localhost:8080/api/resources
+
+###
+# Get all resources (default pagination)
+GET {{baseUrl}}/ HTTP/1.1
+
+###
+# With custom page size
+curl "{{baseUrl}}?limit=10"
+
+###
+# Type Filtering
+# Get only videos
+curl "{{baseUrl}}?type=video"
+
+###
+# Get only PDFs
+curl "{{baseUrl}}?type=pdf"
+
+###
+# Get only articles
+curl "{{baseUrl}}?type=article"
+
+###
+# Get all types (explicit)
+curl "{{baseUrl}}?type=all"
+
+###
+# Tag Filtering
+# Single tag
+curl "{{baseUrl}}?tags=onboarding"
+
+###
+# Multiple tags (OR condition)
+curl "{{baseUrl}}?tags=onboarding,tutorial,basics"
+
+###
+# URL encoded for special characters
+curl "{{baseUrl}}?tags=get-started,how-to"
+
+###
+# Search Functionality
+# Search in title and description
+curl "{{baseUrl}}?search=getting%20started"
+
+###
+# URL encoded search
+curl "{{baseUrl}}?search=how%20to%20use"
+
+###
+# Search with special characters
+curl "{{baseUrl}}?search=API%20%26%20Integration"
+
+###
+# Combined Filters
+# Type + Tags + Search
+curl "{{baseUrl}}?type=video&tags=onboarding,tutorial&search=introduction&limit=5"
+
+###
+# All filters with pagination
+curl "{{baseUrl}}?type=pdf&tags=documentation&search=guide&limit=10&cursor=20"
+
+###
+# Pagination Examples
+# First page
+curl "{{baseUrl}}?limit=5"
+
+###
+# Second page (using cursor from first response)
+curl "{{baseUrl}}?limit=5&cursor=5"
+
+###
+# Third page
+curl "{{baseUrl}}?limit=5&cursor=10"
+
+###
+# Article (external link)
+curl -X POST "{{baseUrl}}" \
+  -H "Authorization: Bearer your-admin-secret-key" \
+  -F "title=Best Practices Blog Post" \
+  -F "description=External blog post about platform best practices and optimization tips" \
+  -F "type=article" \
+  -F "tags=best-practices,optimization,tips,external" \
+  -F "url=https://www.allthefood.ie/single-post/the-square-dish-once-over" \
+  -F "thumbnail=@/Users/singhamandeep007/Developer/Projects/learning-hub/backend/httpClientTest/images/image1.png"
+
+###
+
+
+
+
+
+
+
+
+curl -X POST "http://localhost:8080/api/resources" \
+  -H "Authorization: Bearer your-admin-secret-key" \
+  -F "title=3 Best Practices Blog Post" \
+  -F "description=3 External blog post about platform best practices and optimization tips" \
+  -F "type=article" \
+  -F "tags=best-practices,optimization,tips,external" \
+  -F "url=https://www.allthefood.ie/single-post/the-square-dish-once-over" \
+  -F "thumbnail=@/Users/singhamandeep007/Developer/Projects/learning-hub/backend/httpClientTest/images/image1.png"
+
+
+
+
+
+
+
+
+
+###
+# Article without thumbnail
+curl -X POST "{{baseUrl}}" \
+  -H "Authorization: Bearer your-admin-secret-key" \
+  -F "title=Integration Guide" \
+  -F "description=Step-by-step integration guide for third-party services" \
+  -F "type=article" \
+  -F "tags=integration,guide,third-party,tutorial" \
+  -F "url=https://docs.example.com/integration-guide"
+
+
+### 
+# CURL ceate a video resource (admin only)
+curl -X POST {{baseUrl}} \
+  -H "Authorization: Bearer your-admin-secret" \
+  -F "title=Getting Started Video" \
+  -F "description=Learn the basics" \
+  -F "type=video" \
+  -F "tags=onboarding,tutorial,basics" \
+  -F "file=@video.mp4" \
+  -F "thumbnail=@thumb.jpg"
+
+
+
+###
+# Rest ceate a video resource (admin only)
+POST {{baseUrl}} HTTP/1.1
+Authorization: Bearer your-admin-secret
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="title"
+
+Getting Started Video
+------WebKitFormBoundary
+Content-Disposition: form-data; name="description"
+
+Learn the basics
+------WebKitFormBoundary
+Content-Disposition: form-data; name="type"
+
+video
+------WebKitFormBoundary
+Content-Disposition: form-data; name="tags"
+
+onboarding,tutorial,basics
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="video.mp4"
+Content-Type: video/mp4
+
+< ./video.mp4
+------WebKitFormBoundary
+Content-Disposition: form-data; name="thumbnail"; filename="thumb.jpg"
+Content-Type: image/jpeg
+
+< ./thumb.jpg
+------WebKitFormBoundary--
+
+### 
+# Update a resource
+curl -X PUT "http://localhost:8080/api/resources/resource-id" \
+  -H "Authorization: Bearer your-admin-secret" \
+  -F "title=Updated Title"
+
+
+###
+# Delete a resource
+curl -X DELETE "http://localhost:8080/api/resources/resource-id" \
+  -H "Authorization: Bearer your-admin-secret"

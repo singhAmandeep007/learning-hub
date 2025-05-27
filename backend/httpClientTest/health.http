@@ -1,0 +1,3 @@
+@baseUrl = http://localhost:8080/health
+
+GET {{baseUrl}} HTTP/1.1
