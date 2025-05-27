@@ -4,46 +4,38 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	"learning-hub/config"
+	"learning-hub/handlers"
+	"learning-hub/middleware"
 )
 
 func main() {
 	// Load environment variables
 	loadEnv()
 	// Initialize Firebase
-	app, err := initializeFirebase()
+	err := config.InitializeFirebase()
 	if err != nil {
-		log.Fatal("Failed to initialize Firebase:", err)
+		log.Fatalf("Failed to initialize Firebase: %v", err)
 	}
-	defer app.cleanup()
+	defer config.CloseFirebase()
 
 	// Setup Gin router
 	r := gin.Default()
-	
-	// CORS middleware
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Configure appropriately for production
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
 
 	// API routes
 	api := r.Group("/api")
 	{
-		api.GET("/resources", app.getResources)
-		api.GET("/resources/:id", app.getResource)
-		api.POST("/resources", app.adminAuth(), app.createResource)
-		api.PUT("/resources/:id", app.adminAuth(), app.updateResource)
-		api.DELETE("/resources/:id", app.adminAuth(), app.deleteResource)
-		api.GET("/tags", app.getTags)
+		api.GET("/resources", handlers.GetResources)
+		api.GET("/resources/:id", handlers.GetResource)
+		api.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
+		api.GET("/tags", handlers.GetTags)
 	}
+
+	r.Use(middleware.CORSMiddleware())
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
