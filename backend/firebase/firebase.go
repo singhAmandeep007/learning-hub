@@ -37,10 +37,10 @@ func InitializeFirebase() error {
 		return fmt.Errorf("error: failed to build Firebase config: %w", err)
 	}
 
-	storageBucket := *config.AppConfig.FIREBASE_PROJECT_ID + ".firebasestorage.app"
+	storageBucket := config.AppConfig.FIREBASE_PROJECT_ID + ".firebasestorage.app"
 
 	conf := &firebase.Config{
-		ProjectID:     *config.AppConfig.FIREBASE_PROJECT_ID,
+		ProjectID:     config.AppConfig.FIREBASE_PROJECT_ID,
 		// StorageBucket: storageBucket,
 	}
 
@@ -92,12 +92,12 @@ func  buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error)
 	if isEmulator {
 		opts = append(opts, option.WithoutAuthentication())
 		
-		// check emulator hosts if not already set
-		checkEmulatorHosts()
+		// set emulator hosts
+		setEmulatorHosts()
 		
 		log.Printf("Using Firebase emulator mode")
 	} else {
-		credentialsFile := *config.AppConfig.FIREBASE_CREDENTIALS_FILE
+		credentialsFile := config.AppConfig.FIREBASE_CREDENTIALS_FILE
 		if credentialsFile == "" {
 			return nil, fmt.Errorf("FIREBASE_CREDENTIALS_FILE is required for production mode")
 		}
@@ -114,16 +114,13 @@ func  buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error)
 	return opts, nil
 }
 
-// checkEmulatorHosts checks the emulator host environment variables if not already set
-func checkEmulatorHosts() {
-	firebaseStorageEmulatorHost := *config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
+// setEmulatorHosts checks the emulator host environment variables if not already set
+func setEmulatorHosts() {
+	firebaseEmulatorHost := config.AppConfig.FIRESTORE_EMULATOR_HOST
+	firebaseStorageEmulatorHost := config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
 
-	if *config.AppConfig.FIRESTORE_EMULATOR_HOST == "" {
-		log.Printf("Warning: FIRESTORE_EMULATOR_HOST not set, emulator connection may fail")
-	}
-	if firebaseStorageEmulatorHost == "" {
-		log.Printf("Warning: FIREBASE_STORAGE_EMULATOR_HOST not set, emulator connection may fail")
-	}
+	os.Setenv("FIRESTORE_EMULATOR_HOST",firebaseEmulatorHost)
+	os.Setenv("FIREBASE_STORAGE_EMULATOR_HOST",firebaseStorageEmulatorHost)
 
 	// need to set because we are using "cloud.google.com/go/storage" to create new storage client
 	// https://github.com/firebase/firebase-admin-go/blob/570427a0f270b9adb061f54187a2b033548c3c9e/storage/storage.go#L38

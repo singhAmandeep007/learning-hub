@@ -10,17 +10,17 @@ var AppConfig *EnvConfig
 
 type EnvConfig struct {
 	ENV                        string  `env:"ENV"`
-	PORT                       string     `env:"PORT"`
+	PORT                       string  `env:"PORT"`
 	ADMIN_SECRET               string  `env:"ADMIN_SECRET"`
 
 	IS_FIREBASE_EMULATOR       bool    `env:"IS_FIREBASE_EMULATOR"`
 
-	FIREBASE_CREDENTIALS_FILE  *string `env:"FIREBASE_CREDENTIALS_FILE"` // Using pointer for Optional
-	FIREBASE_PROJECT_ID        *string `env:"FIREBASE_PROJECT_ID"`       // Using pointer for Optional
+	FIREBASE_CREDENTIALS_FILE  string `env:"FIREBASE_CREDENTIALS_FILE"`
+	FIREBASE_PROJECT_ID        string `env:"FIREBASE_PROJECT_ID"`      
 
-	FIRESTORE_EMULATOR_HOST    *string `env:"FIRESTORE_EMULATOR_HOST"`   // Using pointer for Optional
+	FIRESTORE_EMULATOR_HOST    string `env:"FIRESTORE_EMULATOR_HOST"`  
 
-	FIREBASE_STORAGE_EMULATOR_HOST *string `env:"FIREBASE_STORAGE_EMULATOR_HOST"` // Using pointer for Optional
+	FIREBASE_STORAGE_EMULATOR_HOST string `env:"FIREBASE_STORAGE_EMULATOR_HOST"`
 }
 
 // getEnvOrDefault retrieves an environment variable or returns a default value.
@@ -29,14 +29,6 @@ func getEnvOrDefault(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
-}
-
-// getOptionalEnv retrieves an environment variable and returns a pointer to it, or nil if not set.
-func getOptionalEnv(key string) *string {
-	if value, exists := os.LookupEnv(key); exists {
-		return &value
-	}
-	return nil
 }
 
 // LoadConfig loads environment variables into an EnvConfig struct.
@@ -57,11 +49,11 @@ func LoadConfig() (error) {
 	}
 	config.IS_FIREBASE_EMULATOR = isEmulator
 
-	// Load optional string variables (can be nil)
-	config.FIREBASE_CREDENTIALS_FILE = getOptionalEnv("FIREBASE_CREDENTIALS_FILE")
-	config.FIREBASE_PROJECT_ID = getOptionalEnv("FIREBASE_PROJECT_ID")
-	config.FIRESTORE_EMULATOR_HOST = getOptionalEnv("FIRESTORE_EMULATOR_HOST")
-	config.FIREBASE_STORAGE_EMULATOR_HOST = getOptionalEnv("FIREBASE_STORAGE_EMULATOR_HOST")
+	config.FIREBASE_CREDENTIALS_FILE = getEnvOrDefault("FIREBASE_CREDENTIALS_FILE","")
+	config.FIREBASE_PROJECT_ID = getEnvOrDefault("FIREBASE_PROJECT_ID","")
+
+	config.FIRESTORE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIRESTORE_EMULATOR_HOST_PORT","8081")
+	config.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIREBASE_STORAGE_EMULATOR_HOST_PORT", "8082")
 
 	AppConfig = config
 	

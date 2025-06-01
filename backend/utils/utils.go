@@ -196,7 +196,7 @@ func generatePublicURL(objectName, bucketName string) (string, error) {
 	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
 
 	if isEmulator {
-		emulatorHost := *config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
+		emulatorHost := config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
 		if emulatorHost == "" {
 			return "", fmt.Errorf("FIREBASE_STORAGE_EMULATOR_HOST not set for emulator mode")
 		}

@@ -73,6 +73,10 @@ curl "{{baseUrl}}?limit=5&cursor=5"
 # Third page
 curl "{{baseUrl}}?limit=5&cursor=10"
 
+
+# GET Eg.
+# curl -X GET "http://localhost:8080/api/resources"
+
 # PATCH Eg.
 # curl -X PATCH "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
 #   -H "Authorization: Bearer your-admin-secret-key" \
@@ -83,7 +87,6 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 # 	-F "thumbnail=@./images/image2.webp" \
 # 	-F "type=pdf" \
 # 	-F "file=@./pdfs/pdf1.pdf"
-
 
 # DELETE Eg.
 # curl -X DELETE "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
