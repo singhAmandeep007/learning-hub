@@ -11,8 +11,8 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 
-	"learning-hub/config"
 	"learning-hub/constants"
+	"learning-hub/firebase"
 	"learning-hub/models"
 	"learning-hub/utils"
 )
@@ -34,7 +34,7 @@ func GetResources(c *gin.Context) {
 	}
 
 	// Build Firestore query
-	query := config.FirestoreClient.Collection(constants.CollectionResources).OrderBy("createdAt", firestore.Desc)
+	query := firebase.FirestoreClient.Collection(constants.CollectionResources).OrderBy("createdAt", firestore.Desc)
 
 	// Apply type filter
 	if typeFilter != "all" {
@@ -81,7 +81,7 @@ func GetResources(c *gin.Context) {
 		}
 		resource.ID = doc.Ref.ID
 
-		// Apply search filter (simple implementation)
+		// Apply search filter
 		if search != "" {
 			searchLower := strings.ToLower(search)
 			if !strings.Contains(strings.ToLower(resource.Title), searchLower) &&
@@ -113,7 +113,7 @@ func GetResource(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
 
-	doc, err := config.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound,  models.ErrorResponse{
 			Error:   "resource_not_found",
@@ -143,42 +143,24 @@ func CreateResource(c *gin.Context) {
 	log.Printf("Content-Type: %s", c.GetHeader("Content-Type"))
 	log.Printf("Content-Length: %s", c.GetHeader("Content-Length"))
 
+	// Check if it's actually a multipart form
+	contentType := c.GetHeader("Content-Type")
+	if contentType == "" || !strings.Contains(contentType, "multipart/form-data") {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error:   "invalid_content_type",
+			Message: "Request must be multipart/form-data",
+		})
+		return
+	}
 
-	// Set max multipart memory (this replaces ParseMultipartForm)
-	// c.Request.ParseMultipartForm(MaxFileSize)
+	// error handling for max memory
+	if err := c.Request.ParseMultipartForm(constants.MaxFileSize); err != nil {
+		handleMultipartFormError(c, err)
+		return
+	}
+
+	log.Printf("Form values: %+v", c.Request.MultipartForm.Value)
 	
-
-		// Check if it's actually a multipart form
-		contentType := c.GetHeader("Content-Type")
-		if contentType == "" || !strings.Contains(contentType, "multipart/form-data") {
-			c.JSON(http.StatusBadRequest, models.ErrorResponse{
-				Error:   "invalid_content_type",
-				Message: "Request must be multipart/form-data",
-			})
-			return
-		}
-
-		if err := c.Request.ParseMultipartForm(constants.MaxFileSize); err != nil {
-			log.Printf("ParseMultipartForm error: %v", err)
-			
-			// Provide more specific error messages
-			var message string
-			if strings.Contains(err.Error(), "too large") {
-				message = fmt.Sprintf("File too large. Maximum size is %d MB", constants.MaxFileSize/(1<<20))
-			} else if strings.Contains(err.Error(), "no multipart boundary") {
-				message = "Invalid multipart form data - no boundary found"
-			} else {
-				message = fmt.Sprintf("Failed to parse form data: %v", err)
-			}
-			
-			c.JSON(http.StatusBadRequest, models.ErrorResponse{
-				Error:   "form_parse_error",
-				Message: message,
-			})
-			return
-		}
-
-		log.Printf("Form values: %+v", c.Request.MultipartForm.Value)
 	if c.Request.MultipartForm.File != nil {
 		for key, files := range c.Request.MultipartForm.File {
 			log.Printf("File field '%s': %d files", key, len(files))
@@ -210,7 +192,7 @@ func CreateResource(c *gin.Context) {
 	}
 
 	// Validate resource type
-	if resource.Type != "video" && resource.Type != "pdf" && resource.Type != "article" {
+	if resource.Type != constants.ResourceTypeVideo && resource.Type != constants.ResourceTypePDF && resource.Type != constants.ResourceTypeArticle {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error:   "invalid_type",
 			Message: "Type must be 'video', 'pdf', or 'article'",
@@ -219,7 +201,7 @@ func CreateResource(c *gin.Context) {
 	}
 
 	// Handle file uploads for video and pdf types
-	if resource.Type == "video" || resource.Type == "pdf" {
+	if resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF {
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -239,7 +221,7 @@ func CreateResource(c *gin.Context) {
 			})
 			return
 		}
-		resource.URL = url
+		resource.URL = url.PublicURL
 	}
 
 	// Handle thumbnail upload (optional)
@@ -250,12 +232,12 @@ func CreateResource(c *gin.Context) {
 		if err != nil {
 			log.Printf("Failed to upload thumbnail: %v", err)
 		} else {
-			resource.ThumbnailURL = thumbnailURL
+			resource.ThumbnailURL = thumbnailURL.PublicURL
 		}
 	}
 
 	// Save to Firestore
-	docRef, _, err := config.FirestoreClient.Collection(constants.CollectionResources).Add(ctx, resource)
+	docRef, _, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Add(ctx, resource)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   "save_failed",
@@ -269,4 +251,187 @@ func CreateResource(c *gin.Context) {
 
 	resource.ID = docRef.ID
 	c.JSON(http.StatusCreated, resource)
+}
+
+// UpdateResource handles PUT /api/resources/:id
+func UpdateResource(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
+	// Get existing resource
+	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	if err != nil {
+		c.JSON(http.StatusNotFound, models.ErrorResponse{
+			Error:   "resource_not_found",
+			Message: "Resource not found",
+		})
+		return
+	}
+
+	var existingResource models.Resource
+	if err := doc.DataTo(&existingResource); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error:   "data_conversion_failed",
+			Message: "Failed to process existing resource data",
+		})
+		return
+	}
+
+	// Parse multipart form
+	if err := c.Request.ParseMultipartForm(constants.MaxFileSize); err != nil {
+		handleMultipartFormError(c, err)
+		return
+	}
+
+	// Update fields
+	updatedResource := existingResource
+	if title := c.PostForm("title"); title != "" {
+		updatedResource.Title = title
+	}
+	if description := c.PostForm("description"); description != "" {
+		updatedResource.Description = description
+	}
+	if resourceType := c.PostForm("type"); resourceType != "" {
+		updatedResource.Type = resourceType
+	}
+	if url := c.PostForm("url"); url != "" {
+		updatedResource.URL = url
+	}
+	if tagsStr := c.PostForm("tags"); tagsStr != "" {
+		oldTags := existingResource.Tags
+		newTags := utils.NormalizeTags(strings.Split(tagsStr, ","))
+		updatedResource.Tags = newTags
+		
+		// Update tag usage counts
+		utils.UpdateTagUsage(ctx, oldTags, -1)
+		utils.UpdateTagUsage(ctx, newTags, 1)
+	}
+	updatedResource.UpdatedAt = time.Now()
+
+	// Handle file replacement if resource is of type video or pdf
+	if updatedResource.Type == constants.ResourceTypeVideo || updatedResource.Type == constants.ResourceTypePDF {
+		// Handle file replacement
+		if file, header, err := c.Request.FormFile("file"); err == nil {
+			defer file.Close()
+
+			// Delete old file if it exists
+			if existingResource.URL != "" {
+				if err = utils.DeleteFileFromURL(ctx, existingResource.URL); err != nil {
+					log.Printf("Failed to delete file: %v", err)
+				}
+			}
+
+			// Upload new file
+			url, err := utils.UploadFile(ctx, file, header, updatedResource.Type)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+					Error:   "upload_failed",
+					Message: "Failed to upload new file",
+				})
+				return
+			}
+			updatedResource.URL = url.PublicURL
+		}
+	}
+
+	// Handle thumbnail replacement
+	if thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail"); err == nil {
+		defer thumbnailFile.Close()
+
+		// Delete old thumbnail
+		if existingResource.ThumbnailURL != "" {
+			log.Printf("existingResource.ThumbnailURL: %v", existingResource.ThumbnailURL)
+			if err =  utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
+				log.Printf("Failed to delete thumbnail: %v", err)
+			}
+		}
+
+		// Upload new thumbnail
+		thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
+		if err != nil {
+			log.Printf("Failed to upload thumbnail: %v", err)
+		} else {
+			updatedResource.ThumbnailURL = thumbnailURL.PublicURL
+		}
+	}
+
+	// Save updated resource
+	_, err = firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Set(ctx, updatedResource)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error:   "update_failed",
+			Message: "Failed to update resource",
+		})
+		return
+	}
+
+	updatedResource.ID = id
+	c.JSON(http.StatusOK, updatedResource)
+}
+
+// DeleteResource handles DELETE /api/resource/:id
+func DeleteResource(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+
+	// Get existing resource to clean up files
+	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	if err != nil {
+		c.JSON(http.StatusNotFound, models.ErrorResponse{
+			Error:   "resource_not_found",
+			Message: "Resource not found",
+		})
+		return
+	}
+
+	var resource models.Resource
+	if err := doc.DataTo(&resource); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error:   "data_conversion_failed",
+			Message: "Failed to process resource data",
+		})
+		return
+	}
+
+	// Delete files from Cloud Storage
+	if resource.URL != "" {
+		utils.DeleteFileFromURL(ctx, resource.URL)
+	}
+	if resource.ThumbnailURL != "" {
+		utils.DeleteFileFromURL(ctx, resource.ThumbnailURL)
+	}
+
+	// Update tag usage counts
+	utils.UpdateTagUsage(ctx, resource.Tags, -1)
+
+	// Delete from Firestore
+	_, err = firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Delete(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error:   "delete_failed",
+			Message: "Failed to delete resource",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Resource deleted successfully"})
+}
+
+// handleMultipartFormError handles errors from ParseMultipartForm and returns appropriate error response
+func handleMultipartFormError(c *gin.Context, err error) {
+	log.Printf("ParseMultipartForm error: %v", err)
+	
+	var message string
+	if strings.Contains(err.Error(), "too large") {
+		message = fmt.Sprintf("File too large. Maximum size is %d MB", constants.MaxFileSize/(1<<20))
+	} else if strings.Contains(err.Error(), "no multipart boundary") {
+		message = "Invalid multipart form data - no boundary found"
+	} else {
+		message = fmt.Sprintf("Failed to parse form data: %v", err)
+	}
+	
+	c.JSON(http.StatusBadRequest, models.ErrorResponse{
+		Error:   "form_parse_error",
+		Message: message,
+	})
 }

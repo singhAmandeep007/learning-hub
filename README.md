@@ -60,6 +60,14 @@ learning-hub/
    go run main.go
    ```
 
+### Running shell script
+
+```shell
+chmod +x resources.sh
+
+./resources.sh
+```
+
 ## License
 
 MIT 

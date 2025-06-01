@@ -7,15 +7,18 @@ import (
 	"log"
 	"mime/multipart"
 	"net/url"
-	"os"
 	"path/filepath"
+	"regexp"
+
 	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/storage"
 
 	"learning-hub/config"
 	"learning-hub/constants"
+	"learning-hub/firebase"
 	"learning-hub/models"
 )
 
@@ -67,10 +70,10 @@ func UpdateTagUsage(ctx context.Context, tags []string, delta int) {
 			continue
 		}
 
-		tagRef := config.FirestoreClient.Collection(constants.CollectionTags).Doc(tag)
+		tagRef := firebase.FirestoreClient.Collection(constants.CollectionTags).Doc(tag)
 		
 		// Use a transaction to ensure atomicity
-		err := config.FirestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		err := firebase.FirestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 			doc, err := tx.Get(tagRef)
 			if err != nil {
 				// Tag doesn't exist, create it
@@ -102,58 +105,180 @@ func UpdateTagUsage(ctx context.Context, tags []string, delta int) {
 	}
 }
 
-// UploadFile uploads a file to Cloud Storage and returns the public URL
-func UploadFile(ctx context.Context, file multipart.File, header *multipart.FileHeader, fileType string) (string, error) {
-	// Generate unique filename
-	ext := filepath.Ext(header.Filename)
-	baseFilename := strings.ReplaceAll(filepath.Base(header.Filename), " ", "_")
-	baseFilename = strings.ReplaceAll(baseFilename, ext, "") // Remove original extension before adding our own clean one
-	filename := fmt.Sprintf("%s/%d_%s%s", fileType, time.Now().Unix(), strings.ReplaceAll(header.Filename, " ", "_"), ext)
+// FileUploadResult contains the result of a file upload operation
+type FileUploadResult struct {
+	PublicURL string
+	Filename  string
+	Size      int64
+}
 
-	log.Printf("bucket name: %v", config.StorageBucket)
-
-	// Create Cloud Storage object
-	bucketHandle, err := config.StorageClient.DefaultBucket()
+func UploadFile(ctx context.Context, file multipart.File, header *multipart.FileHeader, fileType string) (*FileUploadResult, error) {
+	// Generate clean, unique filename
+	filename, err := generateUniqueFilename(header.Filename, fileType)
 	if err != nil {
-		return "", fmt.Errorf("failed to get default bucket from Firebase Admin SDK: %w. Check firebase.Config.StorageBucket and emulator logs", err)
+		return nil, fmt.Errorf("failed to generate filename: %w", err)
 	}
 
-	log.Printf("Obtained bucket handle for bucket: '%s'", bucketHandle.BucketName())
+	log.Printf("Uploading file: %s to bucket: %s", filename, firebase.StorageBucket)
 
-	obj := bucketHandle.Object(filename)
+	bucketHandler := firebase.StorageClient.Bucket(firebase.StorageBucket)
+	
+	writer := bucketHandler.Object(filename).NewWriter(ctx)
 
-	log.Printf("obj: %v", obj)
-
-	// Create writer
-	writer := obj.NewWriter(ctx)
-	writer.ContentType = header.Header.Get("Content-Type")
-	// writer.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
-
-	// Copy file content
-	if _, err := io.Copy(writer, file); err != nil {
-		writer.Close()
-		return "", err
+	// Set content type
+	if contentType := header.Header.Get("Content-Type"); contentType != "" {
+		writer.ContentType = contentType
 	}
 
+	bytesWritten, err := io.Copy(writer, file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to upload file: %w", err)
+	}
+
+	// Close the writer to finalize the upload
 	if err := writer.Close(); err != nil {
-		return "", err
+		return nil, fmt.Errorf("failed to finalize upload: %w", err)
 	}
 
-	var publicURL string
-	isEmulator := os.Getenv("IS_FIREBASE_EMULATOR") == "true"
+	// Make the file public
+	// Note: For granular access control, Firebase Security Rules are preferred.
+	// This makes the object publicly readable.
+	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
+	if !isEmulator {
+		acl := bucketHandler.Object(filename).ACL()
+		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
+			log.Printf("Warning: Failed to set public ACL: %v (File uploaded but may not be publicly accessible)", err)
+		}
+	}
+
+	// Generate public URL
+	publicURL, err := generatePublicURL(filename, firebase.StorageBucket)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate public URL: %w", err)
+	}
+
+	log.Printf("File uploaded successfully: %s (%d bytes)", publicURL, bytesWritten)
+
+	return &FileUploadResult{
+		PublicURL: publicURL,
+		Filename:  filename,
+		Size:      bytesWritten,
+	}, nil
+}
+
+// generateUniqueFilename creates a unique filename with proper sanitization
+func generateUniqueFilename(originalFilename, fileType string) (string, error) {
+	if originalFilename == "" {
+		return "", fmt.Errorf("original filename cannot be empty")
+	}
+
+	ext := filepath.Ext(originalFilename)
+	baseName := strings.TrimSuffix(filepath.Base(originalFilename), ext)
+	
+	// Sanitize filename
+	baseName = strings.ReplaceAll(baseName, " ", "_")
+	baseName = strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
+			return r
+		}
+		return '_'
+	}, baseName)
+
+	// Generate unique filename with timestamp
+	timestamp := time.Now().UnixNano()
+	filename := fmt.Sprintf("%s/%d_%s%s", fileType, timestamp, baseName, ext)
+	
+	return filename, nil
+}
+
+// generatePublicURL creates the appropriate public URL based on environment
+func generatePublicURL(objectName, bucketName string) (string, error) {
+	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
 
 	if isEmulator {
-		emulatorHost := os.Getenv("FIREBASE_STORAGE_EMULATOR_HOST") // e.g., 127.0.0.1:8082
-		// For the emulator, the URL format is typically: http://{host}/v0/b/{bucket}/o/{object_path_encoded}?alt=media
-		// The object name needs to be URL path encoded.
-		encodedObjectName := url.PathEscape(obj.ObjectName())
-		publicURL = fmt.Sprintf("http://%s/v0/b/%s/o/%s?alt=media", emulatorHost, obj.BucketName(), encodedObjectName)
-		log.Printf("Generated emulator public URL: %s", publicURL)
-	} else {
-		// For live Firebase Storage, the typical public URL format.
-		publicURL = fmt.Sprintf("https://storage.googleapis.com/%s/%s", obj.BucketName(), obj.ObjectName())
-		log.Printf("Generated production public URL: %s", publicURL)
+		emulatorHost := *config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
+		if emulatorHost == "" {
+			return "", fmt.Errorf("FIREBASE_STORAGE_EMULATOR_HOST not set for emulator mode")
+		}
+
+		encodedObjectName := url.PathEscape(objectName)
+		// Eg. http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
+		publicURL := fmt.Sprintf("http://%s/v0/b/%s/o/%s?alt=media", emulatorHost, bucketName, encodedObjectName)
+		
+		log.Printf("Generated emulator URL: %s", publicURL)
+		return publicURL, nil
 	}
 
+	// Production URL
+	publicURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectName)
+	log.Printf("Generated production URL: %s", publicURL)
 	return publicURL, nil
+}
+
+// DeleteFileFromURL deletes a file from Cloud Storage given its public URL
+func DeleteFileFromURL(ctx context.Context, fileUrl string) error {
+	// Delete file if it is stored in our bucket
+	if strings.Contains(fileUrl, firebase.StorageBucket) {
+		bucketName, objectName, err := parseStorageURL(fileUrl)
+		log.Printf("bucketName: %s objectName: %s", bucketName, objectName)
+
+		if err != nil {
+			return fmt.Errorf("failed to parse storage URL: %w", err)
+		}
+
+		// Get the bucket handle
+		bucketHandler := firebase.StorageClient.Bucket(bucketName)
+		
+		// Get the object handle
+		objHandler := bucketHandler.Object(objectName)
+		
+		// Delete the object
+		if err := objHandler.Delete(ctx); err != nil {
+			return fmt.Errorf("failed to delete object %s from bucket %s: %w", objectName, bucketName, err)
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
+func parseStorageURL(fileUrl string) (bucketName, objectName string, err error) {
+	parsedURL, err := url.Parse(fileUrl)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid URL format: %w", err)
+	}
+
+	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
+
+	if isEmulator {
+		// http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
+		pathRegex := regexp.MustCompile(`^/v0/b/([^/]+)/o/(.+)$`)
+		matches := pathRegex.FindStringSubmatch(parsedURL.Path)
+		
+		if len(matches) != 3 {
+			return "", "", fmt.Errorf("invalid Firebase Storage URL path format")
+		}
+	
+		bucketName = matches[1]
+		encodedObjectName := matches[2]
+		
+		// URL decode the object name
+		objectName, err = url.QueryUnescape(encodedObjectName)
+		if err != nil {
+			return "", "", fmt.Errorf("failed to decode object name: %w", err)
+		}
+	
+		return bucketName, objectName, nil
+	}else {
+		pathParts := strings.SplitN(strings.TrimPrefix(parsedURL.Path, "/"), "/", 2)
+		if len(pathParts) < 2 {
+			return "", "", fmt.Errorf("invalid Google Cloud Storage URL path format")
+		}
+
+		bucketName = pathParts[0]
+		objectName = pathParts[1]
+
+		return bucketName, objectName, nil
+	}
 }

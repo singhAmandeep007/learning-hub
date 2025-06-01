@@ -16,10 +16,13 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Check Authorization header
 		authHeader := c.GetHeader("Authorization")
+
+		adminSecret := config.AppConfig.ADMIN_SECRET
+	
 		if authHeader != "" {
 			// Expected format: "Bearer SECRET_KEY"
 			parts := strings.SplitN(authHeader, " ", 2)
-			if len(parts) == 2 && parts[0] == "Bearer" && parts[1] == config.AdminSecret {
+			if len(parts) == 2 && parts[0] == "Bearer" && parts[1] == adminSecret {
 				c.Next()
 				return
 			}
@@ -27,15 +30,14 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 
 		// Check query parameter as fallback
 		secret := c.Query(constants.AdminSecretQueryParamKey)
-		if secret == config.AdminSecret {
+		if secret == adminSecret {
 			c.Next()
 			return
 		}
 
-		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorResponse{
 			Error:   "unauthorized",
 			Message: "Admin authentication required",
 		})
-		c.Abort()
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"learning-hub/config"
+	"learning-hub/firebase"
 	"learning-hub/handlers"
 	"learning-hub/middleware"
 )
@@ -16,12 +17,23 @@ import (
 func main() {
 	// Load environment variables
 	loadEnv()
+	// Populate AppConfig with env variables
+	err := config.LoadConfig() 
+	if err != nil {
+		log.Fatalf("Error loading configuration: %v", err)
+		return
+	}
+	
 	// Initialize Firebase
-	err := config.InitializeFirebase()
+	err = firebase.InitializeFirebase()
 	if err != nil {
 		log.Fatalf("Failed to initialize Firebase: %v", err)
 	}
-	defer config.CloseFirebase()
+	defer func() {
+		if err := firebase.CloseFirebase(); err != nil {
+				log.Printf("Error during Firebase cleanup: %v", err)
+		}
+	}()
 
 	// Setup Gin router
 	r := gin.Default()
@@ -32,6 +44,9 @@ func main() {
 		api.GET("/resources", handlers.GetResources)
 		api.GET("/resources/:id", handlers.GetResource)
 		api.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
+		api.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
+		api.DELETE("/resources/:id",middleware.AdminAuthMiddleware(), handlers.DeleteResource)
+
 		api.GET("/tags", handlers.GetTags)
 	}
 

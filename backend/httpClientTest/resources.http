@@ -5,11 +5,15 @@
 GET {{baseUrl}}/ HTTP/1.1
 
 ###
+# Get all types (explicit)
+curl "{{baseUrl}}?type=all"
+
+###
 # With custom page size
 curl "{{baseUrl}}?limit=10"
 
 ###
-# Type Filtering
+# Type filtering
 # Get only videos
 curl "{{baseUrl}}?type=video"
 
@@ -22,11 +26,7 @@ curl "{{baseUrl}}?type=pdf"
 curl "{{baseUrl}}?type=article"
 
 ###
-# Get all types (explicit)
-curl "{{baseUrl}}?type=all"
-
-###
-# Tag Filtering
+# Tag filtering
 # Single tag
 curl "{{baseUrl}}?tags=onboarding"
 
@@ -39,20 +39,20 @@ curl "{{baseUrl}}?tags=onboarding,tutorial,basics"
 curl "{{baseUrl}}?tags=get-started,how-to"
 
 ###
-# Search Functionality
+# Search functionality
 # Search in title and description
 curl "{{baseUrl}}?search=getting%20started"
 
 ###
 # URL encoded search
-curl "{{baseUrl}}?search=how%20to%20use"
+curl "{{baseUrl}}?search=test%20PDF%20document"
 
 ###
 # Search with special characters
 curl "{{baseUrl}}?search=API%20%26%20Integration"
 
 ###
-# Combined Filters
+# Combined filters
 # Type + Tags + Search
 curl "{{baseUrl}}?type=video&tags=onboarding,tutorial&search=introduction&limit=5"
 
@@ -73,109 +73,19 @@ curl "{{baseUrl}}?limit=5&cursor=5"
 # Third page
 curl "{{baseUrl}}?limit=5&cursor=10"
 
-###
-# Article (external link)
-curl -X POST "{{baseUrl}}" \
-  -H "Authorization: Bearer your-admin-secret-key" \
-  -F "title=Best Practices Blog Post" \
-  -F "description=External blog post about platform best practices and optimization tips" \
-  -F "type=article" \
-  -F "tags=best-practices,optimization,tips,external" \
-  -F "url=https://www.allthefood.ie/single-post/the-square-dish-once-over" \
-  -F "thumbnail=@/Users/singhamandeep007/Developer/Projects/learning-hub/backend/httpClientTest/images/image1.png"
-
-###
+# PATCH Eg.
+# curl -X PATCH "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
+#   -H "Authorization: Bearer your-admin-secret-key" \
+#   -F "title=Post updated" \
+# 	-F "description=updated descr.wd" \
+# 	-F "tags=new space,optimus,tis,external" \
+# 	-F "url=https://www.allthefood.ie/single-post/tr" \
+# 	-F "thumbnail=@./images/image2.webp" \
+# 	-F "type=pdf" \
+# 	-F "file=@./pdfs/pdf1.pdf"
 
 
+# DELETE Eg.
+# curl -X DELETE "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
+#   -H "Authorization: Bearer your-admin-secret-key"
 
-
-
-
-
-
-curl -X POST "http://localhost:8080/api/resources" \
-  -H "Authorization: Bearer your-admin-secret-key" \
-  -F "title=3 Best Practices Blog Post" \
-  -F "description=3 External blog post about platform best practices and optimization tips" \
-  -F "type=article" \
-  -F "tags=best-practices,optimization,tips,external" \
-  -F "url=https://www.allthefood.ie/single-post/the-square-dish-once-over" \
-  -F "thumbnail=@/Users/singhamandeep007/Developer/Projects/learning-hub/backend/httpClientTest/images/image1.png"
-
-
-
-
-
-
-
-
-
-###
-# Article without thumbnail
-curl -X POST "{{baseUrl}}" \
-  -H "Authorization: Bearer your-admin-secret-key" \
-  -F "title=Integration Guide" \
-  -F "description=Step-by-step integration guide for third-party services" \
-  -F "type=article" \
-  -F "tags=integration,guide,third-party,tutorial" \
-  -F "url=https://docs.example.com/integration-guide"
-
-
-### 
-# CURL ceate a video resource (admin only)
-curl -X POST {{baseUrl}} \
-  -H "Authorization: Bearer your-admin-secret" \
-  -F "title=Getting Started Video" \
-  -F "description=Learn the basics" \
-  -F "type=video" \
-  -F "tags=onboarding,tutorial,basics" \
-  -F "file=@video.mp4" \
-  -F "thumbnail=@thumb.jpg"
-
-
-
-###
-# Rest ceate a video resource (admin only)
-POST {{baseUrl}} HTTP/1.1
-Authorization: Bearer your-admin-secret
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
-
-------WebKitFormBoundary
-Content-Disposition: form-data; name="title"
-
-Getting Started Video
-------WebKitFormBoundary
-Content-Disposition: form-data; name="description"
-
-Learn the basics
-------WebKitFormBoundary
-Content-Disposition: form-data; name="type"
-
-video
-------WebKitFormBoundary
-Content-Disposition: form-data; name="tags"
-
-onboarding,tutorial,basics
-------WebKitFormBoundary
-Content-Disposition: form-data; name="file"; filename="video.mp4"
-Content-Type: video/mp4
-
-< ./video.mp4
-------WebKitFormBoundary
-Content-Disposition: form-data; name="thumbnail"; filename="thumb.jpg"
-Content-Type: image/jpeg
-
-< ./thumb.jpg
-------WebKitFormBoundary--
-
-### 
-# Update a resource
-curl -X PUT "http://localhost:8080/api/resources/resource-id" \
-  -H "Authorization: Bearer your-admin-secret" \
-  -F "title=Updated Title"
-
-
-###
-# Delete a resource
-curl -X DELETE "http://localhost:8080/api/resources/resource-id" \
-  -H "Authorization: Bearer your-admin-secret"

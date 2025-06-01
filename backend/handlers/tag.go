@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 
-	"learning-hub/config"
 	"learning-hub/constants"
+	"learning-hub/firebase"
 	"learning-hub/models"
 )
 
@@ -15,9 +16,11 @@ import (
 func GetTags(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	docs, err := config.FirestoreClient.Collection(constants.CollectionTags).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
+	docs, err := firebase.FirestoreClient.Collection(constants.CollectionTags).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
 
 	if err != nil {
+		log.Printf("Error fetching tags from Firestore: %v\n", err)
+
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   "query_failed",
 			Message: "Failed to fetch tags",
@@ -29,6 +32,7 @@ func GetTags(c *gin.Context) {
 	for _, doc := range docs {
 		var tag models.Tag
 		if err := doc.DataTo(&tag); err != nil {
+			log.Printf("Warning: Failed to unmarshal tag document ID %s: %v\n", doc.Ref.ID, err)
 			continue
 		}
 		tags = append(tags, tag)
