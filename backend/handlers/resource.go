@@ -177,6 +177,7 @@ func CreateResource(c *gin.Context) {
 		Description: c.PostForm("description"),
 		Type:        c.PostForm("type"),
 		URL:         c.PostForm("url"),
+		ThumbnailURL: c.PostForm("thumbnailUrl"),
 		Tags:        utils.NormalizeTags(strings.Split(c.PostForm("tags"), ",")),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -200,8 +201,17 @@ func CreateResource(c *gin.Context) {
 		return
 	}
 
-	// Handle file uploads for video and pdf types
-	if resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF {
+	// Check if resource type is article and url is not provided
+	if resource.Type == constants.ResourceTypeArticle && resource.URL == ""  {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error:   "missing_url",
+			Message: "Url must be provided for 'article'",
+		})
+		return
+	}
+
+	// Handle file uploads for video and pdf types and check if url is not provided
+	if (resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF) && resource.URL == "" {
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -224,17 +234,21 @@ func CreateResource(c *gin.Context) {
 		resource.URL = url.PublicURL
 	}
 
-	// Handle thumbnail upload (optional)
-	thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail")
-	if err == nil {
-		defer thumbnailFile.Close()
-		thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
-		if err != nil {
-			log.Printf("Failed to upload thumbnail: %v", err)
-		} else {
-			resource.ThumbnailURL = thumbnailURL.PublicURL
+	// Handle thumbnail upload and check if thumbnail url not provided
+	if resource.ThumbnailURL == "" {
+		// Handle thumbnail upload (optional)
+		thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail")
+		if err == nil {
+			defer thumbnailFile.Close()
+			thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
+			if err != nil {
+				log.Printf("Failed to upload thumbnail: %v", err)
+			} else {
+				resource.ThumbnailURL = thumbnailURL.PublicURL
+			}
 		}
 	}
+
 
 	// Save to Firestore
 	docRef, _, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Add(ctx, resource)
@@ -297,6 +311,9 @@ func UpdateResource(c *gin.Context) {
 	if url := c.PostForm("url"); url != "" {
 		updatedResource.URL = url
 	}
+	if thumbnailUrl := c.PostForm("thumbnailUrl"); thumbnailUrl != ""{
+		updatedResource.ThumbnailURL = thumbnailUrl
+	}
 	if tagsStr := c.PostForm("tags"); tagsStr != "" {
 		oldTags := existingResource.Tags
 		newTags := utils.NormalizeTags(strings.Split(tagsStr, ","))
@@ -309,7 +326,7 @@ func UpdateResource(c *gin.Context) {
 	updatedResource.UpdatedAt = time.Now()
 
 	// Handle file replacement if resource is of type video or pdf
-	if updatedResource.Type == constants.ResourceTypeVideo || updatedResource.Type == constants.ResourceTypePDF {
+	if (updatedResource.Type == constants.ResourceTypeVideo || updatedResource.Type == constants.ResourceTypePDF) && updatedResource.URL == "" {
 		// Handle file replacement
 		if file, header, err := c.Request.FormFile("file"); err == nil {
 			defer file.Close()
@@ -334,24 +351,26 @@ func UpdateResource(c *gin.Context) {
 		}
 	}
 
-	// Handle thumbnail replacement
-	if thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail"); err == nil {
-		defer thumbnailFile.Close()
+	if updatedResource.ThumbnailURL == "" {
+		// Handle thumbnail replacement
+		if thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail"); err == nil {
+			defer thumbnailFile.Close()
 
-		// Delete old thumbnail
-		if existingResource.ThumbnailURL != "" {
-			log.Printf("existingResource.ThumbnailURL: %v", existingResource.ThumbnailURL)
-			if err =  utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
-				log.Printf("Failed to delete thumbnail: %v", err)
+			// Delete old thumbnail
+			if existingResource.ThumbnailURL != "" {
+				log.Printf("existingResource.ThumbnailURL: %v", existingResource.ThumbnailURL)
+				if err =  utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
+					log.Printf("Failed to delete thumbnail: %v", err)
+				}
 			}
-		}
 
-		// Upload new thumbnail
-		thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
-		if err != nil {
-			log.Printf("Failed to upload thumbnail: %v", err)
-		} else {
-			updatedResource.ThumbnailURL = thumbnailURL.PublicURL
+			// Upload new thumbnail
+			thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
+			if err != nil {
+				log.Printf("Failed to upload thumbnail: %v", err)
+			} else {
+				updatedResource.ThumbnailURL = thumbnailURL.PublicURL
+			}
 		}
 	}
 
