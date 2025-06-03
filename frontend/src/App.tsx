@@ -1,7 +1,7 @@
 import { Outlet, RouterProvider, createBrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import LandingPage from "./pages/LandingPage";
+import Resources from "./pages/Resources";
 import ResourceDetail from "./pages/ResourceDetail";
 import AdminPanel from "./pages/AdminPanel";
 
@@ -19,7 +19,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <LandingPage />,
+        element: <Resources />,
       },
       {
         path: "/resource/:id",
