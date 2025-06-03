@@ -1,0 +1,84 @@
+@import "../../styles/variables.scss";
+
+.search-bar {
+  width: 100%;
+  margin-bottom: $spacing-4;
+
+  .search-input-container {
+    position: relative;
+    width: 100%;
+
+    .search-icon {
+      position: absolute;
+      left: $spacing-3;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $neutral-500;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: $spacing-3 $spacing-3 $spacing-3 $spacing-8;
+      padding-right: $spacing-10; /* Add right padding for the tag button */
+      border-radius: $border-radius-lg;
+      border: 1px solid $neutral-300;
+      background-color: white;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      transition: all $transition-fast ease-in-out;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+      }
+
+      &::placeholder {
+        color: $neutral-400;
+      }
+    }
+
+    .tag-toggle {
+      position: absolute;
+      right: $spacing-3;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: none;
+      border: none;
+      color: $neutral-500;
+      cursor: pointer;
+      border-radius: $border-radius-sm;
+      transition: all $transition-fast ease-in-out;
+      z-index: 2; /* Ensure button is above other elements */
+
+      &:hover {
+        color: $primary-color;
+        background-color: rgba($primary-color, 0.1);
+      }
+
+      &.active {
+        color: white;
+        background-color: $primary-color;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: $breakpoint-md) {
+  .search-bar {
+    margin-bottom: $spacing-3;
+
+    .search-input-container .search-input {
+      padding: $spacing-2 $spacing-2 $spacing-2 $spacing-8;
+      padding-right: $spacing-8; /* Adjust right padding for mobile */
+      font-size: 0.813rem;
+    }
+  }
+}

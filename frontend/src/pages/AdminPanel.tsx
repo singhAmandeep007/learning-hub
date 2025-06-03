@@ -1,7 +1,7 @@
-import styles from "./AdminPanel.module.scss";
+import "./AdminPanel.scss";
 
 const AdminPanel = () => {
-  return <div className={styles.adminPanel}>Admin Panel</div>;
+  return <div className="adminPanel">Admin Panel</div>;
 };
 
 export default AdminPanel;

@@ -1,31 +1,37 @@
-import { useParams, Link } from "react-router";
-import styles from "./ResourceDetail.module.scss";
+import React from "react";
+import { useParams } from "react-router";
+
+import { type Resource } from "../types";
+
+import "./ResourceDetail.scss";
+import { resourcesApi } from "../services/resources";
 
 const ResourceDetail = () => {
   const { id } = useParams<{ id: string }>();
 
-  console.log("id=", id);
+  const [resource, setResource] = React.useState<Resource | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (id) {
+      resourcesApi.getById({ id }).then((data) => {
+        setResource(data);
+        setLoading(false);
+      });
+    }
+  }, [id]);
 
   return (
-    <div className={styles.resourceDetail}>
-      <header className={styles.header}>
-        <Link
-          to="/"
-          className={styles.backLink}
-        >
-          ← Back to Resources
-        </Link>
-      </header>
+    <div className="resourceDetail">
+      <header className="header"></header>
 
-      <main className={styles.content}>
-        <h1 className={styles.title}>resource.title</h1>
+      <h1 className="title">resource.title</h1>
 
-        <div className={styles.tags}>Resources</div>
+      <div className="tags">Resources</div>
 
-        <div className={styles.description}>resource.description</div>
+      <div className="description">resource.description</div>
 
-        <div className={styles.media}>Media</div>
-      </main>
+      <div className="media">Media</div>
     </div>
   );
 };

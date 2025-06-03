@@ -59,6 +59,8 @@ export type UpdateResourcePayload = Partial<CreateResourcePayload> & Pick<Resour
 
 export type UpdateResourceResponse = Resource;
 
+export type DeleteResourcePayload = Pick<Resource, "id">;
+
 // Tag
 export type Tag = {
   name: string;
