@@ -1,27 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Book, Video } from "lucide-react";
-import { type Resource } from "../../../types";
-import { resourcesApi } from "../../../services/resources";
+import { useResources } from "../../../services/resources/hooks";
 import "./ContentDisplay.scss";
 
 export const DefaultView: React.FC = () => {
-  const [featuredResources, setFeaturedResources] = useState<Resource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadFeaturedResources = async () => {
-      try {
-        const resources = await resourcesApi.getAll();
-        setFeaturedResources(resources.data);
-      } catch (error) {
-        console.error("Failed to load featured resources:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadFeaturedResources();
-  }, []);
+  const { data: resourcesData, isLoading } = useResources();
 
   if (isLoading) {
     return (
@@ -48,7 +31,7 @@ export const DefaultView: React.FC = () => {
         <h2>Resources</h2>
 
         <div className="featured-grid">
-          {featuredResources.map((resource) => (
+          {resourcesData?.data.map((resource) => (
             <div
               key={resource.id}
               className="featured-card"

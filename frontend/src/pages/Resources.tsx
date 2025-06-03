@@ -1,55 +1,26 @@
-import { useEffect, useState } from "react";
-
+import { useState } from "react";
 import { FilterTabs } from "../components/FilterTabs";
 import { SearchBar } from "../components/SearchBar";
-
 import { ResourceList } from "./components/ResourceList";
-
+import { ContentDisplay } from "./components/ContentDisplay";
+import { useResources } from "../services/resources/hooks";
+import { useTags } from "../services/tags/hooks";
+import type { Resource, ResourceType } from "../types";
 import "./Resources.scss";
 
-import type { Resource, ResourceType, Tag } from "../types";
-
-import { resourcesApi } from "../services/resources";
-import { tagsApi } from "../services/tags";
-import { Search } from "lucide-react";
-import { ContentDisplay } from "./components/ContentDisplay";
-
 const Resources = () => {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [activeResource, setActiveResource] = useState<Resource | null>(null);
   const [activeType, setActiveType] = useState<ResourceType | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
+  const { data: resourcesData, isLoading: isLoadingResources } = useResources({
+    search: searchQuery,
+    type: activeType ?? undefined,
+    tags: activeTag ? [activeTag] : undefined,
+  });
 
-        // Load topics
-        const tagsData = await tagsApi.getAll();
-
-        // Load Resources
-        const resourcesData = await resourcesApi.getAll({
-          search: searchQuery,
-          type: activeType ? activeType : undefined,
-          tags: activeTag ? [activeTag] : undefined,
-        });
-
-        setTags(tagsData);
-
-        setResources(resourcesData.data);
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, [searchQuery, activeType, activeTag]);
+  const { data: tags } = useTags();
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -71,7 +42,7 @@ const Resources = () => {
       </header>
 
       <div className="learning-hub-container">
-        <aside className={`sidebar`}>
+        <aside className="sidebar">
           <div className="sidebar-content">
             <SearchBar onSearch={handleSearch} />
 
@@ -83,10 +54,10 @@ const Resources = () => {
             <div className="resources-container">
               <h3 className="resources-heading">Resources</h3>
               <ResourceList
-                resources={resources}
+                resources={resourcesData?.data ?? []}
                 activeResourceId={activeResource?.id || null}
                 onResourceSelect={handleResourceSelect}
-                isLoading={isLoading}
+                isLoading={isLoadingResources}
               />
             </div>
           </div>
