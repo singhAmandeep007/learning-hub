@@ -63,10 +63,24 @@ export class HttpClient {
     });
   }
 
+  async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "POST",
+      body: formData,
+    });
+  }
+
   async patch<T>(endpoint: string, data: Record<string, unknown>): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PATCH",
       body: JSON.stringify(data),
+    });
+  }
+
+  async patchFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "PATCH",
+      body: formData,
     });
   }
 

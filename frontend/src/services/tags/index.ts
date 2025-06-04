@@ -1,10 +1,3 @@
-import { httpClient } from "../httpClient";
+export { tagsApi } from "./api";
 
-import { type GetTagsResponse } from "../../types";
-
-export const tagsApi = {
-  // Get all tags
-  getAll: async (): Promise<GetTagsResponse> => {
-    return httpClient.get<GetTagsResponse>("/tags");
-  },
-};
+export { useTags } from "./hooks";
