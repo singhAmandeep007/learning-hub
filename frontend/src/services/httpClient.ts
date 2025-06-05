@@ -44,10 +44,13 @@ export class HttpClient {
 
   async get<T>(endpoint: string, params?: Record<string, string | number | boolean | string[]>): Promise<T> {
     const processedParams = params
-      ? Object.entries(params).reduce((acc, [key, value]) => {
-          acc[key] = Array.isArray(value) ? value.join(",") : value;
-          return acc;
-        }, {} as Record<string, string | number | boolean>)
+      ? Object.entries(params).reduce(
+          (acc, [key, value]) => {
+            acc[key] = Array.isArray(value) ? value.join(",") : value;
+            return acc;
+          },
+          {} as Record<string, string | number | boolean>
+        )
       : undefined;
 
     const url = processedParams
@@ -63,10 +66,11 @@ export class HttpClient {
     });
   }
 
-  async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  async postFormData<T>(endpoint: string, options: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: "POST",
-      body: formData,
+      headers: {},
+      ...options,
     });
   }
 
@@ -77,10 +81,11 @@ export class HttpClient {
     });
   }
 
-  async patchFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  async patchFormData<T>(endpoint: string, options: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PATCH",
-      body: formData,
+      headers: {},
+      ...options,
     });
   }
 

@@ -1,0 +1,183 @@
+@use "sass:color";
+@use "../../styles/variables.scss";
+
+.rq-flash-container {
+  position: fixed;
+  top: variables.$spacing-5;
+  right: variables.$spacing-5;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-3;
+  max-width: 25rem;
+}
+
+.rq-flash-notification {
+  display: flex;
+  align-items: center;
+  gap: variables.$spacing-3;
+  padding: variables.$spacing-4;
+  border-radius: variables.$border-radius-lg;
+  box-shadow: variables.$shadow-lg;
+  background: white;
+  border-left: 4px solid;
+  animation: rq-flash-slide-in variables.$transition-normal ease-out;
+  min-width: 18.75rem;
+  backdrop-filter: blur(8px);
+  border: 1px solid variables.$neutral-200;
+
+  &--success {
+    border-left-color: variables.$success-color;
+    background: rgba(240, 253, 244, 0.95); // Success background with transparency
+    border-color: rgba(variables.$success-color, 0.2);
+  }
+
+  &--error {
+    border-left-color: variables.$error-color;
+    background: rgba(254, 242, 242, 0.95); // Error background with transparency
+    border-color: rgba(variables.$error-color, 0.2);
+  }
+
+  &--warning {
+    border-left-color: variables.$warning-color;
+    background: rgba(255, 251, 235, 0.95); // Warning background with transparency
+    border-color: rgba(variables.$warning-color, 0.2);
+  }
+
+  &--info {
+    border-left-color: variables.$primary-color;
+    background: rgba(239, 246, 255, 0.95); // Info background with transparency
+    border-color: rgba(variables.$primary-color, 0.2);
+  }
+}
+
+.rq-flash-icon {
+  flex-shrink: 0;
+  width: variables.$spacing-5;
+  height: variables.$spacing-5;
+
+  .rq-flash-notification--success & {
+    color: variables.$success-color;
+  }
+
+  .rq-flash-notification--error & {
+    color: variables.$error-color;
+  }
+
+  .rq-flash-notification--warning & {
+    color: variables.$warning-color;
+  }
+
+  .rq-flash-notification--info & {
+    color: variables.$primary-color;
+  }
+}
+
+.rq-flash-message {
+  flex: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: variables.$neutral-700;
+  font-weight: 500;
+
+  .rq-flash-notification--success & {
+    color: color.adjust(variables.$success-color, $lightness: -20%);
+  }
+
+  .rq-flash-notification--error & {
+    color: color.adjust(variables.$error-color, $lightness: -15%);
+  }
+
+  .rq-flash-notification--warning & {
+    color: color.adjust(variables.$warning-color, $lightness: -20%);
+  }
+
+  .rq-flash-notification--info & {
+    color: color.adjust(variables.$primary-color, $lightness: -15%);
+  }
+}
+
+.rq-flash-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: variables.$spacing-1;
+  border-radius: variables.$border-radius-md;
+  color: variables.$neutral-500;
+  transition: all variables.$transition-fast ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(variables.$neutral-900, 0.1);
+    color: variables.$neutral-700;
+    transform: scale(1.1);
+  }
+
+  &:focus {
+    outline: 2px solid variables.$primary-color;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+@keyframes rq-flash-slide-in {
+  from {
+    transform: translateX(100%) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rq-flash-slide-out {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    max-height: 100px;
+  }
+  to {
+    transform: translateX(100%) scale(0.95);
+    opacity: 0;
+    max-height: 0;
+  }
+}
+
+// Responsive design
+@media (max-width: variables.$breakpoint-sm) {
+  .rq-flash-container {
+    left: variables.$spacing-4;
+    right: variables.$spacing-4;
+    top: variables.$spacing-4;
+    max-width: none;
+  }
+
+  .rq-flash-notification {
+    min-width: auto;
+    padding: variables.$spacing-3;
+    gap: variables.$spacing-2;
+  }
+
+  .rq-flash-message {
+    font-size: 0.8125rem; // 13px on mobile
+  }
+
+  .rq-flash-icon {
+    width: variables.$spacing-4;
+    height: variables.$spacing-4;
+  }
+}
+
+@media (max-width: variables.$breakpoint-md) {
+  .rq-flash-container {
+    max-width: calc(100vw - #{variables.$spacing-8});
+  }
+}

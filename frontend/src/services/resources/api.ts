@@ -39,14 +39,30 @@ export const resourcesApi = {
   },
 
   create: async (payload: CreateResourcePayload): Promise<CreateResourceResponse> => {
+    const token = import.meta.env["VITE_ADMIN_SECRET"];
+
     const formData = toFormData(payload);
-    return httpClient.postFormData<CreateResourceResponse>("/resources", formData);
+
+    return httpClient.postFormData<CreateResourceResponse>("/resources", {
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   },
 
   update: async (payload: UpdateResourcePayload): Promise<UpdateResourceResponse> => {
     const { id, ...data } = payload;
     const formData = toFormData(data as CreateResourcePayload);
-    return httpClient.patchFormData<UpdateResourceResponse>(`/resources/${id}`, formData);
+
+    const token = import.meta.env["VITE_ADMIN_SECRET"];
+
+    return httpClient.patchFormData<UpdateResourceResponse>(`/resources/${id}`, {
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   },
 
   // Delete resource

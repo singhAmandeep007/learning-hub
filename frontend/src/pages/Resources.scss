@@ -1,26 +1,26 @@
-@import "../styles/variables.scss";
+@use "../styles/variables.scss";
 
 .learning-hub {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: $neutral-100;
+  background-color: variables.$neutral-100;
 
   .learning-hub-header {
-    padding: $spacing-6 $spacing-6 $spacing-4;
+    padding: variables.$spacing-6 variables.$spacing-6 variables.$spacing-4;
     background-color: white;
-    border-bottom: 1px solid $neutral-200;
+    border-bottom: 1px solid variables.$neutral-200;
 
     h1 {
       font-size: 1.75rem;
       font-weight: 700;
-      color: $neutral-800;
-      margin: 0 0 $spacing-2;
+      color: variables.$neutral-800;
+      margin: 0 0 variables.$spacing-2;
     }
 
     p {
       font-size: 1rem;
-      color: $neutral-600;
+      color: variables.$neutral-600;
       margin: 0;
       max-width: 800px;
     }
@@ -35,13 +35,13 @@
       width: 320px;
       flex-shrink: 0;
       background-color: white;
-      border-right: 1px solid $neutral-200;
+      border-right: 1px solid variables.$neutral-200;
       overflow: hidden;
-      transition: transform $transition-normal ease-in-out;
+      transition: transform variables.$transition-normal ease-in-out;
 
       .sidebar-content {
         height: 100%;
-        padding: $spacing-6;
+        padding: variables.$spacing-6;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
@@ -57,41 +57,41 @@
         .resources-heading {
           font-size: 1rem;
           font-weight: 600;
-          color: $neutral-800;
-          margin: 0 0 $spacing-3;
+          color: variables.$neutral-800;
+          margin: 0 0 variables.$spacing-3;
         }
       }
     }
 
     .main-content {
       flex: 1;
-      padding: $spacing-6;
+      padding: variables.$spacing-6;
       overflow-y: auto;
     }
   }
 }
 
 // Responsive styles
-@media (max-width: $breakpoint-lg) {
+@media (max-width: variables.$breakpoint-lg) {
   .learning-hub {
     .learning-hub-container {
       .sidebar {
         .sidebar-content {
-          padding: $spacing-4;
+          padding: variables.$spacing-4;
         }
       }
 
       .main-content {
-        padding: $spacing-4;
+        padding: variables.$spacing-4;
       }
     }
   }
 }
 
-@media (max-width: $breakpoint-md) {
+@media (max-width: variables.$breakpoint-md) {
   .learning-hub {
     .learning-hub-header {
-      padding: $spacing-4;
+      padding: variables.$spacing-4;
 
       h1 {
         font-size: 1.5rem;
@@ -100,7 +100,7 @@
 
     .learning-hub-container {
       .main-content {
-        padding: $spacing-3;
+        padding: variables.$spacing-3;
       }
     }
   }

@@ -4,7 +4,9 @@ import "./ResourceDetail.scss";
 
 const ResourceDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: resource, isLoading } = useResource(id!);
+  const { data: resource, isLoading } = useResource({
+    id: id!,
+  });
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -20,7 +22,10 @@ const ResourceDetail = () => {
       <h1 className="title">{resource.title}</h1>
       <div className="tags">
         {resource.tags.map((tag) => (
-          <span key={tag} className="tag">
+          <span
+            key={tag}
+            className="tag"
+          >
             {tag}
           </span>
         ))}
@@ -28,11 +33,24 @@ const ResourceDetail = () => {
       <div className="description">{resource.description}</div>
       <div className="media">
         {resource.type === "video" ? (
-          <video src={resource.url} controls />
+          <video
+            src={resource.url}
+            controls
+          />
         ) : resource.type === "pdf" ? (
-          <embed src={resource.url} type="application/pdf" width="100%" height="600px" />
+          <embed
+            src={resource.url}
+            type="application/pdf"
+            width="100%"
+            height="600px"
+          />
         ) : (
-          <iframe src={resource.url} width="100%" height="600px" title={resource.title} />
+          <iframe
+            src={resource.url}
+            width="100%"
+            height="600px"
+            title={resource.title}
+          />
         )}
       </div>
     </div>

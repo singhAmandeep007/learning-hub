@@ -40,11 +40,11 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
 
   // filter items based on input value
   useEffect(() => {
-    const lowerCaseInput = inputValue.toLowerCase();
+    const lowerCaseInput = inputValue.toLowerCase().trim();
     let newFilteredItems: Item[] = [];
 
     if (inputValue.length > 0) {
-      // filter existing items
+      // filter existing items based on search input
       newFilteredItems = items.filter(
         (item) =>
           item.name.toLowerCase().includes(lowerCaseInput) && !selectedItems.some((selected) => selected.id === item.id)
@@ -80,13 +80,12 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
           });
         }
       }
-
-      setFilteredItems(newFilteredItems);
-      setIsDropdownOpen(newFilteredItems.length > 0); // open dropdown if there are items or "add new" option
     } else {
-      setFilteredItems([]);
-      setIsDropdownOpen(false); // close dropdown when input is empty
+      // Show all unselected items when input is empty
+      newFilteredItems = items.filter((item) => !selectedItems.some((selected) => selected.id === item.id));
     }
+
+    setFilteredItems(newFilteredItems);
   }, [inputValue, items, selectedItems, allowNewTags, getNewTagId]);
 
   // Handle clicks outside the component to close the dropdown
@@ -94,6 +93,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+        setInputValue(""); // Clear input when clicking outside
       }
     };
 
@@ -130,7 +130,6 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
       }
 
       setInputValue(""); // Clear input after selection
-      setIsDropdownOpen(false); // Close dropdown after selection
       inputRef.current?.focus(); // Keep focus on the input
     },
     [selectedItems, onSelectedItemsChange, inputValue, getNewTagId]
@@ -145,14 +144,6 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
     },
     [selectedItems, onSelectedItemsChange]
   );
-
-  const handleInputFocus = () => {
-    // Only open dropdown if there's input or if items are available for selection
-    // Or if allowing new tags and input is not empty
-    if (inputValue.length > 0 || filteredItems.length > 0 || (allowNewTags && inputValue.trim().length > 0)) {
-      setIsDropdownOpen(true);
-    }
-  };
 
   return (
     <div
@@ -183,7 +174,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
           placeholder={selectedItems.length === 0 ? placeholder : ""}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={handleInputFocus}
+          onFocus={() => setIsDropdownOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Backspace" && inputValue === "" && selectedItems.length > 0) {
               // Remove last selected item on backspace if input is empty

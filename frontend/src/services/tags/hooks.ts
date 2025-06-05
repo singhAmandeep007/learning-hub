@@ -1,6 +1,7 @@
-import { useQuery, type UseQueryOptions, type QueryKey } from "@tanstack/react-query";
+import { type UseQueryOptions, type QueryKey } from "@tanstack/react-query";
 import { tagsApi } from "./api";
 import { type GetTagsResponse } from "../../types";
+import { useQueryWithFlash } from "../../hooks";
 
 // Query Keys
 export const tagsKeys = {
@@ -12,9 +13,12 @@ export const tagsKeys = {
 export function useTags(
   options?: Omit<UseQueryOptions<GetTagsResponse, Error, GetTagsResponse, QueryKey>, "queryKey" | "queryFn">
 ) {
-  return useQuery({
+  return useQueryWithFlash({
     queryKey: tagsKeys.lists(),
     queryFn: tagsApi.getAll,
+    retry: false,
+    refetchOnWindowFocus: false,
+    errorMessage: "Failed to load tags",
     ...options,
   });
 }
