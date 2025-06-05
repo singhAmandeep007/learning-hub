@@ -5,7 +5,10 @@ import Resources from "./pages/Resources";
 import ResourceDetail from "./pages/ResourceDetail";
 import AdminPanel from "./pages/AdminPanel";
 
+import { CreateUpdateResource } from "./pages/CreateUpdateResource";
+
 import "./App.scss";
+import { ReactQueryFlashProvider } from "./components/Flash";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +32,10 @@ const router = createBrowserRouter([
         path: "/admin",
         element: <AdminPanel />,
       },
+      {
+        path: "/create-resource",
+        element: <CreateUpdateResource />,
+      },
     ],
   },
 ]);
@@ -38,7 +45,9 @@ export const Router = () => <RouterProvider router={router} />;
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
+      <ReactQueryFlashProvider>
+        <Router />
+      </ReactQueryFlashProvider>
     </QueryClientProvider>
   );
 }

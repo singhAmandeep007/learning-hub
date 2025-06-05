@@ -21,6 +21,8 @@ import {
   type DeleteResourcePayload,
 } from "../../types";
 
+import { useMutationWithFlash } from "../../hooks";
+
 // Query Keys
 export const resourcesKeys = {
   all: ["resources"] as const,
@@ -63,7 +65,7 @@ export function useCreateResource(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutationWithFlash({
     mutationFn: resourcesApi.create,
     onSuccess: (data, variables, context) => {
       // Invalidate and refetch resources list
@@ -82,7 +84,7 @@ export function useUpdateResource(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutationWithFlash({
     mutationFn: resourcesApi.update,
     onSuccess: (data, variables, context) => {
       // Invalidate specific resource and lists

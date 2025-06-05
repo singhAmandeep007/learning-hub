@@ -1,6 +1,6 @@
 import React from "react";
 import { Book, Video } from "lucide-react";
-import { useResources } from "../../../services/resources/hooks";
+import { useResources } from "../../../services/resources";
 import "./ContentDisplay.scss";
 
 export const DefaultView: React.FC = () => {

@@ -1,4 +1,4 @@
-@import "../../../styles/variables.scss";
+@use "../../../styles/variables.scss";
 
 .resource-list-container {
   height: 100%;
@@ -7,7 +7,7 @@
   .resource-list {
     display: flex;
     flex-direction: column;
-    gap: $spacing-3;
+    gap: variables.$spacing-3;
   }
 
   .resource-list-loading,
@@ -17,18 +17,18 @@
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    color: $neutral-500;
+    color: variables.$neutral-500;
     text-align: center;
-    padding: $spacing-6;
+    padding: variables.$spacing-6;
 
     .spinner {
       width: 32px;
       height: 32px;
-      border: 3px solid $neutral-200;
-      border-top-color: $primary-color;
+      border: 3px solid variables.$neutral-200;
+      border-top-color: variables.$primary-color;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: $spacing-4;
+      margin-bottom: variables.$spacing-4;
     }
 
     @keyframes spin {
@@ -41,24 +41,24 @@
 
 .resource-item {
   display: flex;
-  gap: $spacing-3;
-  padding: $spacing-4;
-  border-radius: $border-radius-lg;
+  gap: variables.$spacing-3;
+  padding: variables.$spacing-4;
+  border-radius: variables.$border-radius-lg;
   background-color: white;
-  border: 1px solid $neutral-200;
+  border: 1px solid variables.$neutral-200;
   cursor: pointer;
-  transition: all $transition-fast ease-in-out;
+  transition: all variables.$transition-fast ease-in-out;
 
   &:hover {
-    border-color: $primary-color;
-    box-shadow: $shadow-md;
+    border-color: variables.$primary-color;
+    box-shadow: variables.$shadow-md;
     transform: translateY(-2px);
   }
 
   &.active {
-    border-color: $primary-color;
-    background-color: rgba($primary-color, 0.05);
-    box-shadow: 0 0 0 1px $primary-color;
+    border-color: variables.$primary-color;
+    background-color: rgba(variables.$primary-color, 0.05);
+    box-shadow: 0 0 0 1px variables.$primary-color;
   }
 
   .resource-icon {
@@ -68,9 +68,9 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    background-color: $neutral-100;
-    border-radius: $border-radius-lg;
-    color: $primary-color;
+    background-color: variables.$neutral-100;
+    border-radius: variables.$border-radius-lg;
+    color: variables.$primary-color;
   }
 
   .resource-content {
@@ -80,15 +80,15 @@
     .resource-title {
       font-size: 1rem;
       font-weight: 600;
-      color: $neutral-800;
-      margin: 0 0 $spacing-1;
+      color: variables.$neutral-800;
+      margin: 0 0 variables.$spacing-1;
       line-height: 1.4;
     }
 
     .resource-description {
       font-size: 0.875rem;
-      color: $neutral-600;
-      margin: 0 0 $spacing-2;
+      color: variables.$neutral-600;
+      margin: 0 0 variables.$spacing-2;
       line-height: 1.5;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -98,24 +98,24 @@
 
     .resource-meta {
       display: flex;
-      gap: $spacing-3;
+      gap: variables.$spacing-3;
       font-size: 0.75rem;
-      color: $neutral-500;
+      color: variables.$neutral-500;
 
       .meta-item {
         display: flex;
         align-items: center;
-        gap: $spacing-1;
+        gap: variables.$spacing-1;
       }
     }
   }
 }
 
 // Responsive adjustments
-@media (max-width: $breakpoint-md) {
+@media (max-width: variables.$breakpoint-md) {
   .resource-item {
-    padding: $spacing-3;
-    gap: $spacing-2;
+    padding: variables.$spacing-3;
+    gap: variables.$spacing-2;
 
     .resource-icon {
       width: 32px;

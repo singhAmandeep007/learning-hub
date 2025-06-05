@@ -52,3 +52,11 @@ export default tseslint.config({
   },
 })
 ```
+
+## [Migrating SASS](https://sass-lang.com/documentation/breaking-changes/legacy-js-api/)
+
+```bash
+npm install -g sass-migrator  
+
+sass-migrator module path-to-scss-file.scss
+```

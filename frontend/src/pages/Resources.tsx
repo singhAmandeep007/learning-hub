@@ -4,7 +4,7 @@ import { SearchBar } from "../components/SearchBar";
 import { ResourceList } from "./components/ResourceList";
 import { ContentDisplay } from "./components/ContentDisplay";
 import { useResources } from "../services/resources/hooks";
-import { useTags } from "../services/tags/hooks";
+
 import type { Resource, ResourceType } from "../types";
 import "./Resources.scss";
 
@@ -12,15 +12,13 @@ const Resources = () => {
   const [activeResource, setActiveResource] = useState<Resource | null>(null);
   const [activeType, setActiveType] = useState<ResourceType | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeTag] = useState<string | null>(null);
 
   const { data: resourcesData, isLoading: isLoadingResources } = useResources({
     search: searchQuery,
     type: activeType ?? undefined,
     tags: activeTag ? [activeTag] : undefined,
   });
-
-  const { data: tags } = useTags();
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -39,6 +37,14 @@ const Resources = () => {
       <header className="learning-hub-header">
         <h1>Learning Hub</h1>
         <p>Find tutorials, guides, and resources to help you get the most out of the Migration App.</p>
+
+        {/* <SearchSelectInput
+          items={tags?.map((tag) => ({ id: tag.name, name: tag.name })) || []}
+          placeholder="Search by tags"
+          onSelectedItemsChange={(selectedItems) => {
+            console.log("Selected items:", selectedItems);
+          }}
+        /> */}
       </header>
 
       <div className="learning-hub-container">

@@ -1,59 +1,61 @@
-@import "../../styles/variables.scss";
+@use "sass:color";
+@use "../../styles/variables.scss";
 
 .search-select-input-wrapper {
   position: relative;
   width: 100%;
-  font-family: $font-sans;
 
   .selected-items-container {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: $spacing-2;
-    border: 1px solid $neutral-300;
-    border-radius: $border-radius-md;
-    padding: $spacing-2 $spacing-3;
-    min-height: $spacing-10;
-    box-shadow: $shadow-sm;
-    transition: border-color $transition-fast ease-in-out, box-shadow $transition-fast ease-in-out;
+    gap: variables.$spacing-2;
+    border: 1px solid variables.$neutral-300;
+    border-radius: variables.$border-radius-md;
+    padding: variables.$spacing-2 variables.$spacing-3;
+    min-height: variables.$spacing-10;
+    box-shadow: variables.$shadow-sm;
+    transition:
+      border-color variables.$transition-fast ease-in-out,
+      box-shadow variables.$transition-fast ease-in-out;
 
     &:focus-within {
-      border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba($primary-color, 0.3);
+      border-color: variables.$primary-color;
+      box-shadow: 0 0 0 3px rgba(variables.$primary-color, 0.3);
     }
   }
 
   .selected-item-tag {
     display: inline-flex;
     align-items: center;
-    background-color: $primary-color;
-    color: $neutral-50;
-    border-radius: $border-radius-full;
-    padding: $spacing-1 $spacing-3;
+    background-color: variables.$primary-color;
+    color: variables.$neutral-50;
+    border-radius: variables.$border-radius-full;
+    padding: variables.$spacing-1 variables.$spacing-3;
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap; // Prevent text from wrapping inside the tag
 
     &--new {
       // Style for newly added tags
-      background-color: $secondary-color; // Or any distinct color
+      background-color: variables.$secondary-color; // Or any distinct color
     }
 
     span {
-      margin-right: $spacing-2;
+      margin-right: variables.$spacing-2;
     }
 
     .remove-item-button {
       display: inline-flex;
       background: none;
       border: none;
-      color: $neutral-50;
+      color: variables.$neutral-50;
       font-size: 1.125rem;
       cursor: pointer;
       padding: 0;
       line-height: 1;
       opacity: 0.8;
-      transition: opacity $transition-fast ease-in-out;
+      transition: opacity variables.$transition-fast ease-in-out;
 
       &:hover {
         opacity: 1;
@@ -65,14 +67,14 @@
     flex-grow: 1;
     border: none;
     outline: none;
-    padding: $spacing-1 $spacing-1;
+    padding: variables.$spacing-1 variables.$spacing-1;
     font-size: 1rem;
-    color: $neutral-800;
+    color: variables.$neutral-800;
     min-width: 80px; // Ensure input is always visible even with many tags
     background-color: transparent; // Ensure it blends with the container
 
     &::placeholder {
-      color: $neutral-500;
+      color: variables.$neutral-500;
     }
   }
 
@@ -81,45 +83,45 @@
     top: 100%; // Position below the input container
     left: 0;
     right: 0;
-    background-color: $neutral-50;
-    border: 1px solid $neutral-300;
-    border-radius: $border-radius-md;
-    box-shadow: $shadow-md;
+    background-color: variables.$neutral-50;
+    border: 1px solid variables.$neutral-300;
+    border-radius: variables.$border-radius-md;
+    box-shadow: variables.$shadow-md;
     max-height: 200px;
     overflow-y: auto;
     z-index: 100;
     list-style: none;
     padding: 0;
-    margin-top: $spacing-1; // Small gap between input and dropdown
+    margin-top: variables.$spacing-1; // Small gap between input and dropdown
   }
 
   .dropdown-item {
-    padding: $spacing-2 $spacing-3;
+    padding: variables.$spacing-2 variables.$spacing-3;
     cursor: pointer;
-    color: $neutral-700;
-    transition: background-color $transition-fast ease-in-out;
+    color: variables.$neutral-700;
+    transition: background-color variables.$transition-fast ease-in-out;
 
     &--new {
       // Style for the "Add new" option in the dropdown
       font-weight: 600;
-      color: $accent-color; // Highlight it
-      background-color: $neutral-100;
-      border-top: 1px solid $neutral-200; // Separator for clarity
+      color: variables.$primary-color; // Highlight it
+      background-color: variables.$neutral-100;
+      border-top: 1px solid variables.$neutral-200; // Separator for clarity
       &:hover {
-        background-color: lighten($accent-color, 45%); // Lighter hover
-        color: $accent-color;
+        background-color: color.adjust(variables.$primary-color, $lightness: 45%); // Lighter hover
+        color: variables.$primary-color;
       }
     }
 
     &:hover {
-      background-color: $neutral-100;
-      color: $primary-color;
+      background-color: variables.$neutral-100;
+      color: variables.$primary-color;
     }
 
     &.selected {
       // Optional: for highlighting already selected items if needed
-      background-color: $neutral-200;
-      color: $neutral-500;
+      background-color: variables.$neutral-200;
+      color: variables.$neutral-500;
       cursor: not-allowed;
     }
   }
@@ -129,13 +131,13 @@
     top: 100%;
     left: 0;
     right: 0;
-    background-color: $neutral-50;
-    border: 1px solid $neutral-300;
-    border-radius: $border-radius-md;
-    box-shadow: $shadow-md;
-    padding: $spacing-3;
-    margin-top: $spacing-1;
-    color: $neutral-600;
+    background-color: variables.$neutral-50;
+    border: 1px solid variables.$neutral-300;
+    border-radius: variables.$border-radius-md;
+    box-shadow: variables.$shadow-md;
+    padding: variables.$spacing-3;
+    margin-top: variables.$spacing-1;
+    color: variables.$neutral-600;
     text-align: center;
     z-index: 100;
   }
