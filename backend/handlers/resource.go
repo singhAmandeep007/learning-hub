@@ -201,7 +201,7 @@ func CreateResource(c *gin.Context) {
 		return
 	}
 
-	// Check if resource type is article and url is not provided
+	// Check if resource type is article AND url is not provided
 	if resource.Type == constants.ResourceTypeArticle && resource.URL == ""  {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error:   "missing_url",
@@ -210,7 +210,7 @@ func CreateResource(c *gin.Context) {
 		return
 	}
 
-	// Handle file uploads for video and pdf types and check if url is not provided
+	// Handle file uploads for video and pdf types AND check if url is not provided
 	if (resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF) && resource.URL == "" {
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
@@ -234,7 +234,7 @@ func CreateResource(c *gin.Context) {
 		resource.URL = url.PublicURL
 	}
 
-	// Handle thumbnail upload and check if thumbnail url not provided
+	// Handle thumbnail upload AND check if thumbnail url not provided
 	if resource.ThumbnailURL == "" {
 		// Handle thumbnail upload (optional)
 		thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail")
@@ -267,7 +267,7 @@ func CreateResource(c *gin.Context) {
 	c.JSON(http.StatusCreated, resource)
 }
 
-// UpdateResource handles PUT /api/resources/:id
+// UpdateResource handles PATCH /api/resources/:id
 func UpdateResource(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")

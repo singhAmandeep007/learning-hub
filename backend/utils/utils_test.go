@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"reflect"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -220,6 +222,59 @@ func TestParseStorageURL(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectedBucket, bucket)
 				assert.Equal(t, tt.expectedObject, object)
+			}
+		})
+	}
+}
+
+func TestNormalizeTags(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []string
+	}{
+		{
+			name:     "empty tags",
+			input:    []string{},
+			expected: []string{},
+		},
+		{
+			name:     "single tag",
+			input:    []string{"golang"},
+			expected: []string{"golang"},
+		},
+		{
+			name:     "duplicate tags",
+			input:    []string{"golang", "Golang", "GOLANG"},
+			expected: []string{"golang"},
+		},
+		{
+			name:     "tags with whitespace",
+			input:    []string{"  golang  ", "  react  ", "react"},
+			expected: []string{"golang", "react"},
+		},
+		{
+			name:     "mixed case tags",
+			input:    []string{"GoLang", "REACT", "TypeScript", "typescript"},
+			expected: []string{"golang", "react", "typescript"},
+		},
+		{
+			name:     "empty strings",
+			input:    []string{"", "golang", "  ", "react"},
+			expected: []string{"golang", "react"},
+		},
+		{
+			name:     "special characters",
+			input:    []string{"go-lang", "react.js", "react.js"},
+			expected: []string{"go-lang", "react.js"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := NormalizeTags(tt.input)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("NormalizeTags() = %v, want %v", result, tt.expected)
 			}
 		})
 	}

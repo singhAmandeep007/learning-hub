@@ -36,26 +36,7 @@ func main() {
 	}()
 
 	// Setup Gin router
-	r := gin.Default()
-
-	// API routes
-	api := r.Group("/api")
-	{
-		api.GET("/resources", handlers.GetResources)
-		api.GET("/resources/:id", handlers.GetResource)
-		api.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
-		api.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
-		api.DELETE("/resources/:id",middleware.AdminAuthMiddleware(), handlers.DeleteResource)
-
-		api.GET("/tags", handlers.GetTags)
-	}
-
-	r.Use(middleware.CORSMiddleware())
-
-	// Health check
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
-	})
+	r := setupRouter()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -69,10 +50,71 @@ func main() {
 }
 
 func loadEnv() {
-	// Load environment variables from .env file
-	if _, err := os.Stat(".env"); err == nil {
-		if err := godotenv.Load(); err != nil {
-			log.Fatalf("Error loading .env file: %v", err)
+	envMode := getEnvMode()
+	
+	var envFile string
+	switch envMode {
+	case "dev":
+		envFile = ".env.dev"
+	case "prod":
+		envFile = ".env.prod"
+	default:
+		// Auto-detect if ENV_MODE not set
+		if _, err := os.Stat(".env.dev"); err == nil {
+			envFile = ".env.dev"
+		} else if _, err := os.Stat(".env.prod"); err == nil {
+			envFile = ".env.prod"
+		} else {
+			log.Println("No environment file found, using system environment variables")
+			return
 		}
 	}
+
+	if err := godotenv.Load(envFile); err != nil {
+		log.Printf("Could not load %s: %v", envFile, err)
+	} else {
+		log.Printf("Loaded environment from %s", envFile)
+	}
+}
+
+
+func setupRouter () *gin.Engine {
+	envMode := getEnvMode()
+	if envMode == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	// Setup Gin router
+	r := gin.Default()
+
+	r.Use(middleware.CORSMiddleware())
+
+	// API routes
+	api := r.Group("/api")
+	{
+		api.GET("/resources", handlers.GetResources)
+		api.GET("/resources/:id", handlers.GetResource)
+		api.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
+		api.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
+		api.DELETE("/resources/:id",middleware.AdminAuthMiddleware(), handlers.DeleteResource)
+
+		api.GET("/tags", handlers.GetTags)
+	}
+
+	// Health check
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+	})
+
+	return r
+}
+
+func getEnvMode() string {
+	// Requires ENV_MODE to be set in docker-compose.yml or in system: dev or prod
+	envMode := os.Getenv("ENV_MODE")
+	// Default to dev if ENV_MODE is not set
+	if envMode == "" {
+		envMode = "dev"
+	}
+	return envMode
 }
