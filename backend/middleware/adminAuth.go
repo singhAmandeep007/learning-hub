@@ -18,7 +18,7 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 
 		adminSecret := config.AppConfig.ADMIN_SECRET
-	
+
 		if authHeader != "" {
 			// Expected format: "Bearer SECRET_KEY"
 			parts := strings.SplitN(authHeader, " ", 2)

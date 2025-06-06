@@ -14,7 +14,7 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }),
 
@@ -28,7 +28,7 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 401 }
+      { status: 401 },
     );
   }),
 
@@ -45,7 +45,7 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }),
 
@@ -62,7 +62,7 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }),
 
@@ -79,7 +79,7 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }),
 
@@ -147,7 +147,16 @@ let resources: Resource[] = [
     description: "This is a test article 3",
     type: "article",
     url: "https://shorturl.at/jbcrY",
-    tags: ["test", "article", "blog", "productivity", "coding", "programming", "dev", "golang"],
+    tags: [
+      "test",
+      "article",
+      "blog",
+      "productivity",
+      "coding",
+      "programming",
+      "dev",
+      "golang",
+    ],
     createdAt: "2025-06-03T04:48:28.444762Z",
     updatedAt: "2025-06-03T04:48:28.444762Z",
   },

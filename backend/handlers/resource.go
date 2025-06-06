@@ -23,8 +23,8 @@ func GetResources(c *gin.Context) {
 
 	// Parse query parameters
 	typeFilter := c.DefaultQuery("type", "all") // "all" | "video" | "pdf" | "article"
-	tagsParam := c.Query("tags") // "onboarding,tutorial" | "onboarding"
-	search := c.Query("search") // "getting%20started" | "v1.2"
+	tagsParam := c.Query("tags")                // "onboarding,tutorial" | "onboarding"
+	search := c.Query("search")                 // "getting%20started" | "v1.2"
 	cursor := c.Query("cursor")
 	limitStr := c.DefaultQuery("limit", "20")
 
@@ -115,7 +115,7 @@ func GetResource(c *gin.Context) {
 
 	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
 	if err != nil {
-		c.JSON(http.StatusNotFound,  models.ErrorResponse{
+		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   "resource_not_found",
 			Message: "Resource not found",
 		})
@@ -160,7 +160,7 @@ func CreateResource(c *gin.Context) {
 	}
 
 	log.Printf("Form values: %+v", c.Request.MultipartForm.Value)
-	
+
 	if c.Request.MultipartForm.File != nil {
 		for key, files := range c.Request.MultipartForm.File {
 			log.Printf("File field '%s': %d files", key, len(files))
@@ -170,17 +170,16 @@ func CreateResource(c *gin.Context) {
 		}
 	}
 
-
 	// Extract form fields
 	resource := models.Resource{
-		Title:       c.PostForm("title"),
-		Description: c.PostForm("description"),
-		Type:        c.PostForm("type"),
-		URL:         c.PostForm("url"),
+		Title:        c.PostForm("title"),
+		Description:  c.PostForm("description"),
+		Type:         c.PostForm("type"),
+		URL:          c.PostForm("url"),
 		ThumbnailURL: c.PostForm("thumbnailUrl"),
-		Tags:        utils.NormalizeTags(strings.Split(c.PostForm("tags"), ",")),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		Tags:         utils.NormalizeTags(strings.Split(c.PostForm("tags"), ",")),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	// Validate required fields
@@ -202,7 +201,7 @@ func CreateResource(c *gin.Context) {
 	}
 
 	// Check if resource type is article AND url is not provided
-	if resource.Type == constants.ResourceTypeArticle && resource.URL == ""  {
+	if resource.Type == constants.ResourceTypeArticle && resource.URL == "" {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error:   "missing_url",
 			Message: "Url must be provided for 'article'",
@@ -248,7 +247,6 @@ func CreateResource(c *gin.Context) {
 			}
 		}
 	}
-
 
 	// Save to Firestore
 	docRef, _, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Add(ctx, resource)
@@ -311,14 +309,14 @@ func UpdateResource(c *gin.Context) {
 	if url := c.PostForm("url"); url != "" {
 		updatedResource.URL = url
 	}
-	if thumbnailUrl := c.PostForm("thumbnailUrl"); thumbnailUrl != ""{
+	if thumbnailUrl := c.PostForm("thumbnailUrl"); thumbnailUrl != "" {
 		updatedResource.ThumbnailURL = thumbnailUrl
 	}
 	if tagsStr := c.PostForm("tags"); tagsStr != "" {
 		oldTags := existingResource.Tags
 		newTags := utils.NormalizeTags(strings.Split(tagsStr, ","))
 		updatedResource.Tags = newTags
-		
+
 		// Update tag usage counts
 		utils.UpdateTagUsage(ctx, oldTags, -1)
 		utils.UpdateTagUsage(ctx, newTags, 1)
@@ -359,7 +357,7 @@ func UpdateResource(c *gin.Context) {
 			// Delete old thumbnail
 			if existingResource.ThumbnailURL != "" {
 				log.Printf("existingResource.ThumbnailURL: %v", existingResource.ThumbnailURL)
-				if err =  utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
+				if err = utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
 					log.Printf("Failed to delete thumbnail: %v", err)
 				}
 			}
@@ -439,7 +437,7 @@ func DeleteResource(c *gin.Context) {
 // handleMultipartFormError handles errors from ParseMultipartForm and returns appropriate error response
 func handleMultipartFormError(c *gin.Context, err error) {
 	log.Printf("ParseMultipartForm error: %v", err)
-	
+
 	var message string
 	if strings.Contains(err.Error(), "too large") {
 		message = fmt.Sprintf("File too large. Maximum size is %d MB", constants.MaxFileSize/(1<<20))
@@ -448,7 +446,7 @@ func handleMultipartFormError(c *gin.Context, err error) {
 	} else {
 		message = fmt.Sprintf("Failed to parse form data: %v", err)
 	}
-	
+
 	c.JSON(http.StatusBadRequest, models.ErrorResponse{
 		Error:   "form_parse_error",
 		Message: message,

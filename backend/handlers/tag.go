@@ -40,4 +40,3 @@ func GetTags(c *gin.Context) {
 
 	c.JSON(http.StatusOK, tags)
 }
-

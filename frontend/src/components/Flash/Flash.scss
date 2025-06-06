@@ -26,25 +26,35 @@
   backdrop-filter: blur(8px);
   border: 1px solid variables.$neutral-200;
 
-  &--success {
+  &-success {
     border-left-color: variables.$success-color;
-    background: rgba(240, 253, 244, 0.95); // Success background with transparency
+    background: rgba(
+      240,
+      253,
+      244,
+      0.95
+    ); // Success background with transparency
     border-color: rgba(variables.$success-color, 0.2);
   }
 
-  &--error {
+  &-error {
     border-left-color: variables.$error-color;
     background: rgba(254, 242, 242, 0.95); // Error background with transparency
     border-color: rgba(variables.$error-color, 0.2);
   }
 
-  &--warning {
+  &-warning {
     border-left-color: variables.$warning-color;
-    background: rgba(255, 251, 235, 0.95); // Warning background with transparency
+    background: rgba(
+      255,
+      251,
+      235,
+      0.95
+    ); // Warning background with transparency
     border-color: rgba(variables.$warning-color, 0.2);
   }
 
-  &--info {
+  &-info {
     border-left-color: variables.$primary-color;
     background: rgba(239, 246, 255, 0.95); // Info background with transparency
     border-color: rgba(variables.$primary-color, 0.2);
@@ -56,19 +66,19 @@
   width: variables.$spacing-5;
   height: variables.$spacing-5;
 
-  .rq-flash-notification--success & {
+  .rq-flash-notification-success & {
     color: variables.$success-color;
   }
 
-  .rq-flash-notification--error & {
+  .rq-flash-notification-error & {
     color: variables.$error-color;
   }
 
-  .rq-flash-notification--warning & {
+  .rq-flash-notification-warning & {
     color: variables.$warning-color;
   }
 
-  .rq-flash-notification--info & {
+  .rq-flash-notification-info & {
     color: variables.$primary-color;
   }
 }
@@ -81,19 +91,19 @@
   color: variables.$neutral-700;
   font-weight: 500;
 
-  .rq-flash-notification--success & {
+  .rq-flash-notification-success & {
     color: color.adjust(variables.$success-color, $lightness: -20%);
   }
 
-  .rq-flash-notification--error & {
+  .rq-flash-notification-error & {
     color: color.adjust(variables.$error-color, $lightness: -15%);
   }
 
-  .rq-flash-notification--warning & {
+  .rq-flash-notification-warning & {
     color: color.adjust(variables.$warning-color, $lightness: -20%);
   }
 
-  .rq-flash-notification--info & {
+  .rq-flash-notification-info & {
     color: color.adjust(variables.$primary-color, $lightness: -15%);
   }
 }

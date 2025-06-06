@@ -1,3 +1,16 @@
+## Prerequisites
+
+- Firebase Tools (for Firebase emulators)
+
+## Starting firebase emulators
+
+```bash
+# Check if Firebase CLI is installed
+firebase --version
+# Start Firebase emulators
+firebase emulators:start --only firestore,storage
+```
+
 ## Starting the Backend
 
 ```bash
@@ -8,6 +21,7 @@ go install github.com/air-verse/air@latest
 which air
 
 # Install dependencies
+go mod download
 go mod tidy
 
 # Start the server in development mode
@@ -31,4 +45,14 @@ go test -cover ./...
 ```bash
 # Build the application
 go build -o ./tmp/main .
+```
+
+## Running shell script to seed, update and delete resources
+
+```shell
+cd httpClientTest
+
+chmod +x resources.sh
+
+./resources.sh
 ```

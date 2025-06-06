@@ -100,7 +100,7 @@ func TestGenerateUniqueFilename(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := generateUniqueFilename(tt.originalFile, tt.fileType)
-			
+
 			// Check error condition
 			if (err != nil) != tt.wantErr {
 				t.Errorf("generateUniqueFilename() error = %v, wantErr %v", err, tt.wantErr)
@@ -140,68 +140,68 @@ func TestGenerateUniqueFilename(t *testing.T) {
 
 func TestParseStorageURL(t *testing.T) {
 	tests := []struct {
-		name          string
-		url           string
-		isEmulator    bool
+		name           string
+		url            string
+		isEmulator     bool
 		expectedBucket string
 		expectedObject string
-		expectError   bool
+		expectError    bool
 	}{
 		{
-			name:          "Valid emulator URL",
-			url:           "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media",
-			isEmulator:    true,
+			name:           "Valid emulator URL",
+			url:            "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media",
+			isEmulator:     true,
 			expectedBucket: "learning-hub-81cc6.firebasestorage.app",
 			expectedObject: "image/1748580692_image1.png",
-			expectError:   false,
+			expectError:    false,
 		},
 		{
-			name:          "Valid production URL",
-			url:           "https://storage.googleapis.com/my-bucket/path/to/file.jpg",
-			isEmulator:    false,
+			name:           "Valid production URL",
+			url:            "https://storage.googleapis.com/my-bucket/path/to/file.jpg",
+			isEmulator:     false,
 			expectedBucket: "my-bucket",
 			expectedObject: "path/to/file.jpg",
-			expectError:   false,
+			expectError:    false,
 		},
 		{
-			name:          "Invalid emulator URL format",
-			url:           "http://127.0.0.1:8082/invalid/path",
-			isEmulator:    true,
+			name:           "Invalid emulator URL format",
+			url:            "http://127.0.0.1:8082/invalid/path",
+			isEmulator:     true,
 			expectedBucket: "",
 			expectedObject: "",
-			expectError:   true,
+			expectError:    true,
 		},
 		{
-			name:          "Invalid production URL format",
-			url:           "https://storage.googleapis.com/invalid",
-			isEmulator:    false,
+			name:           "Invalid production URL format",
+			url:            "https://storage.googleapis.com/invalid",
+			isEmulator:     false,
 			expectedBucket: "",
 			expectedObject: "",
-			expectError:   true,
+			expectError:    true,
 		},
 		{
-			name:          "Invalid URL",
-			url:           "not-a-url",
-			isEmulator:    false,
+			name:           "Invalid URL",
+			url:            "not-a-url",
+			isEmulator:     false,
 			expectedBucket: "",
 			expectedObject: "",
-			expectError:   true,
+			expectError:    true,
 		},
 		{
-			name:          "Emulator URL with special characters",
-			url:           "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/path%2Fwith%20spaces%20and%20%26%20symbols.jpg?alt=media",
-			isEmulator:    true,
+			name:           "Emulator URL with special characters",
+			url:            "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/path%2Fwith%20spaces%20and%20%26%20symbols.jpg?alt=media",
+			isEmulator:     true,
 			expectedBucket: "learning-hub-81cc6.firebasestorage.app",
 			expectedObject: "path/with spaces and & symbols.jpg",
-			expectError:   false,
+			expectError:    false,
 		},
 		{
-			name:          "Production URL with special characters",
-			url:           "https://storage.googleapis.com/my-bucket/path/with spaces and & symbols.jpg",
-			isEmulator:    false,
+			name:           "Production URL with special characters",
+			url:            "https://storage.googleapis.com/my-bucket/path/with spaces and & symbols.jpg",
+			isEmulator:     false,
 			expectedBucket: "my-bucket",
 			expectedObject: "path/with spaces and & symbols.jpg",
-			expectError:   false,
+			expectError:    false,
 		},
 	}
 
@@ -278,4 +278,4 @@ func TestNormalizeTags(t *testing.T) {
 			}
 		})
 	}
-} 
+}

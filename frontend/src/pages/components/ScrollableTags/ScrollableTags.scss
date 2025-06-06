@@ -1,0 +1,126 @@
+@use "sass:color";
+@use "../../../styles/variables.scss" as *;
+
+.scrollable-tags {
+  &-container {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    position: relative;
+
+    flex: 1;
+    width: 0;
+  }
+
+  &-tag-filters {
+    display: flex;
+    gap: $spacing-1;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: $spacing-1 0;
+
+    // Hide scrollbar but keep functionality
+    scrollbar-width: none; // Firefox
+    -ms-overflow-style: none; // IE and Edge
+
+    &::-webkit-scrollbar {
+      display: none; // Chrome, Safari, Opera
+    }
+
+    // Prevent flex items from wrapping
+    flex-wrap: nowrap;
+  }
+
+  &-tag-filter {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem $spacing-2;
+    font-size: 0.75rem;
+    border-radius: $border-radius-full;
+    border: none;
+    cursor: pointer;
+    transition: all $transition-fast ease-in-out;
+    background-color: $neutral-100;
+    color: $neutral-700;
+    white-space: nowrap; // Prevent text wrapping
+    flex-shrink: 0; // Prevent shrinking
+
+    &:hover {
+      background-color: $neutral-200;
+    }
+
+    &-active {
+      background-color: $primary-color;
+      color: white;
+
+      .scrollable-tags-tag-filter-icon-usage {
+        background-color: $neutral-50;
+        color: $primary-color;
+      }
+
+      &:hover {
+        background-color: color.adjust($primary-color, $lightness: 5%);
+      }
+    }
+  }
+
+  &-tag-filter-icon {
+    width: 1rem;
+    height: 1rem;
+    margin-right: $spacing-2;
+    flex-shrink: 0;
+  }
+
+  &-tag-filter-icon-usage {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1rem;
+    height: 1rem;
+    border-radius: $border-radius-full;
+    background-color: $neutral-300;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.5rem;
+  }
+
+  &-scroll-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: $border-radius-full;
+    background-color: $neutral-100;
+    color: $neutral-600;
+    cursor: pointer;
+    transition: all $transition-fast ease-in-out;
+    flex-shrink: 0;
+    z-index: 1;
+
+    &:hover {
+      background-color: $neutral-200;
+      color: $neutral-700;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &-left {
+      margin-right: $spacing-1;
+    }
+
+    &-right {
+      margin-left: $spacing-1;
+    }
+  }
+
+  &-scroll-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}

@@ -9,9 +9,13 @@ export type PaginatedResponse<T> = {
 };
 
 // Resource
-export const RESOURCE_TYPES = ["video", "pdf", "article"] as const;
+export const RESOURCE_TYPES = {
+  video: "video",
+  pdf: "pdf",
+  article: "article",
+} as const;
 
-export type ResourceType = (typeof RESOURCE_TYPES)[number];
+export type ResourceType = (typeof RESOURCE_TYPES)[keyof typeof RESOURCE_TYPES];
 
 export type Resource = {
   id: string;
@@ -55,7 +59,8 @@ export type CreateResourcePayload = {
 
 export type CreateResourceResponse = Resource;
 
-export type UpdateResourcePayload = Partial<CreateResourcePayload> & Pick<Resource, "id">;
+export type UpdateResourcePayload = Partial<CreateResourcePayload> &
+  Pick<Resource, "id">;
 
 export type UpdateResourceResponse = Resource;
 

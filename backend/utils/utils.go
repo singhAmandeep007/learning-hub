@@ -31,9 +31,10 @@ import (
 // This ensures consistent tag formatting across the application.
 //
 // Example:
-//   tags := []string{"  GoLang  ", "golang", "Backend", "  ", "backend"}
-//   normalized := NormalizeTags(tags)
-//   // Result: []string{"golang", "backend"}
+//
+//	tags := []string{"  GoLang  ", "golang", "Backend", "  ", "backend"}
+//	normalized := NormalizeTags(tags)
+//	// Result: []string{"golang", "backend"}
 //
 // Parameters:
 //   - tags: []string - A slice of tags to normalize
@@ -71,7 +72,7 @@ func UpdateTagUsage(ctx context.Context, tags []string, delta int) {
 		}
 
 		tagRef := firebase.FirestoreClient.Collection(constants.CollectionTags).Doc(tag)
-		
+
 		// Use a transaction to ensure atomicity
 		err := firebase.FirestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 			doc, err := tx.Get(tagRef)
@@ -122,12 +123,14 @@ func UploadFile(ctx context.Context, file multipart.File, header *multipart.File
 	log.Printf("Uploading file: %s to bucket: %s", filename, firebase.StorageBucket)
 
 	bucketHandler := firebase.StorageClient.Bucket(firebase.StorageBucket)
-	
+
 	writer := bucketHandler.Object(filename).NewWriter(ctx)
 
 	// Set content type
 	if contentType := header.Header.Get("Content-Type"); contentType != "" {
 		writer.ContentType = contentType
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition
+		writer.ContentDisposition = "inline"
 	}
 
 	bytesWritten, err := io.Copy(writer, file)
@@ -174,7 +177,7 @@ func generateUniqueFilename(originalFilename, fileType string) (string, error) {
 
 	ext := filepath.Ext(originalFilename)
 	baseName := strings.TrimSuffix(filepath.Base(originalFilename), ext)
-	
+
 	// Sanitize filename
 	baseName = strings.ReplaceAll(baseName, " ", "_")
 	baseName = strings.Map(func(r rune) rune {
@@ -187,7 +190,7 @@ func generateUniqueFilename(originalFilename, fileType string) (string, error) {
 	// Generate unique filename with timestamp
 	timestamp := time.Now().UnixNano()
 	filename := fmt.Sprintf("%s/%d_%s%s", fileType, timestamp, baseName, ext)
-	
+
 	return filename, nil
 }
 
@@ -204,7 +207,7 @@ func generatePublicURL(objectName, bucketName string) (string, error) {
 		encodedObjectName := url.PathEscape(objectName)
 		// Eg. http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
 		publicURL := fmt.Sprintf("http://%s/v0/b/%s/o/%s?alt=media", emulatorHost, bucketName, encodedObjectName)
-		
+
 		log.Printf("Generated emulator URL: %s", publicURL)
 		return publicURL, nil
 	}
@@ -228,10 +231,10 @@ func DeleteFileFromURL(ctx context.Context, fileUrl string) error {
 
 		// Get the bucket handle
 		bucketHandler := firebase.StorageClient.Bucket(bucketName)
-		
+
 		// Get the object handle
 		objHandler := bucketHandler.Object(objectName)
-		
+
 		// Delete the object
 		if err := objHandler.Delete(ctx); err != nil {
 			return fmt.Errorf("failed to delete object %s from bucket %s: %w", objectName, bucketName, err)
@@ -255,22 +258,22 @@ func parseStorageURL(fileUrl string) (bucketName, objectName string, err error) 
 		// http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
 		pathRegex := regexp.MustCompile(`^/v0/b/([^/]+)/o/(.+)$`)
 		matches := pathRegex.FindStringSubmatch(parsedURL.Path)
-		
+
 		if len(matches) != 3 {
 			return "", "", fmt.Errorf("invalid Firebase Storage URL path format")
 		}
-	
+
 		bucketName = matches[1]
 		encodedObjectName := matches[2]
-		
+
 		// URL decode the object name
 		objectName, err = url.QueryUnescape(encodedObjectName)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to decode object name: %w", err)
 		}
-	
+
 		return bucketName, objectName, nil
-	}else {
+	} else {
 		pathParts := strings.SplitN(strings.TrimPrefix(parsedURL.Path, "/"), "/", 2)
 		if len(pathParts) < 2 {
 			return "", "", fmt.Errorf("invalid Google Cloud Storage URL path format")

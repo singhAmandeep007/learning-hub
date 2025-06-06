@@ -1,0 +1,46 @@
+@use "sass:color";
+@use "../styles/variables.scss" as *;
+
+.error-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  gap: $spacing-2;
+
+  font-family: $font-sans;
+
+  .error-fallback-icon {
+    color: $error-color;
+  }
+
+  .error-fallback-caption {
+    text-align: center;
+  }
+
+  .error-fallback-message {
+    width: 50%;
+    text-align: center;
+    color: $neutral-500;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .error-fallback-button {
+    margin-top: $spacing-8;
+    padding: $spacing-2 $spacing-4;
+    border-radius: $border-radius-md;
+    background: $primary-color;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-family: $font-sans;
+    font-size: 1rem;
+    transition: background $transition-normal;
+
+    &:hover {
+      background: color.adjust($primary-color, $lightness: 10%);
+    }
+  }
+}

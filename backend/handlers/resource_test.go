@@ -56,7 +56,7 @@ func TestHandleMultipartFormError(t *testing.T) {
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", "/test", bytes.NewBuffer([]byte{}))
 			req.Header.Set("Content-Type", "multipart/form-data")
-			
+
 			// Create a new Gin context
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
@@ -88,7 +88,7 @@ func TestHandleMultipartFormErrorWithMaxFileSize(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/test", bytes.NewBuffer([]byte{}))
 	req.Header.Set("Content-Type", "multipart/form-data")
-	
+
 	// Create a new Gin context
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
@@ -104,4 +104,4 @@ func TestHandleMultipartFormErrorWithMaxFileSize(t *testing.T) {
 	// Assert that the message contains the correct file size
 	expectedSize := constants.MaxFileSize / (1 << 20) // Convert to MB
 	assert.Contains(t, response.Message, fmt.Sprintf("%d MB", expectedSize))
-} 
+}

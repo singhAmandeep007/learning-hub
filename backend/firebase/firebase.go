@@ -22,8 +22,8 @@ var (
 
 	StorageBucket string
 
-	ctx           = context.Background()
-	cancel          context.CancelFunc
+	ctx    = context.Background()
+	cancel context.CancelFunc
 )
 
 // InitializeFirebase initializes Firebase services
@@ -40,7 +40,7 @@ func InitializeFirebase() error {
 	storageBucket := config.AppConfig.FIREBASE_PROJECT_ID + ".firebasestorage.app"
 
 	conf := &firebase.Config{
-		ProjectID:     config.AppConfig.FIREBASE_PROJECT_ID,
+		ProjectID: config.AppConfig.FIREBASE_PROJECT_ID,
 		// StorageBucket: storageBucket,
 	}
 
@@ -84,30 +84,30 @@ func InitializeFirebase() error {
 }
 
 // buildFirebaseConfig builds the Firebase configuration based on environment
-func  buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error) {
+func buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error) {
 	var opts []option.ClientOption
 
 	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
 
 	if isEmulator {
 		opts = append(opts, option.WithoutAuthentication())
-		
+
 		// set emulator hosts
 		setEmulatorHosts()
-		
+
 		log.Printf("Using Firebase emulator mode")
 	} else {
 		credentialsFile := config.AppConfig.FIREBASE_CREDENTIALS_FILE
 		if credentialsFile == "" {
 			return nil, fmt.Errorf("FIREBASE_CREDENTIALS_FILE is required for production mode")
 		}
-		
+
 		if _, err := os.Stat(credentialsFile); os.IsNotExist(err) {
 			return nil, fmt.Errorf("credentials file not found: %s", credentialsFile)
 		}
-		
+
 		opts = append(opts, option.WithCredentialsFile(credentialsFile))
-		
+
 		log.Printf("Using Firebase production mode")
 	}
 
@@ -119,8 +119,8 @@ func setEmulatorHosts() {
 	firebaseEmulatorHost := config.AppConfig.FIRESTORE_EMULATOR_HOST
 	firebaseStorageEmulatorHost := config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
 
-	os.Setenv("FIRESTORE_EMULATOR_HOST",firebaseEmulatorHost)
-	os.Setenv("FIREBASE_STORAGE_EMULATOR_HOST",firebaseStorageEmulatorHost)
+	os.Setenv("FIRESTORE_EMULATOR_HOST", firebaseEmulatorHost)
+	os.Setenv("FIREBASE_STORAGE_EMULATOR_HOST", firebaseStorageEmulatorHost)
 
 	// need to set because we are using "cloud.google.com/go/storage" to create new storage client
 	// https://github.com/firebase/firebase-admin-go/blob/570427a0f270b9adb061f54187a2b033548c3c9e/storage/storage.go#L38
@@ -137,7 +137,6 @@ func CloseFirebase() error {
 		}
 		FirestoreClient = nil
 	}
-
 
 	if StorageClient != nil {
 		if err := StorageClient.Close(); err != nil {

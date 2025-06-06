@@ -18,12 +18,12 @@ func main() {
 	// Load environment variables
 	loadEnv()
 	// Populate AppConfig with env variables
-	err := config.LoadConfig() 
+	err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 		return
 	}
-	
+
 	// Initialize Firebase
 	err = firebase.InitializeFirebase()
 	if err != nil {
@@ -31,7 +31,7 @@ func main() {
 	}
 	defer func() {
 		if err := firebase.CloseFirebase(); err != nil {
-				log.Printf("Error during Firebase cleanup: %v", err)
+			log.Printf("Error during Firebase cleanup: %v", err)
 		}
 	}()
 
@@ -51,7 +51,7 @@ func main() {
 
 func loadEnv() {
 	envMode := getEnvMode()
-	
+
 	var envFile string
 	switch envMode {
 	case "dev":
@@ -77,8 +77,7 @@ func loadEnv() {
 	}
 }
 
-
-func setupRouter () *gin.Engine {
+func setupRouter() *gin.Engine {
 	envMode := getEnvMode()
 	if envMode == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -96,7 +95,7 @@ func setupRouter () *gin.Engine {
 		api.GET("/resources/:id", handlers.GetResource)
 		api.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
 		api.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
-		api.DELETE("/resources/:id",middleware.AdminAuthMiddleware(), handlers.DeleteResource)
+		api.DELETE("/resources/:id", middleware.AdminAuthMiddleware(), handlers.DeleteResource)
 
 		api.GET("/tags", handlers.GetTags)
 	}

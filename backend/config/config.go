@@ -9,16 +9,16 @@ import (
 var AppConfig *EnvConfig
 
 type EnvConfig struct {
-	ENV                        string  `env:"ENV"`
-	PORT                       string  `env:"PORT"`
-	ADMIN_SECRET               string  `env:"ADMIN_SECRET"`
+	ENV          string `env:"ENV"`
+	PORT         string `env:"PORT"`
+	ADMIN_SECRET string `env:"ADMIN_SECRET"`
 
-	IS_FIREBASE_EMULATOR       bool    `env:"IS_FIREBASE_EMULATOR"`
+	IS_FIREBASE_EMULATOR bool `env:"IS_FIREBASE_EMULATOR"`
 
-	FIREBASE_CREDENTIALS_FILE  string `env:"FIREBASE_CREDENTIALS_FILE"`
-	FIREBASE_PROJECT_ID        string `env:"FIREBASE_PROJECT_ID"`      
+	FIREBASE_CREDENTIALS_FILE string `env:"FIREBASE_CREDENTIALS_FILE"`
+	FIREBASE_PROJECT_ID       string `env:"FIREBASE_PROJECT_ID"`
 
-	FIRESTORE_EMULATOR_HOST    string `env:"FIRESTORE_EMULATOR_HOST"`  
+	FIRESTORE_EMULATOR_HOST string `env:"FIRESTORE_EMULATOR_HOST"`
 
 	FIREBASE_STORAGE_EMULATOR_HOST string `env:"FIREBASE_STORAGE_EMULATOR_HOST"`
 }
@@ -32,7 +32,7 @@ func getEnvOrDefault(key, defaultValue string) string {
 }
 
 // LoadConfig loads environment variables into an EnvConfig struct.
-func LoadConfig() (error) {
+func LoadConfig() error {
 	config := &EnvConfig{}
 
 	// Load string variables with defaults
@@ -49,13 +49,13 @@ func LoadConfig() (error) {
 	}
 	config.IS_FIREBASE_EMULATOR = isEmulator
 
-	config.FIREBASE_CREDENTIALS_FILE = getEnvOrDefault("FIREBASE_CREDENTIALS_FILE","")
-	config.FIREBASE_PROJECT_ID = getEnvOrDefault("FIREBASE_PROJECT_ID","")
+	config.FIREBASE_CREDENTIALS_FILE = getEnvOrDefault("FIREBASE_CREDENTIALS_FILE", "")
+	config.FIREBASE_PROJECT_ID = getEnvOrDefault("FIREBASE_PROJECT_ID", "")
 
-	config.FIRESTORE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIRESTORE_EMULATOR_HOST_PORT","8081")
+	config.FIRESTORE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIRESTORE_EMULATOR_HOST_PORT", "8081")
 	config.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIREBASE_STORAGE_EMULATOR_HOST_PORT", "8082")
 
 	AppConfig = config
-	
+
 	return nil
 }

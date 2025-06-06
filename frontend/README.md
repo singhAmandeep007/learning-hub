@@ -1,4 +1,28 @@
-# React + TypeScript + Vite
+## Prerequisites
+
+- Node.js (v22 or higher)
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+
+## [Migrating SASS](https://sass-lang.com/documentation/breaking-changes/legacy-js-api/)
+
+```bash
+npm install -g sass-migrator  
+
+sass-migrator module path-to-scss-file.scss
+```
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
@@ -7,7 +31,7 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Expanding the ESLint configuration
+### Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
@@ -53,10 +77,4 @@ export default tseslint.config({
 })
 ```
 
-## [Migrating SASS](https://sass-lang.com/documentation/breaking-changes/legacy-js-api/)
 
-```bash
-npm install -g sass-migrator  
-
-sass-migrator module path-to-scss-file.scss
-```
