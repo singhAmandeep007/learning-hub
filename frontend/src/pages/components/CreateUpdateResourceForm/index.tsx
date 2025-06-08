@@ -1,8 +1,6 @@
 import React, { useState, useCallback, type JSX, useEffect, useRef } from "react";
 import { Upload, Plus, Edit3, Save, Eye, X, Video, File, ExternalLink, FileText, Trash2 } from "lucide-react";
 
-import "./CreateUpdateResourceForm.scss";
-
 import {
   RESOURCE_TYPES,
   type CreateResourcePayload,
@@ -13,135 +11,33 @@ import {
 
 import { SearchSelectInput, type Item } from "../../../components/SearchSelectInput";
 
-import { useCreateResource } from "../../../services/resources";
+import { ResourceDetails } from "../ResourceDetails";
 
+import { useCreateResource, useUpdateResource } from "../../../services/resources";
 import { useTags } from "../../../services/tags";
 
-interface FormData extends Partial<Resource> {
+import { usePrevious } from "../../../hooks";
+
+import "./CreateUpdateResourceForm.scss";
+
+interface TFormData extends Partial<Resource> {
   file: File | null;
   thumbnail: File | null;
 }
 
-const ResourcePreview: React.FC<{
-  resource: FormData;
-  onClose: () => void;
-}> = ({ resource, onClose }) => {
-  const renderPreviewContent = () => {
-    switch (resource.type) {
-      case "video":
-        if (resource.file) {
-          const videoUrl = URL.createObjectURL(resource.file);
-          return (
-            <video
-              controls
-              className="resource-preview-video"
-              onLoadedData={() => URL.revokeObjectURL(videoUrl)}
-            >
-              <source
-                src={videoUrl}
-                type={resource.file.type}
-              />
-              Your browser does not support the video tag.
-            </video>
-          );
-        }
-        return (
-          <div className="resource-preview-placeholder">
-            <Video className="resource-preview-placeholder-icon" />
-            <p>Video file not available for preview</p>
-          </div>
-        );
-
-      case "pdf":
-        if (resource.file) {
-          const pdfUrl = URL.createObjectURL(resource.file);
-          return (
-            <iframe
-              src={pdfUrl}
-              className="resource-preview-pdf"
-              title="PDF Preview"
-              onLoad={() => URL.revokeObjectURL(pdfUrl)}
-            />
-          );
-        }
-        return (
-          <div className="resource-preview-placeholder">
-            <File className="resource-preview-placeholder-icon" />
-            <p>PDF file not available for preview</p>
-          </div>
-        );
-
-      case "article":
-        if (resource.url) {
-          return (
-            <div className="resource-preview-article">
-              <div className="resource-preview-article-header">
-                <ExternalLink />
-                <span>External Article</span>
-              </div>
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="resource-preview-article-link"
-              >
-                {resource.url.length > 50 ? resource.url.substring(0, 50) + "..." : resource.url}
-              </a>
-              <p className="resource-preview-article-note">Click the link above to view the article in a new tab</p>
-            </div>
-          );
-        }
-        return (
-          <div className="resource-preview-placeholder">
-            <ExternalLink className="resource-preview-placeholder-icon" />
-            <p>Article URL not provided</p>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="resource-preview-placeholder">
-            <FileText className="resource-preview-placeholder-icon" />
-            <p>No preview available</p>
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div className="resource-preview">
-      <div className="resource-preview-header">
-        <h3 className="resource-preview-title">{resource.title || "Resource Preview"}</h3>
-        <button
-          onClick={onClose}
-          className="resource-preview-close"
-          aria-label="Close preview"
-        >
-          <X />
-        </button>
-      </div>
-      <div className="resource-preview-content">{renderPreviewContent()}</div>
-      {resource.description && (
-        <div className="resource-preview-description">
-          <h4>Description:</h4>
-          <p>{resource.description}</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
 interface CreateUpdateResourceProps {
+  onCancel: () => void;
   resource?: Resource;
   onSuccess?: () => void;
-  onCancel: () => void;
 }
 
-export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ resource, onCancel }) => {
-  const [formData, setFormData] = useState<FormData>({
+const defaultType = "video";
+
+export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ resource, onCancel, onSuccess }) => {
+  const [formData, setFormData] = useState<TFormData>({
     title: resource?.title || "",
     description: resource?.description || "",
-    type: resource?.type || "video",
+    type: resource?.type || defaultType,
     url: resource?.url || "",
     thumbnailUrl: resource?.thumbnailUrl || "",
     tags: resource?.tags || [],
@@ -155,17 +51,53 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const thumbnailInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { data: tags } = useTags();
+  const prevType = usePrevious(formData.type, defaultType);
 
-  const { mutate: createResource } = useCreateResource();
+  const { data: tags = [], isFetching: isTagsFetching } = useTags();
 
-  // Effect to handle URL input state based on file attachment
-  useEffect(() => {
-    if (formData.file && (formData.type === "video" || formData.type === "pdf")) {
-      setFormData((prev) => ({ ...prev, url: "" }));
+  const { mutate: createResource, isPending: isCreatingResource } = useCreateResource({
+    onSuccess: () => {
+      onCancel();
+      onSuccess?.();
+    },
+  });
+
+  const { mutate: updateResource, isPending: isUpdatingResource } = useUpdateResource({
+    onSuccess: () => {
+      onCancel();
+      onSuccess?.();
+    },
+  });
+
+  const isDisabled = isTagsFetching || isCreatingResource || isUpdatingResource;
+
+  const handleRemoveFile = useCallback((fileType: "file" | "thumbnail") => {
+    setFormData((prev) => ({ ...prev, [fileType]: null }));
+    // Clear the input using ref
+    if (fileType === "file" && fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
-  }, [formData.file, formData.type]);
+    if (fileType === "thumbnail" && thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = "";
+    }
+    // remove thumbnail preview
+    if (fileType === "thumbnail") {
+      setThumbnailPreviewUrl("");
+    }
+  }, []);
+
+  // reset URL and file state on type chanage when create
+  useEffect(() => {
+    if (!resource && prevType !== formData.type) {
+      setFormData((prev) => ({ ...prev, url: "", file: null }));
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [resource, prevType, formData.type]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -184,7 +116,8 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setFormData((prev) => ({ ...prev, [fileType]: file }));
+    // update the file and reset url
+    setFormData((prev) => ({ ...prev, [fileType]: file, [fileType === "file" ? "url" : "thumbnailUrl"]: "" }));
 
     if (fileType === "thumbnail") {
       const reader = new FileReader();
@@ -195,10 +128,6 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
       };
       reader.readAsDataURL(file);
     }
-  }, []);
-
-  const handleRemoveFile = useCallback((fileType: "file" | "thumbnail") => {
-    setFormData((prev) => ({ ...prev, [fileType]: null }));
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -212,6 +141,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+
     setDragOver(false);
     const file = e.dataTransfer.files[0];
     if (file) {
@@ -230,8 +160,16 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
       errors.description = "Description is required";
     }
 
-    if ((formData.type === "video" || formData.type === "pdf") && !formData.file && !resource) {
-      errors.file = `Please select a ${formData.type} file`;
+    if (!formData.type?.trim()) {
+      errors.type = "Type is required";
+    }
+
+    if ((formData.type === "video" || formData.type === "pdf") && !formData.file) {
+      if (!resource) {
+        errors.file = `Please select a ${formData.type} file`;
+      } else if (resource && !formData.url) {
+        errors.file = `Please select a ${formData.type} file`;
+      }
     }
 
     if (formData.type === "article" && !formData.url?.trim()) {
@@ -251,22 +189,11 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
       return;
     }
 
-    const payload: CreateResourcePayload = {
-      title: formData.title!,
-      description: formData.description!,
-      type: formData.type!,
-      tags: formData.tags!.join(",") || "",
-      ...(formData.url && { url: formData.url }),
-      ...(formData.thumbnailUrl && { url: formData.thumbnailUrl }),
-      ...(formData.file && { file: formData.file }),
-      ...(formData.thumbnail && { thumbnail: formData.thumbnail }),
-    };
-
+    const payload = getResourcePayload(resource, formData);
     if (resource) {
-      (payload as UpdateResourcePayload).id = resource.id; // Include ID for update
-      console.log("Updating resource with payload:", payload);
+      updateResource(payload as UpdateResourcePayload);
     } else {
-      createResource(payload);
+      createResource(payload as CreateResourcePayload);
     }
     // eslint-disable-next-line
   }, [formData, resource, createResource]);
@@ -320,7 +247,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                className={`form-field-input ${validationErrors.title ? "form-field-input--error" : ""}`}
+                className={`form-field-input ${validationErrors.title ? "form-field-input-error" : ""}`}
                 placeholder="Enter resource title..."
                 required
               />
@@ -335,7 +262,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={4}
-                className={`form-field-textarea ${validationErrors.description ? "form-field-textarea--error" : ""}`}
+                className={`form-field-textarea ${validationErrors.description ? "form-field-textarea-error" : ""}`}
                 placeholder="Describe what this resource covers..."
                 required
               />
@@ -346,17 +273,17 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
             <div className="form-field">
               <label className="form-field-label">Resource Type *</label>
               <div className="resource-type-selector">
-                {RESOURCE_TYPES.map((type) => (
+                {Object.values(RESOURCE_TYPES).map((type) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, type }));
-                      handleRemoveFile("file");
                     }}
                     className={`resource-type-selector-option ${
-                      formData.type === type ? "resource-type-selector-option--active" : ""
+                      formData.type === type ? "resource-type-selector-option-active" : ""
                     }`}
+                    disabled={resource && resource.type !== type}
                   >
                     {getTypeIcon(type)}
                     <span className="resource-type-selector-label">{type}</span>
@@ -372,10 +299,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
               <SearchSelectInput
                 items={tags?.map((tag) => ({ id: tag.name, name: tag.name })) || []}
                 placeholder="Search and select tags..."
-                onSelectedItemsChange={(tags) => {
-                  handleTagsChange(tags);
-                  console.log("Selected tags:", tags);
-                }}
+                onSelectedItemsChange={handleTagsChange}
                 initialSelectedItems={formData.tags?.map((tag) => ({ id: tag, name: tag })) || []}
                 allowNewTags
               />
@@ -389,7 +313,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                   {formData.type === "video" ? "Video File" : "PDF File"} {!resource && "*"}
                 </label>
                 <div
-                  className={`file-upload ${dragOver ? "file-upload--drag-over" : ""}`}
+                  className={`file-upload ${dragOver ? "file-upload-drag-over" : ""}`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -403,6 +327,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                     className="file-upload-input"
                     id="file-upload"
                     required={!resource}
+                    ref={fileInputRef}
                   />
                   <label
                     htmlFor="file-upload"
@@ -418,6 +343,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                         onClick={() => handleRemoveFile("file")}
                         className="file-upload-remove-button"
                         aria-label="Remove file"
+                        disabled={isDisabled}
                       >
                         <Trash2 />
                       </button>
@@ -429,16 +355,17 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
             )}
 
             {/* URL (for articles or as fallback) */}
-            {formData.type === "article" && (
+            {(formData.type === "article" || (resource && resource.url && !formData.file)) && (
               <div className="form-field">
-                <label className="form-field-label">External URL *</label>
+                <label className="form-field-label">Resource URL *</label>
                 <input
                   type="url"
                   name="url"
                   value={formData.url}
                   onChange={handleInputChange}
-                  className={`form-field-input ${validationErrors.url ? "form-field-input--error" : ""}`}
+                  className={`form-field-input ${validationErrors.url ? "form-field-input-error" : ""}`}
                   placeholder="https://example.com/article"
+                  disabled={resource && resource.url && resource.type !== "article" ? true : false}
                 />
                 {validationErrors.url && <span className="form-field-error">{validationErrors.url}</span>}
               </div>
@@ -467,13 +394,10 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                     <button
                       className="thumbnail-upload-remove"
                       onClick={() => {
-                        setThumbnailPreviewUrl("");
-                        setFormData((prev) => ({ ...prev, thumbnail: null }));
-                        if (thumbnailInputRef.current) {
-                          thumbnailInputRef.current.value = ""; // Reset the file input
-                        }
+                        handleRemoveFile("thumbnail");
                       }}
                       aria-label="Remove thumbnail"
+                      disabled={isDisabled || !!resource}
                     >
                       <X size={16} />
                     </button>
@@ -481,37 +405,38 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                 )}
               </div>
             </div>
+          </div>
+          {/* Form Actions */}
+          <div className="form-actions">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="form-actions-button form-actions-button-secondary"
+            >
+              Cancel
+            </button>
 
-            {/* Form Actions */}
-            <div className="form-actions">
+            {canPreview() && (
               <button
                 type="button"
-                onClick={onCancel}
-                className="form-actions-button form-actions-button--secondary"
+                onClick={() => setShowPreview(true)}
+                className="form-actions-button form-actions-button-outline"
+                disabled={isDisabled}
               >
-                Cancel
+                <Eye size={16} />
+                Preview
               </button>
+            )}
 
-              {canPreview() && (
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(true)}
-                  className="form-actions-button form-actions-button--outline"
-                >
-                  <Eye />
-                  Preview
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="form-actions-button form-actions-button--primary"
-              >
-                <Save />
-                {resource ? "Update Resource" : "Create Resource"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="form-actions-button form-actions-button-primary"
+              disabled={isDisabled}
+            >
+              <Save size={16} />
+              {resource ? "Update Resource" : "Create Resource"}
+            </button>
           </div>
         </div>
       </div>
@@ -519,12 +444,55 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
       {/* Preview Modal */}
       {showPreview && (
         <div className="create-update-resource-preview-overlay">
-          <ResourcePreview
+          <ResourceDetails
             resource={formData}
             onClose={() => setShowPreview(false)}
+            isPreview
           />
         </div>
       )}
     </>
   );
 };
+
+function areTagsModified(originalTags: string[] = [], currentTags: string[] = []): boolean {
+  if (originalTags.length !== currentTags.length) return true;
+  const originalSet = new Set(originalTags);
+  const currentSet = new Set(currentTags);
+  for (const tag of originalSet) {
+    if (!currentSet.has(tag)) return true;
+  }
+  return false;
+}
+
+function getResourcePayload(resource: Resource | undefined, formData: TFormData) {
+  if (!resource) {
+    // For create, send all fields (except nulls)
+    return {
+      title: formData.title!,
+      description: formData.description!,
+      type: formData.type!,
+      ...(formData.tags ? { tags: formData.tags.join(",") } : {}),
+      ...(formData.url && { url: formData.url }),
+      ...(formData.thumbnailUrl && { url: formData.thumbnailUrl }),
+      ...(formData.file && { file: formData.file }),
+      ...(formData.thumbnail && { thumbnail: formData.thumbnail }),
+    };
+  }
+
+  // For update, only send changed fields
+  const delta: Partial<UpdateResourcePayload> = {};
+
+  if (formData.title !== resource.title) delta.title = formData.title!;
+  if (formData.description !== resource.description) delta.description = formData.description!;
+  if (formData.type !== resource.type) delta.type = formData.type!;
+  if (formData.url !== resource.url) delta.url = formData.url!;
+  if (formData.thumbnailUrl !== resource.thumbnailUrl) delta.thumbnailUrl = formData.thumbnailUrl!;
+  if (areTagsModified(resource.tags, formData.tags)) delta.tags = formData.tags!.join(",");
+  if (formData.file) delta.file = formData.file;
+  if (formData.thumbnail) delta.thumbnail = formData.thumbnail;
+
+  delta.id = resource.id;
+
+  return delta;
+}

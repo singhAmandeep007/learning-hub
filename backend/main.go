@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -87,6 +88,12 @@ func setupRouter() *gin.Engine {
 	r := gin.Default()
 
 	r.Use(middleware.CORSMiddleware())
+
+	if envMode == "dev" {
+		r.Use(middleware.DelayMiddleware(1000 * time.Millisecond))
+	}
+
+	r.Use(middleware.NewRateLimiterMiddleware(100, time.Minute).RateLimiter())
 
 	// API routes
 	api := r.Group("/api")

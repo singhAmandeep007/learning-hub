@@ -1,18 +1,11 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  type UseQueryOptions,
-  type UseMutationOptions,
-  type QueryKey,
-} from "@tanstack/react-query";
+import { useQueryClient, type UseQueryOptions, type UseMutationOptions, type QueryKey } from "@tanstack/react-query";
 
 import { resourcesApi } from "./api";
 import {
   type PaginatedResponse,
   type Resource,
   type GetResourcesParams,
-  type GetResourcePayload,
+  type GetResourceParams,
   type GetResourceResponse,
   type CreateResourcePayload,
   type CreateResourceResponse,
@@ -27,8 +20,7 @@ import { useMutationWithFlash, useQueryWithFlash } from "../../hooks";
 export const resourcesKeys = {
   all: ["resources"] as const,
   lists: () => [...resourcesKeys.all, "list"] as const,
-  list: (params?: GetResourcesParams) =>
-    [...resourcesKeys.lists(), params] as const,
+  list: (params?: GetResourcesParams) => [...resourcesKeys.lists(), params] as const,
   details: () => [...resourcesKeys.all, "detail"] as const,
   detail: (id: string | number) => [...resourcesKeys.details(), id] as const,
 } as const;
@@ -37,18 +29,14 @@ export const resourcesKeys = {
 export function useResources(
   params?: GetResourcesParams,
   options?: Omit<
-    UseQueryOptions<
-      PaginatedResponse<Resource>,
-      Error,
-      PaginatedResponse<Resource>,
-      QueryKey
-    >,
+    UseQueryOptions<PaginatedResponse<Resource>, Error, PaginatedResponse<Resource>, QueryKey>,
     "queryKey" | "queryFn"
-  >,
+  >
 ) {
   return useQueryWithFlash({
     queryKey: resourcesKeys.list(params),
-    queryFn: () => resourcesApi.getAll(params),
+    queryFn: ({ signal }) => resourcesApi.getAll(params, { signal }),
+    retry: false,
     errorMessage: "Failed to load resources",
     ...options,
   });
@@ -56,30 +44,21 @@ export function useResources(
 
 // Custom hook for getting a single resource by ID
 export function useResource(
-  payload: GetResourcePayload,
-  options?: Omit<
-    UseQueryOptions<GetResourceResponse, Error, GetResourceResponse, QueryKey>,
-    "queryKey" | "queryFn"
-  >,
+  payload: GetResourceParams,
+  options?: Omit<UseQueryOptions<GetResourceResponse, Error, GetResourceResponse, QueryKey>, "queryKey" | "queryFn">
 ) {
-  return useQuery({
+  return useQueryWithFlash({
     queryKey: resourcesKeys.detail(payload.id),
-    queryFn: () => resourcesApi.getById(payload),
+    queryFn: ({ signal }) => resourcesApi.getById(payload, { signal }),
+    retry: false,
+    errorMessage: "Failed to load resource",
     ...options,
   });
 }
 
 // Custom hook for creating a resource
 export function useCreateResource(
-  options?: Omit<
-    UseMutationOptions<
-      CreateResourceResponse,
-      Error,
-      CreateResourcePayload,
-      unknown
-    >,
-    "mutationFn"
-  >,
+  options?: Omit<UseMutationOptions<CreateResourceResponse, Error, CreateResourcePayload, unknown>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
 
@@ -92,21 +71,14 @@ export function useCreateResource(
       // Call user-provided onSuccess if exists
       options?.onSuccess?.(data, variables, context);
     },
-    ...options,
+    errorMessage: "Failed to create resource",
+    successMessage: "Created resource successfully",
   });
 }
 
 // Custom hook for updating a resource
 export function useUpdateResource(
-  options?: Omit<
-    UseMutationOptions<
-      UpdateResourceResponse,
-      Error,
-      UpdateResourcePayload,
-      unknown
-    >,
-    "mutationFn"
-  >,
+  options?: Omit<UseMutationOptions<UpdateResourceResponse, Error, UpdateResourcePayload, unknown>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
 
@@ -122,20 +94,19 @@ export function useUpdateResource(
       // Call user-provided onSuccess if exists
       options?.onSuccess?.(data, variables, context);
     },
+    errorMessage: "Failed to update resource",
+    successMessage: "Updated resource successfully",
     ...options,
   });
 }
 
 // Custom hook for deleting a resource
 export function useDeleteResource(
-  options?: Omit<
-    UseMutationOptions<void, Error, DeleteResourcePayload, unknown>,
-    "mutationFn"
-  >,
+  options?: Omit<UseMutationOptions<void, Error, DeleteResourcePayload, unknown>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutationWithFlash({
     mutationFn: resourcesApi.delete,
     onSuccess: (data, variables, context) => {
       // Remove specific resource from cache and invalidate lists
@@ -147,6 +118,8 @@ export function useDeleteResource(
       // Call user-provided onSuccess if exists
       options?.onSuccess?.(data, variables, context);
     },
+    errorMessage: "Failed to delete resource",
+    successMessage: "Deleted resource successfully",
     ...options,
   });
 }

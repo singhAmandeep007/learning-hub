@@ -15,9 +15,7 @@
     "build:msw": "msw init ./public",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html,md,json}\"",
-    "preview": "vite preview",
-    "build:prod": "npm run build && npm run optimize",
-    "optimize": "vite build --mode production"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.77.2",

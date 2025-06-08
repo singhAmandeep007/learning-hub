@@ -1,0 +1,36 @@
+@use "styles/variables.scss" as *;
+
+.app {
+  min-height: 100vh;
+  font-family: $font-sans;
+}
+
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 9999;
+
+  &::after {
+    content: "";
+    width: 48px;
+    height: 48px;
+    border: 6px solid $neutral-200;
+    border-top: 6px solid $primary-color;
+    border-radius: 50%;
+    animation: spinner 1s linear infinite;
+    display: block;
+  }
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}

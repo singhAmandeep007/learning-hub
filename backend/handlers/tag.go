@@ -22,7 +22,7 @@ func GetTags(c *gin.Context) {
 		log.Printf("Error fetching tags from Firestore: %v\n", err)
 
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   "query_failed",
+			Error:   constants.QueryFailed,
 			Message: "Failed to fetch tags",
 		})
 		return

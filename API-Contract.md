@@ -12,10 +12,10 @@ https://example.com/api
 
 ## Admin Authentication
 
-Creating, updating and deleting resources API requests require admin authentication using Bearer token:
+Creating, updating and deleting resources API requests require admin authentication using secret:
 
 ```
-Authorization: Bearer <token>
+AdminSecret: <secret>
 ```
 
 ## Error Handling

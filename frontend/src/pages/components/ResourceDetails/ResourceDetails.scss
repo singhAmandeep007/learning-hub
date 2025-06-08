@@ -1,0 +1,170 @@
+@use "sass:color";
+@use "../../../styles/variables.scss" as *;
+
+.resource-details {
+  background-color: white;
+  border-radius: $border-radius-lg;
+  max-width: 840px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: $shadow-xl;
+
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-4 $spacing-6;
+    border-bottom: 1px solid $neutral-200;
+    background-color: $neutral-50;
+  }
+
+  &-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: $neutral-800;
+    margin: 0;
+  }
+
+  &-close {
+    background: none;
+    border: none;
+    color: $neutral-500;
+    cursor: pointer;
+    padding: $spacing-2;
+    border-radius: $border-radius-md;
+    transition: all $transition-fast;
+
+    &:hover {
+      background-color: $neutral-200;
+      color: $neutral-700;
+    }
+  }
+
+  &-content {
+    flex: 1;
+    overflow: auto;
+    padding: $spacing-6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &-video {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: $border-radius-md;
+  }
+
+  &-pdf {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: $border-radius-md;
+  }
+
+  &-article {
+    text-align: center;
+    padding: $spacing-8;
+  }
+
+  &-article-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-2;
+    margin-bottom: $spacing-4;
+    font-size: 15px;
+    font-weight: 600;
+    color: $neutral-700;
+  }
+
+  &-article-link {
+    display: inline-block;
+    background-color: $primary-color;
+    color: white;
+    padding: $spacing-3 $spacing-6;
+    border-radius: $border-radius-md;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: $spacing-4;
+    transition: background-color $transition-fast;
+    word-break: break-all;
+
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%);
+    }
+  }
+
+  &-article-note {
+    color: $neutral-600;
+    font-size: 12px;
+  }
+
+  &-placeholder {
+    text-align: center;
+    color: $neutral-500;
+    padding: $spacing-8;
+  }
+
+  &-placeholder-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto $spacing-4;
+    color: $neutral-400;
+  }
+
+  &-description {
+    padding: $spacing-4 $spacing-6;
+    border-top: 1px solid $neutral-200;
+    background-color: $neutral-50;
+
+    h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: $neutral-700;
+      margin: 0 0 $spacing-2 0;
+    }
+
+    p {
+      font-size: 13px;
+      color: $neutral-600;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+
+  @media (max-width: $breakpoint-md) {
+    max-width: 95vw;
+    max-height: 95vh;
+
+    &-content {
+      padding: $spacing-4;
+    }
+
+    &-pdf {
+      height: 400px;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    &-header {
+      padding: $spacing-3;
+    }
+
+    &-content {
+      padding: $spacing-3;
+    }
+
+    &-description {
+      padding: $spacing-3;
+    }
+
+    &-pdf {
+      height: 300px;
+    }
+  }
+}

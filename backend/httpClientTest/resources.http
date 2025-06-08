@@ -84,7 +84,7 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 # thumbnailUrl optional
 
 # curl -X POST "http://localhost:8080/api/resources" \
-# 	-H "Authorization: Bearer your-admin-secret-key" \
+# 	-H "AdminSecret: your-admin-secret-key" \
 # 	-F "title=Test PDF Document 1" \
 # 	-F "description=updated descr.wd" \
 # 	-F "tags=new space,optimus,tis,external" \
@@ -96,7 +96,7 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 
 # PATCH Eg.
 # curl -X PATCH "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
-#   -H "Authorization: Bearer your-admin-secret-key" \
+#   -H "AdminSecret: your-admin-secret-key" \
 #   -F "title=Post updated" \
 # 	-F "description=updated descr.wd" \
 # 	-F "tags=new space,optimus,tis,external" \
@@ -107,5 +107,5 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 
 # DELETE Eg.
 # curl -X DELETE "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
-#   -H "Authorization: Bearer your-admin-secret-key"
+#   -H "AdminSecret: your-admin-secret-key"
 

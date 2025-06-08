@@ -146,6 +146,7 @@ func UploadFile(ctx context.Context, file multipart.File, header *multipart.File
 	// Make the file public
 	// Note: For granular access control, Firebase Security Rules are preferred.
 	// This makes the object publicly readable.
+	// TODO: need to verify
 	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
 	if !isEmulator {
 		acl := bucketHandler.Object(filename).ACL()
@@ -219,10 +220,10 @@ func generatePublicURL(objectName, bucketName string) (string, error) {
 }
 
 // DeleteFileFromURL deletes a file from Cloud Storage given its public URL
-func DeleteFileFromURL(ctx context.Context, fileUrl string) error {
+func DeleteFileFromURL(ctx context.Context, fileURL string) error {
 	// Delete file if it is stored in our bucket
-	if strings.Contains(fileUrl, firebase.StorageBucket) {
-		bucketName, objectName, err := parseStorageURL(fileUrl)
+	if IsValidStorageURL(fileURL) {
+		bucketName, objectName, err := parseStorageURL(fileURL)
 		log.Printf("bucketName: %s objectName: %s", bucketName, objectName)
 
 		if err != nil {
@@ -246,8 +247,8 @@ func DeleteFileFromURL(ctx context.Context, fileUrl string) error {
 	return nil
 }
 
-func parseStorageURL(fileUrl string) (bucketName, objectName string, err error) {
-	parsedURL, err := url.Parse(fileUrl)
+func parseStorageURL(fileURL string) (bucketName, objectName string, err error) {
+	parsedURL, err := url.Parse(fileURL)
 	if err != nil {
 		return "", "", fmt.Errorf("invalid URL format: %w", err)
 	}
@@ -275,6 +276,7 @@ func parseStorageURL(fileUrl string) (bucketName, objectName string, err error) 
 		return bucketName, objectName, nil
 	} else {
 		pathParts := strings.SplitN(strings.TrimPrefix(parsedURL.Path, "/"), "/", 2)
+
 		if len(pathParts) < 2 {
 			return "", "", fmt.Errorf("invalid Google Cloud Storage URL path format")
 		}
@@ -284,4 +286,21 @@ func parseStorageURL(fileUrl string) (bucketName, objectName string, err error) 
 
 		return bucketName, objectName, nil
 	}
+}
+
+// Validations
+
+// IsValidResourceType check if resource type is valid
+func IsValidResourceType(t string) bool {
+	for _, v := range constants.ResourceTypes {
+		if t == v {
+			return true
+		}
+	}
+	return false
+}
+
+// IsValidStorageURL checks if url points to resource stored in storage
+func IsValidStorageURL(fileURL string) bool {
+	return strings.Contains(fileURL, firebase.StorageBucket)
 }

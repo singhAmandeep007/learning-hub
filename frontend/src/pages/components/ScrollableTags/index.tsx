@@ -11,19 +11,14 @@ interface ScrollableTagsProps {
   setSelectedTags: (tags: string[]) => void;
 }
 
-export const ScrollableTags: React.FC<ScrollableTagsProps> = ({
-  tags,
-  selectedTags,
-  setSelectedTags,
-}) => {
+export const ScrollableTags: React.FC<ScrollableTagsProps> = ({ tags, selectedTags, setSelectedTags }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const checkScrollButtons = () => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } =
-        scrollContainerRef.current;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     }
@@ -80,15 +75,11 @@ export const ScrollableTags: React.FC<ScrollableTagsProps> = ({
             key={tag.name}
             onClick={() => handleTagClick(tag.name)}
             className={`scrollable-tags-tag-filter ${
-              selectedTags.includes(tag.name)
-                ? "scrollable-tags-tag-filter-active"
-                : ""
+              selectedTags.includes(tag.name) ? "scrollable-tags-tag-filter-active" : ""
             }`}
           >
             {tag.name}
-            <span className="scrollable-tags-tag-filter-icon-usage">
-              {tag.usageCount}
-            </span>
+            <span className="scrollable-tags-tag-filter-icon-usage">{tag.usageCount}</span>
           </button>
         ))}
       </div>

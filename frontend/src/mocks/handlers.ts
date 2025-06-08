@@ -2,6 +2,8 @@ import { http, HttpResponse } from "msw";
 
 import type { Resource, Tag } from "../types";
 
+import { withDelay } from "./middleware";
+
 export const handlers = [
   http.get("api/resources", () => {
     return HttpResponse.json({
@@ -14,7 +16,7 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 400 },
+      { status: 400 }
     );
   }),
 
@@ -28,32 +30,33 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 401 },
+      { status: 401 }
     );
   }),
 
-  http.post("api/resources", async ({ request }) => {
-    console.log("MSW Intercepted: POST /api/resources");
+  http.post(
+    "api/resources",
+    withDelay(1000, async ({ request }) => {
+      const formData = await request.formData();
+      console.log("Create resource formdata", formData);
 
-    const formData = await request.formData();
-    console.log(formData);
+      return HttpResponse.json(resources[0]);
 
-    return HttpResponse.json({});
-
-    return HttpResponse.json(
-      {
-        error: "invalid",
-        message: "something went wrong",
-      },
-      { status: 500 },
-    );
-  }),
+      return HttpResponse.json(
+        {
+          error: "invalid",
+          message: "something went wrong",
+        },
+        { status: 500 }
+      );
+    })
+  ),
 
   http.patch("api/resources/:id", async ({ params, request }) => {
     const resource = resources.find((resource) => resource.id === params.id);
 
-    const payload = await request.formData();
-    console.log(payload);
+    const formData = await request.formData();
+    console.log("Update resource formdata", formData);
 
     return HttpResponse.json(resource);
 
@@ -62,37 +65,34 @@ export const handlers = [
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }),
 
-  http.delete("api/resources/:id", async ({ params, request }) => {
-    resources = resources.filter((resource) => resource.id === params.id);
+  http.delete("api/resources/:id", async ({ params }) => {
+    resources = resources.filter((resource) => resource.id !== params.id);
 
-    const payload = await request.json();
-    console.log(payload);
-
-    return HttpResponse.json({});
+    return HttpResponse.json({}, { status: 200 });
 
     return HttpResponse.json(
       {
         error: "invalid",
         message: "something went wrong",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }),
 
   http.get("api/tags", () => {
     return HttpResponse.json(tags);
 
-    // return HttpResponse.json(
-    //   {
-    //     error: "invalid",
-    //     message: "something went wrong",
-    //   },
-    //   { status: 500 }
-    // );
+    return HttpResponse.json(
+      {
+        error: "invalid",
+        message: "something went wrong",
+      },
+      { status: 500 }
+    );
   }),
 ];
 
@@ -102,7 +102,7 @@ let resources: Resource[] = [
     title: "Test Video Tutorial 2",
     description: "This is a test video tutorial 2",
     type: "video",
-    url: "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/video%2F1748926108571486000_video1.mp4?alt=media",
+    url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     tags: ["test", "video", "tutorial"],
     createdAt: "2025-06-03T04:48:28.571485Z",
     updatedAt: "2025-06-03T04:48:28.571485Z",
@@ -112,9 +112,8 @@ let resources: Resource[] = [
     title: "Test Video Tutorial 1",
     description: "This is a test video tutorial 1",
     type: "video",
-    url: "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/video%2F1748926108522790000_video1.mp4?alt=media",
-    thumbnailUrl:
-      "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748926108536108000_image1.webp?alt=media",
+    url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    thumbnailUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
     tags: ["test", "video", "tutorial"],
     createdAt: "2025-06-03T04:48:28.522788Z",
     updatedAt: "2025-06-03T04:48:28.522788Z",
@@ -124,7 +123,7 @@ let resources: Resource[] = [
     title: "Test PDF Document 2",
     description: "This is a test PDF document 2",
     type: "pdf",
-    url: "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/pdf%2F1748926108498453000_pdf1.pdf?alt=media",
+    url: "https://s24.q4cdn.com/216390268/files/doc_downloads/test.pdf",
     tags: ["test", "pdf", "documentation", "creativity", "preact", "react"],
     createdAt: "2025-06-03T04:48:28.498451Z",
     updatedAt: "2025-06-03T04:48:28.498451Z",
@@ -134,9 +133,8 @@ let resources: Resource[] = [
     title: "Test PDF Document 1",
     description: "This is a test PDF document 1",
     type: "pdf",
-    url: "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/pdf%2F1748926108471917000_pdf2.pdf?alt=media",
-    thumbnailUrl:
-      "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748926108475623000_image2.webp?alt=media",
+    url: "https://s24.q4cdn.com/216390268/files/doc_downloads/test.pdf",
+    thumbnailUrl: "https://t4.ftcdn.net/jpg/01/67/19/37/360_F_167193773_nI3NaWJMBdTTvz1EcBmqvjoeAW0WGzlu.jpg",
     tags: ["test", "pdf", "documentation"],
     createdAt: "2025-06-03T04:48:28.471915Z",
     updatedAt: "2025-06-03T04:48:28.471915Z",
@@ -146,17 +144,8 @@ let resources: Resource[] = [
     title: "Test Article 3",
     description: "This is a test article 3",
     type: "article",
-    url: "https://shorturl.at/jbcrY",
-    tags: [
-      "test",
-      "article",
-      "blog",
-      "productivity",
-      "coding",
-      "programming",
-      "dev",
-      "golang",
-    ],
+    url: "https://gist.github.com/jsturgis/3b19447b304616f18657?permalink_comment_id=3658531",
+    tags: ["test", "article", "blog", "productivity", "coding", "programming", "dev", "golang"],
     createdAt: "2025-06-03T04:48:28.444762Z",
     updatedAt: "2025-06-03T04:48:28.444762Z",
   },
@@ -165,9 +154,8 @@ let resources: Resource[] = [
     title: "Test Article 2",
     description: "This is a test article 2",
     type: "article",
-    url: "https://shorturl.at/jbcrY",
-    thumbnailUrl:
-      "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748926108417063000_image2.webp?alt=media",
+    url: "https://gist.github.com/jsturgis/3b19447b304616f18657?permalink_comment_id=3658531",
+    thumbnailUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
     tags: ["test", "article", "blog", "productivity", "coding", "programming"],
     createdAt: "2025-06-03T04:48:28.417062Z",
     updatedAt: "2025-06-03T04:48:28.417062Z",
@@ -177,9 +165,8 @@ let resources: Resource[] = [
     title: "Test Article 1",
     description: "This is a test article 1",
     type: "article",
-    url: "https://shorturl.at/llE4F",
-    thumbnailUrl:
-      "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748926108385860000_image1.webp?alt=media",
+    url: "https://gist.github.com/jsturgis/3b19447b304616f18657?permalink_comment_id=3658531",
+    thumbnailUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
     tags: ["test", "article", "blog"],
     createdAt: "2025-06-03T04:48:28.385855Z",
     updatedAt: "2025-06-03T04:48:28.385855Z",

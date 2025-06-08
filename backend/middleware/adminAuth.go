@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -14,15 +13,14 @@ import (
 // AdminAuthMiddleware middleware for admin-only routes
 func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Check Authorization header
-		authHeader := c.GetHeader("Authorization")
+		// Check header
+		authHeaderValue := c.GetHeader(constants.AdminSecretHeader)
 
 		adminSecret := config.AppConfig.ADMIN_SECRET
 
-		if authHeader != "" {
-			// Expected format: "Bearer SECRET_KEY"
-			parts := strings.SplitN(authHeader, " ", 2)
-			if len(parts) == 2 && parts[0] == "Bearer" && parts[1] == adminSecret {
+		if authHeaderValue != "" {
+			// Expected format: "SECRET_KEY"
+			if authHeaderValue == adminSecret {
 				c.Next()
 				return
 			}
@@ -36,7 +34,7 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 		}
 
 		c.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorResponse{
-			Error:   "unauthorized",
+			Error:   constants.Unauthorized,
 			Message: "Admin authentication required",
 		})
 	}

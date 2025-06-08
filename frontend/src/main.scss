@@ -1,0 +1,51 @@
+@use "./styles/variables.scss" as *;
+
+/* basic reset */
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+
+  /* inherit box sizing property */
+  box-sizing: inherit;
+}
+
+html {
+  font-size: $font-size;
+  font-weight: $font-weight;
+  font-family: $font-sans;
+}
+
+body {
+  box-sizing: border-box;
+}
+
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: $primary-color;
+}
+
+ul {
+  list-style-type: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+input {
+  font: inherit;
+  border: none;
+  outline: none;
+}

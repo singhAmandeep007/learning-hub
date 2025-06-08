@@ -27,7 +27,7 @@ go mod tidy
 # Start the server in development mode
 export ENV_MODE="dev" && air -c .air.toml
 
-# Start the server in production mode
+# Start the server in production mode (requires firebase credentials file)
 export ENV_MODE="prod" && air -c .air.toml
 ```
 

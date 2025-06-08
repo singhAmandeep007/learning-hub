@@ -6,6 +6,7 @@ export type ErrorResponse = {
 export type PaginatedResponse<T> = {
   data: T[];
   hasMore: boolean;
+  nextCursor?: string;
 };
 
 // Resource
@@ -36,13 +37,13 @@ export type ResourcesFilters = {
 };
 
 export type GetResourcesParams = ResourcesFilters & {
-  limit?: number;
-  cursor?: number;
+  limit?: string;
+  cursor?: string;
 };
 
 export type GetResourcesResponse = PaginatedResponse<Resource>;
 
-export type GetResourcePayload = Pick<Resource, "id">;
+export type GetResourceParams = Pick<Resource, "id">;
 
 export type GetResourceResponse = Resource;
 
@@ -59,8 +60,7 @@ export type CreateResourcePayload = {
 
 export type CreateResourceResponse = Resource;
 
-export type UpdateResourcePayload = Partial<CreateResourcePayload> &
-  Pick<Resource, "id">;
+export type UpdateResourcePayload = Partial<CreateResourcePayload> & Pick<Resource, "id">;
 
 export type UpdateResourceResponse = Resource;
 

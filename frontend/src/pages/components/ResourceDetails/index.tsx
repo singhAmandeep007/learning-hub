@@ -14,11 +14,7 @@ interface ResourceDetailsProps {
   isPreview?: boolean;
 }
 
-export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
-  resource,
-  onClose,
-  isPreview = false,
-}) => {
+export const ResourceDetails: React.FC<ResourceDetailsProps> = ({ resource, onClose, isPreview = false }) => {
   const renderContent = () => {
     switch (resource.type) {
       case "video":
@@ -30,7 +26,24 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
               className="resource-details-video"
               onLoadedData={() => URL.revokeObjectURL(videoUrl)}
             >
-              <source src={videoUrl} type={resource.file.type} />
+              <source
+                src={videoUrl}
+                type={resource.file.type}
+              />
+              Your browser does not support the video tag.
+            </video>
+          );
+        }
+        if (!isPreview && resource.url) {
+          return (
+            <video
+              controls
+              className="resource-details-video"
+            >
+              <source
+                src={resource.url}
+                type="video/mp4"
+              />
               Your browser does not support the video tag.
             </video>
           );
@@ -51,6 +64,15 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
               className="resource-details-pdf"
               title="PDF Preview"
               onLoad={() => URL.revokeObjectURL(pdfUrl)}
+            />
+          );
+        }
+        if (!isPreview && resource.url) {
+          return (
+            <iframe
+              src={resource.url}
+              className="resource-details-pdf"
+              title="PDF Preview"
             />
           );
         }
@@ -75,13 +97,28 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
                 rel="noopener noreferrer"
                 className="resource-details-article-link"
               >
-                {resource.url.length > 50
-                  ? resource.url.substring(0, 50) + "..."
-                  : resource.url}
+                {resource.url.length > 50 ? resource.url.substring(0, 50) + "..." : resource.url}
               </a>
-              <p className="resource-details-article-note">
-                Click the link above to view the article in a new tab
-              </p>
+              <p className="resource-details-article-note">Click the link above to view the article in a new tab</p>
+            </div>
+          );
+        }
+        if (!isPreview && resource.url) {
+          return (
+            <div className="resource-details-article">
+              <div className="resource-details-article-header">
+                <ExternalLink />
+                <span>External Article</span>
+              </div>
+              <a
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="resource-details-article-link"
+              >
+                {resource.url.length > 50 ? resource.url.substring(0, 50) + "..." : resource.url}
+              </a>
+              <p className="resource-details-article-note">Click the link above to view the article in a new tab</p>
             </div>
           );
         }
@@ -105,15 +142,13 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   return (
     <div className="resource-details">
       <div className="resource-details-header">
-        <h3 className="resource-details-title">
-          {resource.title || `Resource ${isPreview ? "Preview" : "Detials"}`}
-        </h3>
+        <h3 className="resource-details-title">{resource.title || `Resource ${isPreview ? "Preview" : "Details"}`}</h3>
         <button
           onClick={onClose}
           className="resource-details-close"
           aria-label="Close preview"
         >
-          <X />
+          <X size={16} />
         </button>
       </div>
       <div className="resource-details-content">{renderContent()}</div>

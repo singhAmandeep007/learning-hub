@@ -22,7 +22,10 @@ export const ErrorFallback = () => {
 
   return (
     <div className="error-fallback">
-      <TriangleAlert size={48} className="error-fallback-icon" />
+      <TriangleAlert
+        size={48}
+        className="error-fallback-icon"
+      />
       <div>
         <h1 className="error-fallback-caption">Something went wrong!</h1>
       </div>

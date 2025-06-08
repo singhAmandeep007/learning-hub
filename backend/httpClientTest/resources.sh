@@ -37,7 +37,7 @@ seed_resources() {
     
     # Create Article Resources
 		make_request "Create Article Resource 1" "curl -X POST \"$BASE_URL\" \
-				-H \"Authorization: Bearer $ADMIN_SECRET\" \
+				-H \"AdminSecret: $ADMIN_SECRET\" \
 				-F \"title=Test Article 1\" \
 				-F \"description=This is a test article 1\" \
 				-F \"type=article\" \
@@ -46,7 +46,7 @@ seed_resources() {
 				-F \"thumbnail=@./images/image1.webp\""
 
 		make_request "Create Article Resource 2" "curl -X POST \"$BASE_URL\" \
-				-H \"Authorization: Bearer $ADMIN_SECRET\" \
+				-H \"AdminSecret: $ADMIN_SECRET\" \
 				-F \"title=Test Article 2\" \
 				-F \"description=This is a test article 2\" \
 				-F \"type=article\" \
@@ -55,7 +55,7 @@ seed_resources() {
 				-F \"thumbnail=@./images/image2.webp\""
 
 		make_request "Create Article Resource 3 without thumbnail" "curl -X POST \"$BASE_URL\" \
-				-H \"Authorization: Bearer $ADMIN_SECRET\" \
+				-H \"AdminSecret: $ADMIN_SECRET\" \
 				-F \"title=Test Article 3\" \
 				-F \"description=This is a test article 3\" \
 				-F \"type=article\" \
@@ -64,7 +64,7 @@ seed_resources() {
 
 		# Create PDF Resource
 		make_request "Create PDF Resource 1" "curl -X POST \"$BASE_URL\" \
-				-H \"Authorization: Bearer $ADMIN_SECRET\" \
+				-H \"AdminSecret: $ADMIN_SECRET\" \
 				-F \"title=Test PDF Document 1\" \
 				-F \"description=This is a test PDF document 1\" \
 				-F \"type=pdf\" \
@@ -73,7 +73,7 @@ seed_resources() {
 				-F \"thumbnail=@./images/image2.webp\""
 
 		make_request "Create PDF Resource 2 without thumbnail" "curl -X POST \"$BASE_URL\" \
-				-H \"Authorization: Bearer $ADMIN_SECRET\" \
+				-H \"AdminSecret: $ADMIN_SECRET\" \
 				-F \"title=Test PDF Document 2\" \
 				-F \"description=This is a test PDF document 2\" \
 				-F \"type=pdf\" \
@@ -82,7 +82,7 @@ seed_resources() {
 
 		# Create Video Resource
 		make_request "Create Video Resource 1" "curl -X POST \"$BASE_URL\" \
-				-H \"Authorization: Bearer $ADMIN_SECRET\" \
+				-H \"AdminSecret: $ADMIN_SECRET\" \
 				-F \"title=Test Video Tutorial 1\" \
 				-F \"description=This is a test video tutorial 1\" \
 				-F \"type=video\" \
@@ -91,7 +91,7 @@ seed_resources() {
 				-F \"thumbnail=@./images/image1.webp\""
 
 		make_request "Create Video Resource 2 without thumbnail" "curl -X POST \"$BASE_URL\" \
-			-H \"Authorization: Bearer $ADMIN_SECRET\" \
+			-H \"AdminSecret: $ADMIN_SECRET\" \
 			-F \"title=Test Video Tutorial 2\" \
 			-F \"description=This is a test video tutorial 2\" \
 			-F \"type=video\" \
@@ -108,7 +108,7 @@ update_resource() {
     read -p "Enter new tags (comma-separated, press enter to skip): " new_tags
 
     # Build the update command
-    update_cmd="curl -X PATCH \"$BASE_URL/$resource_id\" -H \"Authorization: Bearer $ADMIN_SECRET\""
+    update_cmd="curl -X PATCH \"$BASE_URL/$resource_id\" -H \"AdminSecret: $ADMIN_SECRET\""
     
     if [ ! -z "$new_title" ]; then
         update_cmd="$update_cmd -F \"title=$new_title\""
@@ -129,7 +129,7 @@ delete_resource() {
     read -p "Enter resource ID to delete: " resource_id
     
     make_request "Delete Resource" "curl -X DELETE \"$BASE_URL/$resource_id\" \
-        -H \"Authorization: Bearer $ADMIN_SECRET\""
+        -H \"AdminSecret: $ADMIN_SECRET\""
 }
 
 # Function to display menu

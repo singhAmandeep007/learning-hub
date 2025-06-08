@@ -4,20 +4,18 @@ export class HttpClient {
 
   constructor(baseURL: string = "/api") {
     this.baseURL = baseURL.replace(/\/$/, ""); // Remove trailing slash
-    this.defaultHeaders = {
-      "Content-Type": "application/json",
-    };
+    this.defaultHeaders = {};
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
     const config: RequestInit = {
+      ...options,
       headers: {
         ...this.defaultHeaders,
-        ...options.headers,
+        ...(options.headers || {}),
       },
-      ...options,
     };
 
     try {
@@ -42,7 +40,11 @@ export class HttpClient {
     }
   }
 
-  async get<T>(endpoint: string, params?: Record<string, string | number | boolean | string[]>): Promise<T> {
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | string[]>,
+    options?: RequestInit
+  ): Promise<T> {
     const processedParams = params
       ? Object.entries(params).reduce(
           (acc, [key, value]) => {
@@ -56,48 +58,49 @@ export class HttpClient {
     const url = processedParams
       ? `${endpoint}?${new URLSearchParams(processedParams as Record<string, string>)}`
       : endpoint;
-    return this.request<T>(url, { method: "GET" });
+    return this.request<T>(url, { method: "GET", ...options });
   }
 
-  async post<T>(endpoint: string, data?: Record<string, unknown>): Promise<T> {
+  async post<T>(endpoint: string, data?: Record<string, unknown>, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async postFormData<T>(endpoint: string, options: RequestInit): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "POST",
-      headers: {},
       ...options,
     });
   }
 
-  async patch<T>(endpoint: string, data: Record<string, unknown>): Promise<T> {
+  async postFormData<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "POST",
+      ...options,
+    });
+  }
+
+  async patch<T>(endpoint: string, data: Record<string, unknown>, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PATCH",
       body: JSON.stringify(data),
+      ...options,
     });
   }
 
   async patchFormData<T>(endpoint: string, options: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PATCH",
-      headers: {},
       ...options,
     });
   }
 
-  async put<T>(endpoint: string, data: Record<string, unknown>): Promise<T> {
+  async put<T>(endpoint: string, data: Record<string, unknown>, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: JSON.stringify(data),
+      ...options,
     });
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE" });
+  async delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE", ...options });
   }
 
   // Method to set authorization header
@@ -116,4 +119,4 @@ export class HttpClient {
   }
 }
 
-export const httpClient = new HttpClient();
+export const httpClient = new HttpClient(import.meta.env["VITE_API_BASE_URL"]);

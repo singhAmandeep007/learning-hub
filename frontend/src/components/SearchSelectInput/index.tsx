@@ -154,7 +154,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
         {selectedItems.map((item) => (
           <div
             key={item.id}
-            className={`selected-item-tag ${item.isNew ? "selected-item-tag--new" : ""}`}
+            className={`selected-item-tag ${item.isNew ? "selected-item-tag-new" : ""}`}
           >
             <span>{item.name}</span>
             <button
@@ -163,7 +163,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
               onClick={() => handleRemoveItem(item.id)}
               aria-label={`Remove ${item.name}`}
             >
-              <X size={16} />
+              <X size={12} />
             </button>
           </div>
         ))}
@@ -194,7 +194,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
           {filteredItems.map((item) => (
             <li
               key={item.id}
-              className={`dropdown-item ${item.isNew ? "dropdown-item--new" : ""}`}
+              className={`dropdown-item ${item.isNew ? "dropdown-item-new" : ""}`}
               onClick={() => handleItemSelect(item)}
             >
               {item.name}

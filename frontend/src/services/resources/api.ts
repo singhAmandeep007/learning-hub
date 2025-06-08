@@ -4,7 +4,7 @@ import {
   type PaginatedResponse,
   type Resource,
   type GetResourcesParams,
-  type GetResourcePayload,
+  type GetResourceParams,
   type GetResourceResponse,
   type CreateResourcePayload,
   type CreateResourceResponse,
@@ -13,7 +13,7 @@ import {
   type DeleteResourcePayload,
 } from "../../types";
 
-const toFormData = (payload: CreateResourcePayload): FormData => {
+const toFormData = (payload: Partial<CreateResourcePayload>): FormData => {
   const formData = new FormData();
 
   if (payload.title) formData.append("title", payload.title);
@@ -28,45 +28,47 @@ const toFormData = (payload: CreateResourcePayload): FormData => {
   return formData;
 };
 
+const adminSecret = import.meta.env["VITE_ADMIN_SECRET"];
+
 export const resourcesApi = {
   // Get all resources with optional pagination and filtering
-  getAll: async (params?: GetResourcesParams): Promise<PaginatedResponse<Resource>> => {
-    return httpClient.get<PaginatedResponse<Resource>>("/resources", params);
+  getAll: async (params?: GetResourcesParams, options?: RequestInit): Promise<PaginatedResponse<Resource>> => {
+    return httpClient.get<PaginatedResponse<Resource>>("/resources", params, options);
   },
 
-  getById: async (payload: GetResourcePayload): Promise<GetResourceResponse> => {
-    return httpClient.get<GetResourceResponse>(`/resources/${payload.id}`);
+  getById: async (params: GetResourceParams, options?: RequestInit): Promise<GetResourceResponse> => {
+    return httpClient.get<GetResourceResponse>(`/resources/${params.id}`, undefined, options);
   },
 
   create: async (payload: CreateResourcePayload): Promise<CreateResourceResponse> => {
-    const token = import.meta.env["VITE_ADMIN_SECRET"];
-
     const formData = toFormData(payload);
 
     return httpClient.postFormData<CreateResourceResponse>("/resources", {
       body: formData,
       headers: {
-        Authorization: `Bearer ${token}`,
+        AdminSecret: `${adminSecret}`,
       },
     });
   },
 
   update: async (payload: UpdateResourcePayload): Promise<UpdateResourceResponse> => {
     const { id, ...data } = payload;
-    const formData = toFormData(data as CreateResourcePayload);
-
-    const token = import.meta.env["VITE_ADMIN_SECRET"];
+    const formData = toFormData(data);
 
     return httpClient.patchFormData<UpdateResourceResponse>(`/resources/${id}`, {
       body: formData,
       headers: {
-        Authorization: `Bearer ${token}`,
+        AdminSecret: `${adminSecret}`,
       },
     });
   },
 
   // Delete resource
   delete: async (payload: DeleteResourcePayload): Promise<void> => {
-    return httpClient.delete<void>(`/resources/${payload.id}`);
+    return httpClient.delete<void>(`/resources/${payload.id}`, {
+      headers: {
+        AdminSecret: `${adminSecret}`,
+      },
+    });
   },
 };

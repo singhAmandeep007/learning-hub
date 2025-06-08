@@ -1,6 +1,7 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from "@tanstack/react-query";
 import { useReactQueryFlash } from "../components/Flash";
-import { useEffect } from "react";
 
 export function useQueryWithFlash<TData, TError = Error>(
   options: UseQueryOptions<TData, TError> & {
@@ -49,27 +50,75 @@ export function useMutationWithFlash<TData, TError = Error, TVariables = void, T
   const flash = useReactQueryFlash();
   const { successMessage, errorMessage, showSuccessFlash = true, showErrorFlash = true, ...mutationOptions } = options;
 
-  const mutation = useMutation(mutationOptions);
+  const mutation = useMutation({
+    ...mutationOptions,
+    // Handle success notifications
+    onSuccess: (data, variables, context) => {
+      if (showSuccessFlash) {
+        const message =
+          typeof successMessage === "function"
+            ? successMessage(data, mutation.variables!)
+            : successMessage || "Operation completed successfully";
 
-  // Handle success notifications
-  useEffect(() => {
-    if (mutation.isSuccess && showSuccessFlash && mutation.data) {
-      const message =
-        typeof successMessage === "function"
-          ? successMessage(mutation.data, mutation.variables!)
-          : successMessage || "Operation completed successfully";
-      flash.showMutationSuccess(message);
-    }
-  }, [mutation.isSuccess, mutation.data, mutation.variables, showSuccessFlash, successMessage, flash]);
+        flash.showMutationSuccess(message);
+      }
+      if (mutationOptions.onSuccess) {
+        mutationOptions.onSuccess(data, variables, context);
+      }
+    },
+    // Handle error notifications
+    onError: (error, variables, context) => {
+      if (showErrorFlash) {
+        const message = typeof errorMessage === "function" ? errorMessage(error, mutation.variables!) : errorMessage;
 
-  // Handle error notifications
-  useEffect(() => {
-    if (mutation.isError && showErrorFlash && mutation.error) {
-      const message =
-        typeof errorMessage === "function" ? errorMessage(mutation.error, mutation.variables!) : errorMessage;
-      flash.showMutationError(mutation.error, message);
-    }
-  }, [mutation.isError, mutation.error, mutation.variables, showErrorFlash, errorMessage, flash]);
+        flash.showMutationError(mutation.error, message);
+      }
+      if (mutationOptions.onError) {
+        mutationOptions.onError(error, variables, context);
+      }
+    },
+  });
 
   return mutation;
+}
+
+// Returns the previous value of the given variable.
+export function usePrevious<T>(value: T, initialValue?: T): T | undefined {
+  const ref = useRef<T | undefined>(initialValue);
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
+}
+
+export function useDebouncedInputState<T extends HTMLInputElement | HTMLTextAreaElement>(
+  initialValue: string = "",
+  delay: number = 500
+): [string, (event: React.ChangeEvent<T>) => void, React.RefObject<T | undefined>] {
+  const inputRef = useRef<T | undefined>(undefined);
+
+  // immediate value of the input as the user types.
+  const [immediateValue, setImmediateValue] = useState<string>(initialValue);
+
+  // debounced value, which updates after the delay.
+  const [debouncedValue, setDebouncedValue] = useState<string>(initialValue);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(immediateValue);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [immediateValue, delay]);
+
+  const handleChange = useCallback((event: React.ChangeEvent<T>) => {
+    // Update the immediate value state whenever the input value changes.
+    setImmediateValue(event.target.value);
+  }, []);
+
+  return [debouncedValue, handleChange, inputRef];
 }

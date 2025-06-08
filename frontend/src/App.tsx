@@ -1,39 +1,46 @@
-import {
-  Navigate,
-  Outlet,
-  RouterProvider,
-  createBrowserRouter,
-} from "react-router";
+import { Navigate, Outlet, RouterProvider, createBrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { Resources } from "./pages/Resources";
 import { ErrorFallback } from "./pages/ErrorFallback";
+import { NotFound } from "./pages/NotFound";
 
 import { ReactQueryFlashProvider } from "./components/Flash";
 
-import "./App.scss";
+import styles from "./App.module.scss";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
     element: (
-      <div className="app">
+      <div className={styles.app}>
         <ReactQueryFlashProvider>
           <Outlet />
         </ReactQueryFlashProvider>
       </div>
     ),
     errorElement: <ErrorFallback />,
-    hydrateFallbackElement: <div>Loading...</div>,
+    hydrateFallbackElement: <div className={styles.loading}>Loading...</div>,
     children: [
       {
         path: "/",
-        element: <Navigate replace to="/resources" />,
+        element: (
+          <Navigate
+            replace
+            to="/resources"
+          />
+        ),
       },
       {
         path: "/resources",
         element: <Resources />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },
@@ -45,6 +52,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
