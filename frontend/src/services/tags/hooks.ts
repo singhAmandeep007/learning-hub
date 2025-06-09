@@ -15,7 +15,7 @@ export function useTags(
 ) {
   return useQueryWithFlash({
     queryKey: tagsKeys.lists(),
-    queryFn: ({ signal }) => tagsApi.getAll({ signal }),
+    queryFn: () => tagsApi.getAll(),
     retry: false,
     refetchOnWindowFocus: false,
     errorMessage: "Failed to load tags",

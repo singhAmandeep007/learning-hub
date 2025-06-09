@@ -34,8 +34,8 @@ export function useResources(
   >
 ) {
   return useQueryWithFlash({
-    queryKey: resourcesKeys.list(params),
-    queryFn: ({ signal }) => resourcesApi.getAll(params, { signal }),
+    queryKey: resourcesKeys.lists(),
+    queryFn: () => resourcesApi.getAll(params),
     retry: false,
     errorMessage: "Failed to load resources",
     ...options,
@@ -49,7 +49,7 @@ export function useResource(
 ) {
   return useQueryWithFlash({
     queryKey: resourcesKeys.detail(payload.id),
-    queryFn: ({ signal }) => resourcesApi.getById(payload, { signal }),
+    queryFn: () => resourcesApi.getById(payload),
     retry: false,
     errorMessage: "Failed to load resource",
     ...options,

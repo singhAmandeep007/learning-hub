@@ -90,7 +90,7 @@ func setupRouter() *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
 
 	if envMode == "dev" {
-		r.Use(middleware.DelayMiddleware(1000 * time.Millisecond))
+		// r.Use(middleware.DelayMiddleware(1000 * time.Millisecond))
 	}
 
 	r.Use(middleware.NewRateLimiterMiddleware(100, time.Minute).RateLimiter())

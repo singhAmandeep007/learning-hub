@@ -40,7 +40,7 @@ export const handlers = [
       const formData = await request.formData();
       console.log("Create resource formdata", formData);
 
-      return HttpResponse.json(resources[0]);
+      return HttpResponse.json(resources[0], { status: 201 });
 
       return HttpResponse.json(
         {

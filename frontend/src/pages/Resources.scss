@@ -23,6 +23,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: $spacing-2;
   }
 
   &-header-info {
@@ -106,7 +107,7 @@
 
   &-search-input {
     width: 100%;
-    padding-left: $spacing-8; // pl-10 equivalent
+    padding-left: $spacing-8;
     padding-right: $spacing-4;
     padding-top: $spacing-2;
     padding-bottom: $spacing-2;
@@ -199,32 +200,104 @@
   &-clear-filters-icon {
   }
 
-  &-results-count {
-    margin-bottom: $spacing-4;
+  &-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-6;
+    gap: $spacing-4;
+
+    padding-right: 15px;
   }
 
-  &-results-text {
-    font-size: 12px;
+  &-results-count {
+    &-results-text {
+      color: $neutral-600;
+      margin: 0;
+    }
+  }
+
+  &-pagination {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+  }
+
+  &-pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-1;
+    padding: $spacing-1 $spacing-2;
+    background: $neutral-50;
+    border: 1px solid $neutral-200;
+    border-radius: $border-radius-md;
+    color: $neutral-700;
+    cursor: pointer;
+    transition: all $transition-fast ease;
+
+    &:hover:not(:disabled) {
+      background: $neutral-100;
+      border-color: $neutral-300;
+      color: $neutral-800;
+    }
+
+    &:active:not(:disabled) {
+      background: $neutral-200;
+      transform: translateY(1px);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: $neutral-50;
+      color: $neutral-400;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+      border-color: $primary-color;
+    }
+  }
+
+  &-pagination-info {
+    padding: 0 $spacing-1;
+    font-size: $font-size;
     color: $neutral-600;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   &-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: $spacing-6;
+    height: 70dvh;
+    overflow: scroll;
 
-    @media (min-width: $breakpoint-md) {
-      grid-template-columns: repeat(2, 1fr);
-    }
+    &-container {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-6;
+      margin-right: 15px;
 
-    @media (min-width: $breakpoint-lg) {
-      grid-template-columns: repeat(3, 1fr);
+      &.loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      @media (min-width: $breakpoint-md) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (min-width: $breakpoint-lg) {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
   }
 
   &-empty-state {
     text-align: center;
-    padding: $spacing-10 0; // py-12 equivalent
+    padding: $spacing-10 0;
   }
 
   &-empty-state-icon {
