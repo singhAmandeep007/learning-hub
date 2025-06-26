@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"learning-hub/config"
+	"learning-hub/constants"
 	"learning-hub/firebase"
 	"learning-hub/handlers"
 	"learning-hub/middleware"
@@ -29,6 +30,7 @@ func main() {
 	err = firebase.InitializeFirebase()
 	if err != nil {
 		log.Fatalf("Failed to initialize Firebase: %v", err)
+		return
 	}
 	defer func() {
 		if err := firebase.CloseFirebase(); err != nil {
@@ -39,14 +41,12 @@ func main() {
 	// Setup Gin router
 	r := setupRouter()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := config.AppConfig.PORT
 
 	log.Printf("Server starting on port %s", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)
+		return
 	}
 }
 
@@ -55,32 +55,26 @@ func loadEnv() {
 
 	var envFile string
 	switch envMode {
-	case "dev":
+	case constants.EnvModeDev:
 		envFile = ".env.dev"
-	case "prod":
+	case constants.EnvModeProd:
 		envFile = ".env.prod"
 	default:
-		// Auto-detect if ENV_MODE not set
-		if _, err := os.Stat(".env.dev"); err == nil {
-			envFile = ".env.dev"
-		} else if _, err := os.Stat(".env.prod"); err == nil {
-			envFile = ".env.prod"
-		} else {
-			log.Println("No environment file found, using system environment variables")
-			return
-		}
+		log.Fatalf("No environment file found, using system environment variables")
+		return
 	}
 
 	if err := godotenv.Load(envFile); err != nil {
-		log.Printf("Could not load %s: %v", envFile, err)
-	} else {
-		log.Printf("Loaded environment from %s", envFile)
+		log.Fatalf("Could not load %s: %v", envFile, err)
+		return
 	}
+
+	log.Printf("Loaded environment from %s", envFile)
 }
 
 func setupRouter() *gin.Engine {
 	envMode := getEnvMode()
-	if envMode == "prod" {
+	if envMode == constants.EnvModeProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -89,9 +83,9 @@ func setupRouter() *gin.Engine {
 
 	r.Use(middleware.CORSMiddleware())
 
-	if envMode == "dev" {
-		// r.Use(middleware.DelayMiddleware(1000 * time.Millisecond))
-	}
+	// if envMode == constants.EnvModeDev {
+	// 	r.Use(middleware.DelayMiddleware(1000 * time.Millisecond))
+	// }
 
 	r.Use(middleware.NewRateLimiterMiddleware(100, time.Minute).RateLimiter())
 
@@ -116,11 +110,11 @@ func setupRouter() *gin.Engine {
 }
 
 func getEnvMode() string {
-	// Requires ENV_MODE to be set in docker-compose.yml or in system: dev or prod
+	// Requires ENV_MODE to be set in docker-compose.yml or in system: "dev" or "prod"
 	envMode := os.Getenv("ENV_MODE")
 	// Default to dev if ENV_MODE is not set
 	if envMode == "" {
-		envMode = "dev"
+		envMode = constants.EnvModeDev
 	}
 	return envMode
 }

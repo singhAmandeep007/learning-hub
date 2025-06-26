@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"learning-hub/constants"
 	"os"
 	"strconv"
 )
@@ -9,7 +10,7 @@ import (
 var AppConfig *EnvConfig
 
 type EnvConfig struct {
-	ENV          string `env:"ENV"`
+	ENV_MODE     string `env:"ENV_MODE"`
 	PORT         string `env:"PORT"`
 	ADMIN_SECRET string `env:"ADMIN_SECRET"`
 
@@ -18,8 +19,7 @@ type EnvConfig struct {
 	FIREBASE_CREDENTIALS_FILE string `env:"FIREBASE_CREDENTIALS_FILE"`
 	FIREBASE_PROJECT_ID       string `env:"FIREBASE_PROJECT_ID"`
 
-	FIRESTORE_EMULATOR_HOST string `env:"FIRESTORE_EMULATOR_HOST"`
-
+	FIRESTORE_EMULATOR_HOST        string `env:"FIRESTORE_EMULATOR_HOST"`
 	FIREBASE_STORAGE_EMULATOR_HOST string `env:"FIREBASE_STORAGE_EMULATOR_HOST"`
 }
 
@@ -36,7 +36,7 @@ func LoadConfig() error {
 	config := &EnvConfig{}
 
 	// Load string variables with defaults
-	config.ENV = getEnvOrDefault("ENV", "development")
+	config.ENV_MODE = getEnvOrDefault("ENV_MODE", constants.EnvModeDev)
 	config.ADMIN_SECRET = getEnvOrDefault("ADMIN_SECRET", "your-admin-secret-key")
 
 	config.PORT = getEnvOrDefault("PORT", "8080")

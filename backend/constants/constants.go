@@ -2,6 +2,10 @@ package constants
 
 // Constants
 const (
+	// Environment modes
+	EnvModeDev  = "dev"
+	EnvModeProd = "prod"
+
 	CollectionResources = "resources"
 	CollectionTags      = "tags"
 	DefaultPageSize     = 20

@@ -1,0 +1,46 @@
+**/.vscode
+
+# Build
+**/build
+**/dist
+**/.turbo
+
+# Dependencies
+**/node_modules
+
+# Testing
+**/coverage
+**/.nyc_output
+
+# Environment
+**/.env.local
+**/.env.*.local
+
+# IDE
+**/.idea
+**/.vscode
+**/*.swp
+**/*.swo
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+**/*-debug.log
+
+# Misc
+**/.git
+**/.gitignore
+**/.dockerignore
+**/README.md
+**/LICENSE 
+
+# Additional
+**/httpClientTest
+**/learning-hub-81cc6-firebase-adminsdk-fbsvc-f78df0ee32.json

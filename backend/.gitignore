@@ -63,10 +63,19 @@ node_modules/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # dataconnect generated files
 .dataconnect
 
 # build
 /tmp
+
+# Misc
+.DS_Store
+
+# Firebase
+learning-hub-81cc6-firebase-adminsdk-fbsvc-f78df0ee32.json

@@ -1,14 +1,18 @@
+**/.vscode
+
+# Build
+**/build
+**/dist
+**/.turbo
+
 # Dependencies
 **/node_modules
-**/dist
 
 # Testing
 **/coverage
 **/.nyc_output
 
 # Environment
-**/.env
-**/.env.*
 **/.env.local
 **/.env.*.local
 
@@ -29,12 +33,6 @@
 **/pnpm-debug.log*
 
 **/*-debug.log
-**/firebase-debug.log
-**/firestore-debug.log
-
-# Build
-**/build
-**/.turbo
 
 # Misc
 **/.git
@@ -42,7 +40,3 @@
 **/.dockerignore
 **/README.md
 **/LICENSE 
-
-# Additional
-**/httpClientTest
-**/learning-hub/backend/learning-hub-81cc6-firebase-adminsdk-fbsvc-f78df0ee32.json
