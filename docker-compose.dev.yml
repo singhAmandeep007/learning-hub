@@ -1,0 +1,53 @@
+services:
+  # Firebase Emulator
+  firebase-emulator:
+    image: andreysenov/firebase-tools:14.2.0-node-22
+    container_name: firebase-emulator
+    ports:
+      - "4000:4000" # Emulator UI
+      - "8080:8080" # Firestore
+      - "9199:9199" # Cloud Storage
+    volumes:
+      - ./backend/firebase.json:/home/node/firebase.json
+      - ./backend/.firebaserc:/home/node/.firebaserc
+      - ./backend/firestore.rules:/home/node/firestore.rules
+      - ./backend/storage.rules:/home/node/storage.rules
+      - ./backend/firestore.indexes.json:/home/node/firestore.indexes.json
+    command: firebase emulators:start --project learning-hub-81cc6
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: backend
+    ports:
+      - "8000:8000" # Main server
+    volumes:
+      - ./backend:/app:delegated
+      - /app/tmp
+      - go-mod-cache:/go/pkg/mod
+    environment:
+      - ENV_MODE=dev
+      - PORT=8000
+      - CORS_ORIGINS=http://localhost:3000,http://0.0.0.0:3000
+      - FIREBASE_PROJECT_ID=learning-hub-81cc6
+      - FIRESTORE_EMULATOR_HOST=firebase-emulator:8080
+      - FIREBASE_STORAGE_EMULATOR_HOST=firebase-emulator:9199
+      - GOCACHE=/tmp/go-build
+      - GOPATH=/go
+    depends_on:
+      - firebase-emulator
+    networks:
+      - app-network
+    restart: unless-stopped
+    user: root
+
+volumes:
+  go-mod-cache:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
