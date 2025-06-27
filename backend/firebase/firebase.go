@@ -103,9 +103,9 @@ func buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error) 
 
 // setEmulatorHosts checks the emulator host environment variables if not already set
 func setEmulatorHosts() {
-	firebaseStorageEmulatorHost := config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
-
 	os.Setenv("FIRESTORE_EMULATOR_HOST", config.AppConfig.FIRESTORE_EMULATOR_HOST)
+
+	firebaseStorageEmulatorHost := config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
 	os.Setenv("FIREBASE_STORAGE_EMULATOR_HOST", firebaseStorageEmulatorHost)
 
 	// need to set because we are using "cloud.google.com/go/storage" to create new storage client - https://github.com/firebase/firebase-admin-go/blob/570427a0f270b9adb061f54187a2b033548c3c9e/storage/storage.go#L38

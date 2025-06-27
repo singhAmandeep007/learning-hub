@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and configuration
-BASE_URL="http://localhost:8080/api/resources"
+BASE_URL="http://localhost:8000/api/resources"
 ADMIN_SECRET="your-admin-secret-key"
 
 # Colors for output

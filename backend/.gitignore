@@ -78,4 +78,4 @@ node_modules/
 .DS_Store
 
 # Firebase
-learning-hub-81cc6-firebase-adminsdk-fbsvc-f78df0ee32.json
+firebase_credentials.json

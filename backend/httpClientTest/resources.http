@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080/api/resources
+@baseUrl = http://localhost:8000/api/resources
 
 ###
 # Get all resources (default pagination)
@@ -75,7 +75,7 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 
 
 # GET Eg.
-# curl -X GET "http://localhost:8080/api/resources"
+# curl -X GET "http://localhost:8000/api/resources"
 
 # POST Eg.
 # file required in case video or pdf
@@ -83,7 +83,7 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 # thumbnail optional
 # thumbnailUrl optional
 
-# curl -X POST "http://localhost:8080/api/resources" \
+# curl -X POST "http://localhost:8000/api/resources" \
 # 	-H "AdminSecret: your-admin-secret-key" \
 # 	-F "title=Test PDF Document 1" \
 # 	-F "description=updated descr.wd" \
@@ -95,7 +95,7 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 # 	-F "thumbnail=@./images/image2.webp"
 
 # PATCH Eg.
-# curl -X PATCH "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
+# curl -X PATCH "http://localhost:8000/api/resources/6Ihi4wRZwra7iBJVXceF" \
 #   -H "AdminSecret: your-admin-secret-key" \
 #   -F "title=Post updated" \
 # 	-F "description=updated descr.wd" \
@@ -106,6 +106,6 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 # 	-F "file=@./pdfs/pdf1.pdf"
 
 # DELETE Eg.
-# curl -X DELETE "http://localhost:8080/api/resources/6Ihi4wRZwra7iBJVXceF" \
+# curl -X DELETE "http://localhost:8000/api/resources/6Ihi4wRZwra7iBJVXceF" \
 #   -H "AdminSecret: your-admin-secret-key"
 

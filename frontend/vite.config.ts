@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      port: env.PORT ? parseInt(env.PORT, 10) : 3000,
+      port: env.VITE_PORT ? parseInt(env.VITE_PORT, 10) : 3000,
       strictPort: true,
       host: "0.0.0.0",
       ...(isDevMode && {

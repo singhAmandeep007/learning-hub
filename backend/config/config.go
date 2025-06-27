@@ -2,6 +2,7 @@ package config
 
 import (
 	"learning-hub/constants"
+	"log"
 	"os"
 )
 
@@ -37,17 +38,20 @@ func LoadConfig() error {
 	config.ENV_MODE = getEnvOrDefault("ENV_MODE", constants.EnvModeDev)
 	config.ADMIN_SECRET = getEnvOrDefault("ADMIN_SECRET", "your-admin-secret-key")
 
-	config.PORT = getEnvOrDefault("PORT", "8080")
+	config.PORT = getEnvOrDefault("PORT", "8000")
 
 	config.CORS_ORIGINS = getEnvOrDefault("CORS_ORIGINS", "*")
 
-	config.FIREBASE_CREDENTIALS_FILE = getEnvOrDefault("FIREBASE_CREDENTIALS_FILE", "")
-	config.FIREBASE_PROJECT_ID = getEnvOrDefault("FIREBASE_PROJECT_ID", "")
+	config.FIREBASE_CREDENTIALS_FILE = getEnvOrDefault("FIREBASE_CREDENTIALS_FILE", "firebase_credentials.json")
 
-	config.FIRESTORE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIRESTORE_EMULATOR_HOST_PORT", "8081")
-	config.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:" + getEnvOrDefault("FIREBASE_STORAGE_EMULATOR_HOST_PORT", "8082")
+	config.FIREBASE_PROJECT_ID = getEnvOrDefault("FIREBASE_PROJECT_ID", "learning-hub-81cc6")
+
+	config.FIRESTORE_EMULATOR_HOST = getEnvOrDefault("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080")
+	config.FIREBASE_STORAGE_EMULATOR_HOST = getEnvOrDefault("FIREBASE_STORAGE_EMULATOR_HOST", "127.0.0.1:9199")
 
 	AppConfig = config
+
+	log.Printf("Loaded configuration: %+v", AppConfig)
 
 	return nil
 }

@@ -9,13 +9,16 @@
   "emulators": {
     "singleProjectMode": true,
     "firestore": {
-      "port": 8081
+      "host": "0.0.0.0",
+      "port": 8080
     },
     "storage": {
-      "port": 8082
+      "host": "0.0.0.0",
+      "port": 9199
     },
     "ui": {
       "enabled": true,
+      "host": "0.0.0.0",
       "port": 4000
     }
   }

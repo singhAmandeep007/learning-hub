@@ -4,6 +4,7 @@
 **/build
 **/dist
 **/.turbo
+**/tmp
 
 # Dependencies
 **/node_modules
@@ -13,8 +14,7 @@
 **/.nyc_output
 
 # Environment
-**/.env.local
-**/.env.*.local
+**/.env**
 
 # IDE
 **/.idea
@@ -43,4 +43,4 @@
 
 # Additional
 **/httpClientTest
-**/learning-hub-81cc6-firebase-adminsdk-fbsvc-f78df0ee32.json
+**/firebase_credentials.json

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	"learning-hub/config"
 	"learning-hub/constants"
@@ -17,8 +16,6 @@ import (
 )
 
 func main() {
-	// Load environment variables
-	loadEnv()
 	// Populate AppConfig with env variables
 	err := config.LoadConfig()
 	if err != nil {
@@ -48,28 +45,6 @@ func main() {
 		log.Fatal("Failed to start server:", err)
 		return
 	}
-}
-
-func loadEnv() {
-	envMode := getEnvMode()
-
-	var envFile string
-	switch envMode {
-	case constants.EnvModeDev:
-		envFile = ".env.local.dev"
-	case constants.EnvModeProd:
-		envFile = ".env.local.prod"
-	default:
-		log.Printf("Environment mode for local development %s not recognized, using system environment variables", envMode)
-		return
-	}
-
-	if err := godotenv.Load(envFile); err != nil {
-		log.Printf("Local environment file %s not found. Using system environment variables instead", envFile)
-		return
-	}
-
-	log.Printf("Loaded environment from %s", envFile)
 }
 
 func setupRouter() *gin.Engine {
@@ -110,11 +85,11 @@ func setupRouter() *gin.Engine {
 }
 
 func getEnvMode() string {
-	// Requires ENV_MODE to be set in docker-compose.yml or in system: "dev" or "prod"
 	envMode := os.Getenv("ENV_MODE")
-	// Default to dev if ENV_MODE is not set
-	if envMode == "" {
-		envMode = constants.EnvModeDev
+	// Requires ENV_MODE to be set in docker-compose.yml or in system: "dev" or "prod"
+	if envMode != constants.EnvModeDev && envMode != constants.EnvModeProd {
+		log.Fatalf("ENV_MODE environment variable is not set. Please set it to 'dev' or 'prod'.")
+		return ""
 	}
 	return envMode
 }

@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"learning-hub/models"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"learning-hub/models"
 )
 
 type RateLimiterMiddleware interface {
