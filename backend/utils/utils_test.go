@@ -2,6 +2,7 @@ package utils
 
 import (
 	"learning-hub/config"
+	"learning-hub/constants"
 	"strconv"
 	"strings"
 	"testing"
@@ -15,7 +16,7 @@ import (
 func init() {
 	// Initialize config for tests
 	config.AppConfig = &config.EnvConfig{
-		IS_FIREBASE_EMULATOR: false, // Default value
+		ENV_MODE: constants.EnvModeProd, // Default value
 	}
 }
 
@@ -142,7 +143,7 @@ func TestParseStorageURL(t *testing.T) {
 	tests := []struct {
 		name           string
 		url            string
-		isEmulator     bool
+		envMode        string
 		expectedBucket string
 		expectedObject string
 		expectError    bool
@@ -150,7 +151,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Valid emulator URL",
 			url:            "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media",
-			isEmulator:     true,
+			envMode:        constants.EnvModeDev,
 			expectedBucket: "learning-hub-81cc6.firebasestorage.app",
 			expectedObject: "image/1748580692_image1.png",
 			expectError:    false,
@@ -158,7 +159,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Valid production URL",
 			url:            "https://storage.googleapis.com/my-bucket/path/to/file.jpg",
-			isEmulator:     false,
+			envMode:        constants.EnvModeProd,
 			expectedBucket: "my-bucket",
 			expectedObject: "path/to/file.jpg",
 			expectError:    false,
@@ -166,7 +167,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Invalid emulator URL format",
 			url:            "http://127.0.0.1:8082/invalid/path",
-			isEmulator:     true,
+			envMode:        constants.EnvModeDev,
 			expectedBucket: "",
 			expectedObject: "",
 			expectError:    true,
@@ -174,7 +175,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Invalid production URL format",
 			url:            "https://storage.googleapis.com/invalid",
-			isEmulator:     false,
+			envMode:        constants.EnvModeProd,
 			expectedBucket: "",
 			expectedObject: "",
 			expectError:    true,
@@ -182,7 +183,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Invalid URL",
 			url:            "not-a-url",
-			isEmulator:     false,
+			envMode:        constants.EnvModeProd,
 			expectedBucket: "",
 			expectedObject: "",
 			expectError:    true,
@@ -190,7 +191,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Emulator URL with special characters",
 			url:            "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/path%2Fwith%20spaces%20and%20%26%20symbols.jpg?alt=media",
-			isEmulator:     true,
+			envMode:        constants.EnvModeDev,
 			expectedBucket: "learning-hub-81cc6.firebasestorage.app",
 			expectedObject: "path/with spaces and & symbols.jpg",
 			expectError:    false,
@@ -198,7 +199,7 @@ func TestParseStorageURL(t *testing.T) {
 		{
 			name:           "Production URL with special characters",
 			url:            "https://storage.googleapis.com/my-bucket/path/with spaces and & symbols.jpg",
-			isEmulator:     false,
+			envMode:        constants.EnvModeProd,
 			expectedBucket: "my-bucket",
 			expectedObject: "path/with spaces and & symbols.jpg",
 			expectError:    false,
@@ -208,7 +209,7 @@ func TestParseStorageURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set the emulator flag
-			config.AppConfig.IS_FIREBASE_EMULATOR = tt.isEmulator
+			config.AppConfig.ENV_MODE = tt.envMode
 
 			// Call the function
 			bucket, object, err := parseStorageURL(tt.url)

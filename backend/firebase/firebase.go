@@ -14,6 +14,7 @@ import (
 	"google.golang.org/api/option"
 
 	"learning-hub/config"
+	"learning-hub/constants"
 )
 
 var (
@@ -37,7 +38,7 @@ func InitializeFirebase() error {
 		return fmt.Errorf("error: failed to build Firebase config: %w", err)
 	}
 
-	StorageBucket := config.AppConfig.FIREBASE_PROJECT_ID + ".firebasestorage.app"
+	StorageBucket = config.AppConfig.FIREBASE_PROJECT_ID + ".firebasestorage.app"
 
 	config := &firebase.Config{
 		ProjectID: config.AppConfig.FIREBASE_PROJECT_ID,
@@ -73,9 +74,9 @@ func InitializeFirebase() error {
 func buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error) {
 	var opts []option.ClientOption
 
-	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
+	isDev := config.AppConfig.ENV_MODE == constants.EnvModeDev
 
-	if isEmulator {
+	if isDev {
 		opts = append(opts, option.WithoutAuthentication())
 
 		// set emulator hosts

@@ -147,8 +147,8 @@ func UploadFile(ctx context.Context, file multipart.File, header *multipart.File
 	// Note: For granular access control, Firebase Security Rules are preferred.
 	// This makes the object publicly readable.
 	// TODO: need to verify
-	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
-	if !isEmulator {
+	isDev := config.AppConfig.ENV_MODE == constants.EnvModeDev
+	if !isDev {
 		acl := bucketHandler.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			log.Printf("Warning: Failed to set public ACL: %v (File uploaded but may not be publicly accessible)", err)
@@ -197,9 +197,9 @@ func generateUniqueFilename(originalFilename, fileType string) (string, error) {
 
 // generatePublicURL creates the appropriate public URL based on environment
 func generatePublicURL(objectName, bucketName string) (string, error) {
-	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
+	isDev := config.AppConfig.ENV_MODE == constants.EnvModeDev
 
-	if isEmulator {
+	if isDev {
 		emulatorHost := config.AppConfig.FIREBASE_STORAGE_EMULATOR_HOST
 		if emulatorHost == "" {
 			return "", fmt.Errorf("FIREBASE_STORAGE_EMULATOR_HOST not set for emulator mode")
@@ -253,9 +253,9 @@ func parseStorageURL(fileURL string) (bucketName, objectName string, err error) 
 		return "", "", fmt.Errorf("invalid URL format: %w", err)
 	}
 
-	isEmulator := config.AppConfig.IS_FIREBASE_EMULATOR
+	isDev := config.AppConfig.ENV_MODE == constants.EnvModeDev
 
-	if isEmulator {
+	if isDev {
 		// http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
 		pathRegex := regexp.MustCompile(`^/v0/b/([^/]+)/o/(.+)$`)
 		matches := pathRegex.FindStringSubmatch(parsedURL.Path)

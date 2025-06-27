@@ -56,16 +56,16 @@ func loadEnv() {
 	var envFile string
 	switch envMode {
 	case constants.EnvModeDev:
-		envFile = ".env.dev"
+		envFile = ".env.local.dev"
 	case constants.EnvModeProd:
-		envFile = ".env.prod"
+		envFile = ".env.local.prod"
 	default:
-		log.Fatalf("No environment file found, using system environment variables")
+		log.Printf("Environment mode for local development %s not recognized, using system environment variables", envMode)
 		return
 	}
 
 	if err := godotenv.Load(envFile); err != nil {
-		log.Fatalf("Could not load %s: %v", envFile, err)
+		log.Printf("Local environment file %s not found. Using system environment variables instead", envFile)
 		return
 	}
 

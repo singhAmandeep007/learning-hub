@@ -1,10 +1,8 @@
 package config
 
 import (
-	"fmt"
 	"learning-hub/constants"
 	"os"
-	"strconv"
 )
 
 var AppConfig *EnvConfig
@@ -14,7 +12,7 @@ type EnvConfig struct {
 	PORT         string `env:"PORT"`
 	ADMIN_SECRET string `env:"ADMIN_SECRET"`
 
-	IS_FIREBASE_EMULATOR bool `env:"IS_FIREBASE_EMULATOR"`
+	CORS_ORIGINS string `env:"CORS_ORIGINS"` // Comma-separated
 
 	FIREBASE_CREDENTIALS_FILE string `env:"FIREBASE_CREDENTIALS_FILE"`
 	FIREBASE_PROJECT_ID       string `env:"FIREBASE_PROJECT_ID"`
@@ -41,13 +39,7 @@ func LoadConfig() error {
 
 	config.PORT = getEnvOrDefault("PORT", "8080")
 
-	// Load boolean variables with defaults
-	isEmulatorStr := getEnvOrDefault("IS_FIREBASE_EMULATOR", "false")
-	isEmulator, err := strconv.ParseBool(isEmulatorStr)
-	if err != nil {
-		return fmt.Errorf("invalid IS_FIREBASE_EMULATOR environment variable: %w", err)
-	}
-	config.IS_FIREBASE_EMULATOR = isEmulator
+	config.CORS_ORIGINS = getEnvOrDefault("CORS_ORIGINS", "*")
 
 	config.FIREBASE_CREDENTIALS_FILE = getEnvOrDefault("FIREBASE_CREDENTIALS_FILE", "")
 	config.FIREBASE_PROJECT_ID = getEnvOrDefault("FIREBASE_PROJECT_ID", "")
