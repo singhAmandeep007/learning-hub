@@ -25,12 +25,12 @@ dev-local:
 	$(call wait_for_port, 4000, Firebase Emulators)
 	@echo "$(YELLOW)Starting backend server with Air...$(NC)"
 	@cd backend && ENV_MODE=dev air -c .air.toml &
-	$(call wait_for_port, 8080, Backend Server)
+	$(call wait_for_port, 8000, Backend Server)
 	@echo "$(YELLOW)Starting frontend development server...$(NC)"
 	@cd frontend && npm run dev &
 	@echo "$(GREEN)All services started!$(NC) Run $(RED)make stop-services$(NC) in a new terminal to stop all services."
-	@echo "$(GREEN)Backend: http://localhost:8080$(NC)"
-	@echo "$(GREEN)Frontend: http://localhost:3003$(NC)"
+	@echo "$(GREEN)Backend: http://localhost:8000$(NC)"
+	@echo "$(GREEN)Frontend: http://localhost:3000$(NC)"
 	@echo "$(GREEN)Firebase UI: http://localhost:4000$(NC)"
 	@wait
 
@@ -39,28 +39,28 @@ prod-local:
 	@echo "$(GREEN)Starting production firebase in local environment...$(NC)"
 	@echo "$(YELLOW)Starting backend server with Air...$(NC)"
 	@cd backend && ENV_MODE=prod air -c .air.toml &
-	$(call wait_for_port, 8080, Backend Server)
+	$(call wait_for_port, 8000, Backend Server)
 	@echo "$(YELLOW)Building and serving frontend...$(NC)"
 	@cd frontend && npm run dev &
-	@echo "$(GREEN)All services started! Press Ctrl+C to stop all services$(NC)"
-	@echo "$(GREEN)Backend: http://localhost:8080$(NC)"
-	@echo "$(GREEN)Frontend: http://localhost:3003$(NC)"
+	@echo "$(GREEN)All services started!$(NC) Run $(RED)make stop-services$(NC) in a new terminal to stop all services."
+	@echo "$(GREEN)Backend: http://localhost:8000$(NC)"
+	@echo "$(GREEN)Frontend: http://localhost:3000$(NC)"
 	@wait
 
 # Stop all running services
 # firebase emulator not exiting properly - https://github.com/firebase/firebase-tools/issues/3578#issuecomment-1024876668
 stop-services:
 	@echo "$(YELLOW)Stopping all services...$(NC)"
-	@pkill -f "firebase emulators:start" || true
 	@pkill -f "air -c" || true
 	@pkill -f "npm run dev" || true
+	@pkill -f "firebase emulators:start" || true
 	@echo "$(GREEN)All services stopped$(NC)"
 
 # Install global tools
 install-tools:
 	@echo "$(GREEN)Installing global tools...$(NC)"
 	@echo "$(YELLOW)Installing Firebase CLI...$(NC)"
-	@npm install -g firebase-tools
+	@npm install -g firebase-tools@14.2.0
 	@echo "$(YELLOW)Installing Air (Go hot reload)...$(NC)"
 	@go install github.com/air-verse/air@latest
 	@echo "$(GREEN)Global tools installed successfully!$(NC)"
@@ -72,6 +72,15 @@ install-deps:
 	@echo "$(GREEN)Installing backend dependencies...$(NC)"
 	@cd backend && go mod tidy
 
+docker-dev:
+	@echo "🚀 Starting development environment with docker..."
+	docker-compose -f docker-compose.dev.yml up --build
+
+# Stop all services
+docker-dev-stop:
+	@echo "🛑 Stopping all dev docker services..."
+	docker-compose -f docker-compose.dev.yml down
+
 # Clean build artifacts
 clean:
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
@@ -82,10 +91,12 @@ clean:
 # Help command
 help:
 	@echo "$(GREEN)Available commands:$(NC)"
-	@echo "  $(YELLOW)dev-local$(NC)     - Start development environment (hot reload)"
-	@echo "  $(YELLOW)prod-local$(NC)    - Start production-like local environment"
-	@echo "  $(YELLOW)stop-services$(NC) - Stop all running services"
-	@echo "  $(YELLOW)install-tools$(NC) - Install Firebase CLI and Air globally"
-	@echo "  $(YELLOW)install-deps$(NC)  - Install all dependencies"
-	@echo "  $(YELLOW)clean$(NC)         - Clean build artifacts"
-	@echo "  $(YELLOW)help$(NC)          - Show this help message"
+	@echo "  $(YELLOW)dev-local$(NC)          - Start development environment (hot reload)"
+	@echo "  $(YELLOW)prod-local$(NC)         - Start production-like local environment"
+	@echo "  $(YELLOW)stop-services$(NC)      - Stop all running services"
+	@echo "  $(YELLOW)docker-dev$(NC)         - Start development environment with Docker"
+	@echo "  $(YELLOW)docker-dev-stop$(NC)    - Stop all dev docker services"
+	@echo "  $(YELLOW)install-tools$(NC)      - Install Firebase CLI and Air globally"
+	@echo "  $(YELLOW)install-deps$(NC)       - Install all dependencies"
+	@echo "  $(YELLOW)clean$(NC)              - Clean build artifacts"
+	@echo "  $(YELLOW)help$(NC)               - Show this help message"

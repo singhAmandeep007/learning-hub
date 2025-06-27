@@ -66,7 +66,6 @@ func InitializeFirebase() error {
 		return fmt.Errorf("error initializing storage: %v", err)
 	}
 
-	log.Printf("Firebase initialized successfully with bucket: %s", StorageBucket)
 	return nil
 }
 
@@ -94,8 +93,6 @@ func buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error) 
 		}
 
 		opts = append(opts, option.WithCredentialsFile(credentialsFile))
-
-		log.Printf("Using Firebase production mode")
 	}
 
 	return opts, nil

@@ -162,10 +162,6 @@ func CreateResource(c *gin.Context) {
 
 	contentType := c.GetHeader("Content-Type")
 
-	// Log the content type for debugging
-	log.Printf("Content-Type: %s", contentType)
-	log.Printf("Content-Length: %s", c.GetHeader("Content-Length"))
-
 	// Check if it's actually a multipart form
 	if contentType == "" || !strings.Contains(contentType, "multipart/form-data") {
 		c.JSON(http.StatusBadGateway, models.ErrorResponse{
@@ -181,17 +177,15 @@ func CreateResource(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Form values: %+v", c.Request.MultipartForm.Value)
-
 	// log the files for debugging
-	if c.Request.MultipartForm.File != nil {
-		for key, files := range c.Request.MultipartForm.File {
-			log.Printf("File field '%s': %d files", key, len(files))
-			for i, file := range files {
-				log.Printf("  File %d: %s (size: %d)", i, file.Filename, file.Size)
-			}
-		}
-	}
+	// if c.Request.MultipartForm.File != nil {
+	// 	for key, files := range c.Request.MultipartForm.File {
+	// 		log.Printf("File field '%s': %d files", key, len(files))
+	// 		for i, file := range files {
+	// 			log.Printf("  File %d: %s (size: %d)", i, file.Filename, file.Size)
+	// 		}
+	// 	}
+	// }
 
 	// Extract form fields
 	resource := models.Resource{

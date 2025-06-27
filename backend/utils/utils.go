@@ -74,7 +74,7 @@ func UpdateTagUsage(ctx context.Context, tags []string, delta int) {
 		tagRef := firebase.FirestoreClient.Collection(constants.CollectionTags).Doc(tag)
 
 		// Use a transaction to ensure atomicity
-		err := firebase.FirestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		err := firebase.FirestoreClient.RunTransaction(ctx, func(_ context.Context, tx *firestore.Transaction) error {
 			doc, err := tx.Get(tagRef)
 			if err != nil {
 				// Tag doesn't exist, create it
@@ -113,14 +113,13 @@ type FileUploadResult struct {
 	Size      int64
 }
 
+// UploadFile uploads a file to Firebase Cloud Storage and returns the public URL
 func UploadFile(ctx context.Context, file multipart.File, header *multipart.FileHeader, fileType string) (*FileUploadResult, error) {
 	// Generate clean, unique filename
 	filename, err := generateUniqueFilename(header.Filename, fileType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate filename: %w", err)
 	}
-
-	log.Printf("Uploading file: %s to bucket: %s", filename, firebase.StorageBucket)
 
 	bucketHandler := firebase.StorageClient.Bucket(firebase.StorageBucket)
 
@@ -160,8 +159,6 @@ func UploadFile(ctx context.Context, file multipart.File, header *multipart.File
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate public URL: %w", err)
 	}
-
-	log.Printf("File uploaded successfully: %s (%d bytes)", publicURL, bytesWritten)
 
 	return &FileUploadResult{
 		PublicURL: publicURL,
@@ -205,17 +202,18 @@ func generatePublicURL(objectName, bucketName string) (string, error) {
 			return "", fmt.Errorf("FIREBASE_STORAGE_EMULATOR_HOST not set for emulator mode")
 		}
 
+		emulatorHostPort := strings.Split(emulatorHost, ":")[1]
+
 		encodedObjectName := url.PathEscape(objectName)
 		// Eg. http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
-		publicURL := fmt.Sprintf("http://%s/v0/b/%s/o/%s?alt=media", emulatorHost, bucketName, encodedObjectName)
+		publicURL := fmt.Sprintf("http://127.0.0.1:%s/v0/b/%s/o/%s?alt=media", emulatorHostPort, bucketName, encodedObjectName)
 
-		log.Printf("Generated emulator URL: %s", publicURL)
 		return publicURL, nil
 	}
 
 	// Production URL
 	publicURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectName)
-	log.Printf("Generated production URL: %s", publicURL)
+
 	return publicURL, nil
 }
 
@@ -224,7 +222,6 @@ func DeleteFileFromURL(ctx context.Context, fileURL string) error {
 	// Delete file if it is stored in our bucket
 	if IsValidStorageURL(fileURL) {
 		bucketName, objectName, err := parseStorageURL(fileURL)
-		log.Printf("bucketName: %s objectName: %s", bucketName, objectName)
 
 		if err != nil {
 			return fmt.Errorf("failed to parse storage URL: %w", err)
@@ -274,18 +271,19 @@ func parseStorageURL(fileURL string) (bucketName, objectName string, err error) 
 		}
 
 		return bucketName, objectName, nil
-	} else {
-		pathParts := strings.SplitN(strings.TrimPrefix(parsedURL.Path, "/"), "/", 2)
-
-		if len(pathParts) < 2 {
-			return "", "", fmt.Errorf("invalid Google Cloud Storage URL path format")
-		}
-
-		bucketName = pathParts[0]
-		objectName = pathParts[1]
-
-		return bucketName, objectName, nil
 	}
+
+	pathParts := strings.SplitN(strings.TrimPrefix(parsedURL.Path, "/"), "/", 2)
+
+	if len(pathParts) < 2 {
+		return "", "", fmt.Errorf("invalid Google Cloud Storage URL path format")
+	}
+
+	bucketName = pathParts[0]
+	objectName = pathParts[1]
+
+	return bucketName, objectName, nil
+
 }
 
 // Validations

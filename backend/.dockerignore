@@ -1,46 +1,63 @@
-**/.vscode
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
 
-# Build
-**/build
-**/dist
-**/.turbo
-**/tmp
+# Go
+vendor/
+*.test
+*.out
+coverage.txt
+coverage.html
 
-# Dependencies
-**/node_modules
-
-# Testing
-**/coverage
-**/.nyc_output
-
-# Environment
-**/.env**
+# Air
+tmp/
+air-errors.log
+.air.toml.tmp
 
 # IDE
-**/.idea
-**/.vscode
-**/*.swp
-**/*.swo
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # OS
-**/.DS_Store
-**/Thumbs.db
+.DS_Store
+Thumbs.db
+
+# Environment
+.env*
+!.env.example
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Testing
+test/
+tests/
+*_test.go
+
+# Build artifacts
+dist/
+build/
+bin/
 
 # Logs
-**/npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-**/pnpm-debug.log*
+*.log
+logs/
 
-**/*-debug.log
+# Temporary files
+*.tmp
+*.temp
 
 # Misc
-**/.git
-**/.gitignore
-**/.dockerignore
-**/README.md
-**/LICENSE 
+.git
+.gitignore
+LICENSE 
 
 # Additional
-**/httpClientTest
-**/firebase_credentials.json
+httpClientTest
+firebase_credentials.json

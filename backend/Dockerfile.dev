@@ -16,10 +16,6 @@ RUN go install github.com/air-verse/air@latest
 
 WORKDIR /app
 
-# Create directories with proper permissions BEFORE switching to non-root user
-RUN mkdir -p /go/pkg/mod && \
-    chmod -R 777 /go/pkg/mod
-
 # Copy dependency files
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
@@ -27,22 +23,8 @@ RUN go mod download && go mod verify
 # Copy source code
 COPY . .
 
-# Create non-root user and set ownership
-RUN addgroup -g 1000 -S appgroup && \
-    adduser -u 1000 -S appuser -G appgroup && \
-    chown -R appuser:appgroup /app && \
-    chown -R appuser:appgroup /go/pkg/mod && \
-    chmod -R 755 /app
-
-# Create tmp directory for air with proper permissions
-RUN mkdir -p /app/tmp && \
-    chown -R appuser:appgroup /app/tmp
-
-# Switch to non-root user
-USER appuser
-
 # Expose port
 EXPOSE 8000
 
-# Wait 10 seconds for Firebase emulator to start, then run air
+# Wait for Firebase emulator then run air
 CMD sleep 10 && air -c .air.toml

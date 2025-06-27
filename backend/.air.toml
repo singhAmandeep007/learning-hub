@@ -15,7 +15,7 @@ full_bin = "./tmp/main"
 # It's not necessary to trigger build each time file changes if it's too frequent.
 delay = 1000 # ms
 # Ignore these filename extensions or directories.
-exclude_dir = ["assets", "tmp", "vendor"]
+exclude_dir = ["assets", "tmp", "vendor", "httpClientTest"]
 # Exclude files.
 exclude_file = []
 # Exclude specific regular expressions.

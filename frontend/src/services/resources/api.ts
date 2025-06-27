@@ -28,7 +28,7 @@ const toFormData = (payload: Partial<CreateResourcePayload>): FormData => {
   return formData;
 };
 
-const adminSecret = import.meta.env["VITE_ADMIN_SECRET"];
+const adminSecret = import.meta.env["VITE_ADMIN_SECRET"] || "your-admin-secret-key";
 
 export const resourcesApi = {
   // Get all resources with optional pagination and filtering
