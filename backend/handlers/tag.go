@@ -9,6 +9,7 @@ import (
 
 	"learning-hub/constants"
 	"learning-hub/firebase"
+	"learning-hub/middleware"
 	"learning-hub/models"
 )
 
@@ -16,7 +17,11 @@ import (
 func GetTags(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	docs, err := firebase.FirestoreClient.Collection(constants.CollectionTags).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
+	// Get product from context (validated by middleware)
+	product := middleware.GetProductFromContext(c)
+
+	// Get tags from product-specific subcollection
+	docs, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionTags).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
 
 	if err != nil {
 		log.Printf("Error fetching tags from Firestore: %v\n", err)

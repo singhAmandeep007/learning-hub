@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and configuration
-BASE_URL="http://localhost:8000/api/v1/resources"
+BASE_URL="http://localhost:8000/api/v1/admin/resources"
 ADMIN_SECRET="your-admin-secret-key"
 
 # Colors for output

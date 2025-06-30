@@ -1,4 +1,5 @@
 import { httpClient } from "../httpClient";
+import { getProductFromUrl } from "../utils";
 
 import {
   type PaginatedResponse,
@@ -33,17 +34,20 @@ const adminSecret = import.meta.env["VITE_ADMIN_SECRET"] || "your-admin-secret-k
 export const resourcesApi = {
   // Get all resources with optional pagination and filtering
   getAll: async (params?: GetResourcesParams, options?: RequestInit): Promise<PaginatedResponse<Resource>> => {
-    return httpClient.get<PaginatedResponse<Resource>>("/resources", params, options);
+    const product = getProductFromUrl();
+    return httpClient.get<PaginatedResponse<Resource>>(`/${product}/resources`, params, options);
   },
 
   getById: async (params: GetResourceParams, options?: RequestInit): Promise<GetResourceResponse> => {
-    return httpClient.get<GetResourceResponse>(`/resources/${params.id}`, undefined, options);
+    const product = getProductFromUrl();
+    return httpClient.get<GetResourceResponse>(`/${product}/resources/${params.id}`, undefined, options);
   },
 
   create: async (payload: CreateResourcePayload): Promise<CreateResourceResponse> => {
+    const product = getProductFromUrl();
     const formData = toFormData(payload);
 
-    return httpClient.postFormData<CreateResourceResponse>("/resources", {
+    return httpClient.postFormData<CreateResourceResponse>(`/${product}/resources`, {
       body: formData,
       headers: {
         AdminSecret: `${adminSecret}`,
@@ -52,10 +56,11 @@ export const resourcesApi = {
   },
 
   update: async (payload: UpdateResourcePayload): Promise<UpdateResourceResponse> => {
+    const product = getProductFromUrl();
     const { id, ...data } = payload;
     const formData = toFormData(data);
 
-    return httpClient.patchFormData<UpdateResourceResponse>(`/resources/${id}`, {
+    return httpClient.patchFormData<UpdateResourceResponse>(`/${product}/resources/${id}`, {
       body: formData,
       headers: {
         AdminSecret: `${adminSecret}`,
@@ -65,7 +70,8 @@ export const resourcesApi = {
 
   // Delete resource
   delete: async (payload: DeleteResourcePayload): Promise<void> => {
-    return httpClient.delete<void>(`/resources/${payload.id}`, {
+    const product = getProductFromUrl();
+    return httpClient.delete<void>(`/${product}/resources/${payload.id}`, {
       headers: {
         AdminSecret: `${adminSecret}`,
       },

@@ -6,14 +6,24 @@ const (
 	EnvModeDev  = "dev"
 	EnvModeProd = "prod"
 
+	CollectionProducts  = "products"
 	CollectionResources = "resources"
 	CollectionTags      = "tags"
-	DefaultPageSize     = 20
-	MaxPageSize         = 100
-	MaxFileSize         = 100 << 20 // 100MB
+
+	// Valid product names
+	ProductEcomm = "ecomm"
+	ProductAdmin = "admin"
+	ProductCrm   = "crm"
+
+	DefaultPageSize = 20
+	MaxPageSize     = 100
+	MaxFileSize     = 100 << 20 // 100MB
 
 	AdminSecretHeader        = "AdminSecret"
 	AdminSecretQueryParamKey = "adminSecret"
+
+	ProductContextKey = "product"
+	ProductParamKey   = "product"
 
 	// Resource Types
 	ResourceTypeVideo   = "video"
@@ -39,4 +49,11 @@ var ResourceTypes = []string{
 	ResourceTypeVideo,
 	ResourceTypePDF,
 	ResourceTypeArticle,
+}
+
+// ValidProducts ...
+var ValidProducts = []string{
+	ProductEcomm,
+	ProductAdmin,
+	ProductCrm,
 }

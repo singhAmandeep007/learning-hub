@@ -20,6 +20,8 @@ func init() {
 	}
 }
 
+const product = "test-product"
+
 func TestGenerateUniqueFilename(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -40,8 +42,9 @@ func TestGenerateUniqueFilename(t *testing.T) {
 			fileType:     "pdf",
 			wantErr:      false,
 			validateOutput: func(t *testing.T, output string) {
-				if !strings.HasPrefix(output, "pdf/") {
-					t.Errorf("expected prefix 'pdf/', got %s", output)
+				expectedPrefix := product + "/pdf/"
+				if !strings.HasPrefix(output, expectedPrefix) {
+					t.Errorf("expected prefix 'test-product/pdf/', got %s", output)
 				}
 				if !strings.HasSuffix(output, ".pdf") {
 					t.Errorf("expected suffix '.pdf', got %s", output)
@@ -57,7 +60,8 @@ func TestGenerateUniqueFilename(t *testing.T) {
 			fileType:     "text",
 			wantErr:      false,
 			validateOutput: func(t *testing.T, output string) {
-				if !strings.HasPrefix(output, "text/") {
+				expectedPrefix := product + "/text/"
+				if !strings.HasPrefix(output, expectedPrefix) {
 					t.Errorf("expected prefix 'text/', got %s", output)
 				}
 				if !strings.HasSuffix(output, ".txt") {
@@ -74,6 +78,10 @@ func TestGenerateUniqueFilename(t *testing.T) {
 			fileType:     "pdf",
 			wantErr:      false,
 			validateOutput: func(t *testing.T, output string) {
+				expectedPrefix := product + "/pdf/"
+				if !strings.HasPrefix(output, expectedPrefix) {
+					t.Errorf("expected prefix '%s', got %s", expectedPrefix, output)
+				}
 				if !strings.HasSuffix(output, ".pdf") {
 					t.Errorf("expected suffix '.pdf', got %s", output)
 				}
@@ -88,6 +96,10 @@ func TestGenerateUniqueFilename(t *testing.T) {
 			fileType:     "pdf",
 			wantErr:      false,
 			validateOutput: func(t *testing.T, output string) {
+				expectedPrefix := product + "/pdf/"
+				if !strings.HasPrefix(output, expectedPrefix) {
+					t.Errorf("expected prefix '%s', got %s", expectedPrefix, output)
+				}
 				if !strings.HasSuffix(output, ".pdf") {
 					t.Errorf("expected suffix '.pdf', got %s", output)
 				}
@@ -100,7 +112,7 @@ func TestGenerateUniqueFilename(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generateUniqueFilename(tt.originalFile, tt.fileType)
+			got, err := generateUniqueFilename(tt.originalFile, product, tt.fileType)
 
 			// Check error condition
 			if (err != nil) != tt.wantErr {
@@ -113,22 +125,22 @@ func TestGenerateUniqueFilename(t *testing.T) {
 				return
 			}
 
-			// Validate timestamp
+			// Validate timestamp product/fileType/timestamp_name.ext
 			parts := strings.Split(got, "/")
-			if len(parts) != 2 {
-				t.Errorf("expected format 'type/timestamp_name.ext', got %s", got)
+			if len(parts) != 3 {
+				t.Errorf("expected format 'product/type/timestamp_name.ext', got %s", got)
 				return
 			}
 
 			// Check if timestamp is recent (within last 5 seconds)
-			timestampStr := strings.Split(parts[1], "_")[0]
+			timestampStr := strings.Split(parts[2], "_")[0]
 			timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
 			if err != nil {
 				t.Errorf("invalid timestamp format: %v", err)
 				return
 			}
-			if time.Since(time.Unix(timestamp, 0)) > 5*time.Second {
-				t.Errorf("timestamp is not recent: %v", time.Unix(timestamp, 0))
+			if time.Since(time.Unix(0, timestamp)) > 5*time.Second {
+				t.Errorf("timestamp is not recent: %v", time.Unix(0, timestamp))
 			}
 
 			// Run additional validation if provided
@@ -150,10 +162,10 @@ func TestParseStorageURL(t *testing.T) {
 	}{
 		{
 			name:           "Valid emulator URL",
-			url:            "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media",
+			url:            "http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/admin/image%2F1748580692_image1.png?alt=media",
 			envMode:        constants.EnvModeDev,
 			expectedBucket: "learning-hub-81cc6.firebasestorage.app",
-			expectedObject: "image/1748580692_image1.png",
+			expectedObject: "admin/image/1748580692_image1.png",
 			expectError:    false,
 		},
 		{

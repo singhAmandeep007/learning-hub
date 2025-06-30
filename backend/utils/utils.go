@@ -64,14 +64,14 @@ func Max(a, b int) int {
 	return b
 }
 
-// UpdateTagUsage updates the usage count for tags
-func UpdateTagUsage(ctx context.Context, tags []string, delta int) {
+// UpdateTagUsage updates the usage count for tags in a product-specific subcollection
+func UpdateTagUsage(ctx context.Context, product string, tags []string, delta int) {
 	for _, tag := range tags {
 		if tag == "" {
 			continue
 		}
 
-		tagRef := firebase.FirestoreClient.Collection(constants.CollectionTags).Doc(tag)
+		tagRef := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionTags).Doc(tag)
 
 		// Use a transaction to ensure atomicity
 		err := firebase.FirestoreClient.RunTransaction(ctx, func(_ context.Context, tx *firestore.Transaction) error {
@@ -114,9 +114,9 @@ type FileUploadResult struct {
 }
 
 // UploadFile uploads a file to Firebase Cloud Storage and returns the public URL
-func UploadFile(ctx context.Context, file multipart.File, header *multipart.FileHeader, fileType string) (*FileUploadResult, error) {
+func UploadFile(ctx context.Context, file multipart.File, header *multipart.FileHeader, product, fileType string) (*FileUploadResult, error) {
 	// Generate clean, unique filename
-	filename, err := generateUniqueFilename(header.Filename, fileType)
+	filename, err := generateUniqueFilename(header.Filename, product, fileType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate filename: %w", err)
 	}
@@ -168,7 +168,7 @@ func UploadFile(ctx context.Context, file multipart.File, header *multipart.File
 }
 
 // generateUniqueFilename creates a unique filename with proper sanitization
-func generateUniqueFilename(originalFilename, fileType string) (string, error) {
+func generateUniqueFilename(originalFilename, product, fileType string) (string, error) {
 	if originalFilename == "" {
 		return "", fmt.Errorf("original filename cannot be empty")
 	}
@@ -187,7 +187,7 @@ func generateUniqueFilename(originalFilename, fileType string) (string, error) {
 
 	// Generate unique filename with timestamp
 	timestamp := time.Now().UnixNano()
-	filename := fmt.Sprintf("%s/%d_%s%s", fileType, timestamp, baseName, ext)
+	filename := fmt.Sprintf("%s/%s/%d_%s%s", product, fileType, timestamp, baseName, ext)
 
 	return filename, nil
 }
@@ -253,7 +253,7 @@ func parseStorageURL(fileURL string) (bucketName, objectName string, err error) 
 	isDev := config.AppConfig.ENV_MODE == constants.EnvModeDev
 
 	if isDev {
-		// http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/image%2F1748580692_image1.png?alt=media
+		// http://127.0.0.1:8082/v0/b/learning-hub-81cc6.firebasestorage.app/o/product/image%2F1748580692_image1.png?alt=media
 		pathRegex := regexp.MustCompile(`^/v0/b/([^/]+)/o/(.+)$`)
 		matches := pathRegex.FindStringSubmatch(parsedURL.Path)
 
@@ -301,4 +301,14 @@ func IsValidResourceType(t string) bool {
 // IsValidStorageURL checks if url points to resource stored in storage
 func IsValidStorageURL(fileURL string) bool {
 	return strings.Contains(fileURL, firebase.StorageBucket)
+}
+
+// IsValidProduct checks if product name is valid
+func IsValidProduct(product string) bool {
+	for _, v := range constants.ValidProducts {
+		if product == v {
+			return true
+		}
+	}
+	return false
 }

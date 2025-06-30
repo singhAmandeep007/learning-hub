@@ -14,6 +14,7 @@ import (
 
 	"learning-hub/constants"
 	"learning-hub/firebase"
+	"learning-hub/middleware"
 	"learning-hub/models"
 	"learning-hub/utils"
 )
@@ -29,6 +30,9 @@ import (
 func GetResources(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	// Get product from context (validated by middleware)
+	product := middleware.GetProductFromContext(c)
+
 	// Parse query parameters
 	typeFilter := c.DefaultQuery("type", "all") // "all" | "video" | "pdf" | "article"
 	tagsParam := c.Query("tags")                // "onboarding,tutorial" | "onboarding"
@@ -42,8 +46,8 @@ func GetResources(c *gin.Context) {
 		limit = constants.DefaultPageSize
 	}
 
-	// Build Firestore query
-	query := firebase.FirestoreClient.Collection(constants.CollectionResources).OrderBy("createdAt", firestore.Desc)
+	// Build Firestore query with product-specific subcollection
+	query := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).OrderBy("createdAt", firestore.Desc)
 
 	// Apply type filter
 	if typeFilter != "all" && utils.IsValidResourceType(typeFilter) {
@@ -129,7 +133,11 @@ func GetResource(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
 
-	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	// Get product from context (validated by middleware)
+	product := middleware.GetProductFromContext(c)
+
+	// Get document from product-specific subcollection
+	doc, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   constants.NotFound,
@@ -159,6 +167,9 @@ func GetResource(c *gin.Context) {
 //   - For "article" type, url is required.
 func CreateResource(c *gin.Context) {
 	ctx := c.Request.Context()
+
+	// Get product from context (validated by middleware)
+	product := middleware.GetProductFromContext(c)
 
 	contentType := c.GetHeader("Content-Type")
 
@@ -241,7 +252,7 @@ func CreateResource(c *gin.Context) {
 		defer file.Close()
 
 		// Upload file to Cloud Storage
-		url, err := utils.UploadFile(ctx, file, header, resource.Type)
+		url, err := utils.UploadFile(ctx, file, header, product, resource.Type)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Error:   constants.UploadFailed,
@@ -259,7 +270,7 @@ func CreateResource(c *gin.Context) {
 		if err == nil {
 			defer thumbnailFile.Close()
 
-			thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
+			thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, product, "image")
 
 			if err != nil {
 				log.Printf("Failed to upload thumbnail: %v", err)
@@ -269,8 +280,8 @@ func CreateResource(c *gin.Context) {
 		}
 	}
 
-	// Save to Firestore
-	docRef, _, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Add(ctx, resource)
+	// Save to Firestore in product-specific subcollection
+	docRef, _, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Add(ctx, resource)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   constants.MutationFailed,
@@ -280,7 +291,7 @@ func CreateResource(c *gin.Context) {
 	}
 
 	// Update tag usage counts
-	utils.UpdateTagUsage(ctx, resource.Tags, 1)
+	utils.UpdateTagUsage(ctx, product, resource.Tags, 1)
 
 	resource.ID = docRef.ID
 	c.JSON(http.StatusCreated, resource)
@@ -294,8 +305,11 @@ func UpdateResource(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
 
-	// Get existing resource
-	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	// Get product from context (validated by middleware)
+	product := middleware.GetProductFromContext(c)
+
+	// Get existing resource from product-specific subcollection
+	doc, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   constants.NotFound,
@@ -396,7 +410,7 @@ func UpdateResource(c *gin.Context) {
 			}
 
 			// Upload new file
-			uploadResult, err := utils.UploadFile(ctx, file, header, existingResource.Type)
+			uploadResult, err := utils.UploadFile(ctx, file, header, product, existingResource.Type)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 					Error:   constants.UploadFailed,
@@ -445,7 +459,7 @@ func UpdateResource(c *gin.Context) {
 			}
 
 			// Upload new thumbnail
-			thumbnailResult, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, "image")
+			thumbnailResult, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, product, "image")
 			if err != nil {
 				log.Printf("Failed to upload thumbnail: %v", err)
 			} else {
@@ -454,8 +468,8 @@ func UpdateResource(c *gin.Context) {
 		}
 	}
 
-	// Save updated resource
-	_, err = firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Set(ctx, updatedResource)
+	// Save updated resource to product-specific subcollection
+	_, err = firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Set(ctx, updatedResource)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   constants.MutationFailed,
@@ -466,8 +480,8 @@ func UpdateResource(c *gin.Context) {
 
 	// Update tag usage counts
 	if len(oldTags) > 0 || len(newTags) > 0 {
-		utils.UpdateTagUsage(ctx, oldTags, -1)
-		utils.UpdateTagUsage(ctx, newTags, 1)
+		utils.UpdateTagUsage(ctx, product, oldTags, -1)
+		utils.UpdateTagUsage(ctx, product, newTags, 1)
 	}
 
 	updatedResource.ID = id
@@ -480,8 +494,11 @@ func DeleteResource(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
 
-	// Get existing resource to clean up files
-	doc, err := firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	// Get product from context (validated by middleware)
+	product := middleware.GetProductFromContext(c)
+
+	// Get existing resource to clean up files from product-specific subcollection
+	doc, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   constants.NotFound,
@@ -508,10 +525,10 @@ func DeleteResource(c *gin.Context) {
 	}
 
 	// Update tag usage counts
-	utils.UpdateTagUsage(ctx, resource.Tags, -1)
+	utils.UpdateTagUsage(ctx, product, resource.Tags, -1)
 
-	// Delete from Firestore
-	_, err = firebase.FirestoreClient.Collection(constants.CollectionResources).Doc(id).Delete(ctx)
+	// Delete from Firestore product-specific subcollection
+	_, err = firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Delete(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   constants.MutationFailed,

@@ -65,15 +65,20 @@ func setupRouter() *gin.Engine {
 	r.Use(middleware.NewRateLimiterMiddleware(100, time.Minute).RateLimiter())
 
 	// API routes
+	// /api/v1/:product/resources
 	api := r.Group("/api/v1")
 	{
-		api.GET("/resources", handlers.GetResources)
-		api.GET("/resources/:id", handlers.GetResource)
-		api.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
-		api.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
-		api.DELETE("/resources/:id", middleware.AdminAuthMiddleware(), handlers.DeleteResource)
+		// Product-specific routes
+		productGroup := api.Group("/:product", middleware.ProductValidationMiddleware())
+		{
+			productGroup.GET("/resources", handlers.GetResources)
+			productGroup.GET("/resources/:id", handlers.GetResource)
+			productGroup.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
+			productGroup.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
+			productGroup.DELETE("/resources/:id", middleware.AdminAuthMiddleware(), handlers.DeleteResource)
 
-		api.GET("/tags", handlers.GetTags)
+			productGroup.GET("/tags", handlers.GetTags)
+		}
 	}
 
 	// Health check
@@ -86,6 +91,9 @@ func setupRouter() *gin.Engine {
 
 func getEnvMode() string {
 	envMode := os.Getenv("ENV_MODE")
+	if envMode == "" {
+		envMode = constants.EnvModeProd // Default to prod mode if not set
+	}
 	// Requires ENV_MODE to be set in docker-compose.yml or in system: "dev" or "prod"
 	if envMode != constants.EnvModeDev && envMode != constants.EnvModeProd {
 		log.Fatalf("ENV_MODE environment variable is not set. Please set it to 'dev' or 'prod'.")

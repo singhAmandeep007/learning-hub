@@ -9,6 +9,19 @@ export type PaginatedResponse<T> = {
   nextCursor?: string;
 };
 
+// Products
+export const PRODUCTS = {
+  ecomm: "ecomm",
+  admin: "admin",
+  crm: "crm",
+} as const;
+
+export type Product = (typeof PRODUCTS)[keyof typeof PRODUCTS];
+
+export const VALID_PRODUCTS = Object.values(PRODUCTS);
+
+export const DEFAULT_PRODUCT: Product = PRODUCTS.ecomm;
+
 // Resource
 export const RESOURCE_TYPES = {
   video: "video",
