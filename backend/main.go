@@ -65,7 +65,7 @@ func setupRouter() *gin.Engine {
 	r.Use(middleware.NewRateLimiterMiddleware(100, time.Minute).RateLimiter())
 
 	// API routes
-	api := r.Group("/api")
+	api := r.Group("/api/v1")
 	{
 		api.GET("/resources", handlers.GetResources)
 		api.GET("/resources/:id", handlers.GetResource)

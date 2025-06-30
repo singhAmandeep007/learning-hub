@@ -1,23 +1,21 @@
+import { useState, useCallback } from "react";
 import { Video, File, ExternalLink, FileText, Eye, Edit3, Trash2, Tag } from "lucide-react";
 
 import { type Resource, RESOURCE_TYPES, type ResourceType } from "../../../types";
 
 import "./ResourceCard.scss";
 import { ResourceDetails } from "../ResourceDetails";
-import { useState } from "react";
 
-export const ResourceCard = ({
-  resource,
-  onEdit,
-  onDelete,
-}: {
+interface ResourceCardProps {
   resource: Resource;
   onEdit: (resource: Resource) => void;
   onDelete: (id: Resource["id"]) => void;
-}) => {
+}
+
+export const ResourceCard = ({ resource, onEdit, onDelete }: ResourceCardProps) => {
   const [showDetails, setShowDetails] = useState<boolean>(false);
 
-  const getTypeIcon = (type: ResourceType) => {
+  const getTypeIcon = useCallback((type: ResourceType) => {
     switch (type) {
       case RESOURCE_TYPES.video:
         return <Video className="resource-card-type-icon resource-card-type-icon-video" />;
@@ -28,7 +26,25 @@ export const ResourceCard = ({
       default:
         return <FileText className="resource-card-type-icon" />;
     }
-  };
+  }, []);
+
+  const handleShowDetails = useCallback(() => {
+    setShowDetails(true);
+  }, []);
+
+  const handleCloseDetails = useCallback(() => {
+    setShowDetails(false);
+  }, []);
+
+  const handleEdit = useCallback(() => {
+    onEdit(resource);
+  }, [onEdit, resource]);
+
+  const handleDelete = useCallback(() => {
+    if (window.confirm("Are you sure you want to delete this resource?")) {
+      onDelete(resource.id);
+    }
+  }, [onDelete, resource.id]);
 
   return (
     <>
@@ -40,27 +56,26 @@ export const ResourceCard = ({
           </div>
           <div className="resource-card-actions">
             <button
-              onClick={() => setShowDetails(true)}
+              onClick={handleShowDetails}
               className="resource-card-action-btn resource-card-action-btn-view"
               title="View Resource"
+              type="button"
             >
               <Eye className="resource-card-action-icon" />
             </button>
             <button
-              onClick={() => onEdit(resource)}
+              onClick={handleEdit}
               className="resource-card-action-btn resource-card-action-btn-edit"
               title="Edit Resource"
+              type="button"
             >
               <Edit3 className="resource-card-action-icon" />
             </button>
             <button
-              onClick={() => {
-                if (window.confirm("Are you sure you want to delete this resource?")) {
-                  onDelete(resource.id);
-                }
-              }}
+              onClick={handleDelete}
               className="resource-card-action-btn resource-card-action-btn-delete"
               title="Delete Resource"
+              type="button"
             >
               <Trash2 className="resource-card-action-icon" />
             </button>
@@ -108,7 +123,7 @@ export const ResourceCard = ({
         <div className="create-update-resource-preview-overlay">
           <ResourceDetails
             resource={resource}
-            onClose={() => setShowDetails(false)}
+            onClose={handleCloseDetails}
           />
         </div>
       )}

@@ -18,7 +18,7 @@ import (
 	"learning-hub/utils"
 )
 
-// GetResources handles GET /api/resources
+// GetResources handles GET /resources
 // Supports filtering by type, tags, and search, as well as pagination using cursor and limit.
 // Query Params:
 //   - type: Filter by resource type ("all", "video", "pdf", "article")
@@ -124,7 +124,7 @@ func GetResources(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// GetResource handles GET /api/resources/:id
+// GetResource handles GET /resources/:id
 func GetResource(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
@@ -151,7 +151,7 @@ func GetResource(c *gin.Context) {
 	c.JSON(http.StatusOK, resource)
 }
 
-// CreateResource handles POST /api/resources
+// CreateResource handles POST /resources
 //   - Accepts multipart/form-data for resource creation.
 //   - Required fields: title, description, type.
 //   - For "video" and "pdf" types, if url provided in the request, it will be prioritized and used as the resource's URL.
@@ -286,7 +286,7 @@ func CreateResource(c *gin.Context) {
 	c.JSON(http.StatusCreated, resource)
 }
 
-// UpdateResource handles PATCH /api/resources/:id
+// UpdateResource handles PATCH /resources/:id
 //   - Accepts multipart/form-data for resource update.
 //   - Only allows updating fields except for resource type (cannot be changed).
 //   - Handles file and thumbnail replacement if provided.
@@ -474,7 +474,7 @@ func UpdateResource(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedResource)
 }
 
-// DeleteResource handles DELETE /api/resource/:id
+// DeleteResource handles DELETE /resource/:id
 //   - Deletes a resource and associated files from storage.
 func DeleteResource(c *gin.Context) {
 	ctx := c.Request.Context()

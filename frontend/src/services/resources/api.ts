@@ -19,9 +19,9 @@ const toFormData = (payload: Partial<CreateResourcePayload>): FormData => {
   if (payload.title) formData.append("title", payload.title);
   if (payload.description) formData.append("description", payload.description);
   if (payload.type) formData.append("type", payload.type);
+  if (payload.tags) formData.append("tags", payload.tags);
   if (payload.url) formData.append("url", payload.url);
   if (payload.thumbnailUrl) formData.append("thumbnailUrl", payload.thumbnailUrl);
-  if (payload.tags) formData.append("tags", payload.tags);
   if (payload.file) formData.append("file", payload.file);
   if (payload.thumbnail) formData.append("thumbnail", payload.thumbnail);
 

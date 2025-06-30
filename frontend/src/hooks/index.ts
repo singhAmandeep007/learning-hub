@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from "@tanstack/react-query";
+import { useSearchParams } from "react-router";
+
 import { useReactQueryFlash } from "../components/Flash";
+
+import { type ResourcesFilters, type Tag, RESOURCE_TYPES } from "../types";
 
 export function useQueryWithFlash<TData, TError = Error>(
   options: UseQueryOptions<TData, TError> & {
@@ -14,25 +18,31 @@ export function useQueryWithFlash<TData, TError = Error>(
   const flash = useReactQueryFlash();
   const { successMessage, errorMessage, showSuccessFlash = false, showErrorFlash = true, ...queryOptions } = options;
 
+  // Track previous states to avoid duplicate notifications
+  const prevStatusRef = useRef<"idle" | "pending" | "error" | "success">("idle");
+  const prevErrorRef = useRef<TError | null>(null);
+
   const query = useQuery(queryOptions);
 
   // Handle success notifications
   useEffect(() => {
-    if (query.isSuccess && showSuccessFlash && query.data) {
+    if (query.isSuccess && showSuccessFlash && prevStatusRef.current !== "success") {
       const message =
         typeof successMessage === "function"
           ? successMessage(query.data)
-          : successMessage || "Data loaded successfully";
+          : successMessage || "Query completed successfully";
       flash.showQuerySuccess(message);
     }
-  }, [query.isSuccess, query.data, showSuccessFlash, successMessage, flash]);
+    prevStatusRef.current = query.status;
+  }, [query.isSuccess, query.status, query.data, showSuccessFlash, successMessage, flash]);
 
   // Handle error notifications
   useEffect(() => {
-    if (query.isError && showErrorFlash && query.error) {
+    if (query.isError && showErrorFlash && prevErrorRef.current !== query.error) {
       const message = typeof errorMessage === "function" ? errorMessage(query.error) : errorMessage;
       flash.showQueryError(query.error, message);
     }
+    prevErrorRef.current = query.error;
   }, [query.isError, query.error, showErrorFlash, errorMessage, flash]);
 
   return query;
@@ -54,27 +64,25 @@ export function useMutationWithFlash<TData, TError = Error, TVariables = void, T
     ...mutationOptions,
     // Handle success notifications
     onSuccess: (data, variables, context) => {
+      mutationOptions.onSuccess?.(data, variables, context);
+
       if (showSuccessFlash) {
         const message =
           typeof successMessage === "function"
-            ? successMessage(data, mutation.variables!)
+            ? successMessage(data, variables)
             : successMessage || "Operation completed successfully";
 
         flash.showMutationSuccess(message);
       }
-      if (mutationOptions.onSuccess) {
-        mutationOptions.onSuccess(data, variables, context);
-      }
     },
     // Handle error notifications
     onError: (error, variables, context) => {
-      if (showErrorFlash) {
-        const message = typeof errorMessage === "function" ? errorMessage(error, mutation.variables!) : errorMessage;
+      mutationOptions.onError?.(error, variables, context);
 
-        flash.showMutationError(mutation.error, message);
-      }
-      if (mutationOptions.onError) {
-        mutationOptions.onError(error, variables, context);
+      if (showErrorFlash) {
+        const message = typeof errorMessage === "function" ? errorMessage(error, variables) : errorMessage;
+
+        flash.showMutationError(error, message);
       }
     },
   });
@@ -121,4 +129,156 @@ export function useDebouncedInputState<T extends HTMLInputElement | HTMLTextArea
   }, []);
 
   return [debouncedValue, handleChange, inputRef];
+}
+
+const ITEMS_PER_PAGE = 20;
+
+export function useResourceFilters({
+  loadedTags = [],
+  hasFetchedTags,
+}: {
+  loadedTags?: Tag["name"][];
+  hasFetchedTags: boolean;
+}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get initial values from URL
+  const getUrlSearch = () => searchParams.get("search") || "";
+  const getUrlTags = () => {
+    const tags = searchParams.get("tags");
+    return tags ? tags.split(",").filter(Boolean) : [];
+  };
+  const getUrlType = () => {
+    const type = searchParams.get("type") as ResourcesFilters["type"];
+    return type && [...Object.values(RESOURCE_TYPES), "all"].includes(type) ? type : "all";
+  };
+
+  // Search state - searchInput is what user types, activeSearch is what's searched
+  const [searchInput, setSearchInput] = useState(() => getUrlSearch());
+  const [activeSearch, setActiveSearch] = useState(() => getUrlSearch());
+
+  // Filter state
+  const [selectedTags, setSelectedTagsState] = useState<Tag["name"][]>([]);
+  const [selectedType, setSelectedTypeState] = useState<ResourcesFilters["type"]>(() => getUrlType());
+  const [currentPage, setCurrentPageState] = useState(1);
+
+  const [hasInitializedTags, setHasInitializedTags] = useState(false);
+
+  // Initialize selected tags from URL once tags are loaded
+  useEffect(
+    () => {
+      if (hasFetchedTags && !hasInitializedTags) {
+        const urlTags = getUrlTags();
+        const validTags = urlTags.filter((tag) => loadedTags.includes(tag));
+        setSelectedTagsState(validTags);
+        setHasInitializedTags(true);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hasFetchedTags, hasInitializedTags, loadedTags]
+  );
+
+  // Update selected tags when loadedTags change (after initialization)
+  // This handles cases where tags are deleted/renamed after resources are updated
+  useEffect(() => {
+    if (hasFetchedTags && hasInitializedTags) {
+      setSelectedTagsState((prevTags) => {
+        return prevTags.filter((tag) => loadedTags.includes(tag));
+      });
+    }
+  }, [loadedTags, hasFetchedTags, hasInitializedTags]);
+
+  // Calculate cursor for pagination
+  const calculateCursor = useCallback((page: number) => {
+    return page <= 1 ? null : (page - 1) * ITEMS_PER_PAGE;
+  }, []);
+
+  // Sync URL with state changes - only when activeSearch, filters, or page change
+  const updateUrlParams = useCallback(() => {
+    const params = new URLSearchParams();
+
+    if (activeSearch) params.set("search", activeSearch);
+    if (selectedType && selectedType !== "all") params.set("type", selectedType);
+    if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+
+    setSearchParams(params, { replace: true });
+  }, [activeSearch, selectedTags, selectedType, setSearchParams]);
+
+  useEffect(
+    () => {
+      // Only sync to URL after tags have been initialized to prevent clearing URL tags
+      if (hasInitializedTags || !getUrlTags().length) {
+        updateUrlParams();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [updateUrlParams, hasInitializedTags]
+  );
+
+  // Reset Page when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPageState(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSearch, selectedTags, selectedType]);
+
+  // Query params for API calls
+  const queryParams = useMemo(() => {
+    const calculatedCursor = calculateCursor(currentPage);
+
+    return {
+      ...(activeSearch ? { search: activeSearch } : {}),
+      ...(selectedType && selectedType !== "all" ? { type: selectedType } : {}),
+      ...(selectedTags.length > 0 ? { tags: selectedTags } : {}),
+      ...(calculatedCursor !== null ? { cursor: String(calculatedCursor), limit: String(ITEMS_PER_PAGE) } : {}),
+    };
+  }, [activeSearch, selectedType, selectedTags, currentPage, calculateCursor]);
+
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(activeSearch || selectedType !== "all" || selectedTags.length > 0);
+  }, [activeSearch, selectedType, selectedTags]);
+
+  // Handle clear filters
+  const handleClearFilters = useCallback(() => {
+    setSearchInput("");
+    setActiveSearch("");
+    setSelectedTagsState([]);
+    setSelectedTypeState("all");
+    setCurrentPageState(1);
+  }, []);
+
+  // Wrapper functions to ensure proper state updates
+  const setSelectedTags = useCallback((tags: Tag["name"][]) => {
+    setSelectedTagsState(tags);
+  }, []);
+
+  const setSelectedType = useCallback((type: ResourcesFilters["type"]) => {
+    setSelectedTypeState(type);
+  }, []);
+
+  const setCurrentPage = useCallback((page: number) => {
+    setCurrentPageState(page);
+  }, []);
+
+  return {
+    searchInput,
+    setSearchInput,
+
+    selectedTags,
+    selectedType,
+    currentPage,
+
+    setSelectedTags,
+    setSelectedType,
+    setCurrentPage,
+    setActiveSearch,
+    handleClearFilters,
+
+    updateUrlParams,
+
+    queryParams,
+    hasActiveFilters,
+  };
 }

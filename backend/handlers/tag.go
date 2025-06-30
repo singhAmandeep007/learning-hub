@@ -12,7 +12,7 @@ import (
 	"learning-hub/models"
 )
 
-// GetTags handles GET /api/tags
+// GetTags handles GET /tags
 func GetTags(c *gin.Context) {
 	ctx := c.Request.Context()
 

@@ -2,7 +2,7 @@ export class HttpClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
 
-  constructor(baseURL: string = "/api") {
+  constructor(baseURL: string) {
     this.baseURL = baseURL.replace(/\/$/, ""); // Remove trailing slash
     this.defaultHeaders = {};
   }
@@ -45,15 +45,16 @@ export class HttpClient {
     params?: Record<string, string | number | boolean | string[]>,
     options?: RequestInit
   ): Promise<T> {
-    const processedParams = params
-      ? Object.entries(params).reduce(
-          (acc, [key, value]) => {
-            acc[key] = Array.isArray(value) ? value.join(",") : value;
-            return acc;
-          },
-          {} as Record<string, string | number | boolean>
-        )
-      : undefined;
+    const processedParams =
+      params && Object.keys(params).length
+        ? Object.entries(params).reduce(
+            (acc, [key, value]) => {
+              acc[key] = Array.isArray(value) ? value.join(",") : value;
+              return acc;
+            },
+            {} as Record<string, string | number | boolean>
+          )
+        : undefined;
 
     const url = processedParams
       ? `${endpoint}?${new URLSearchParams(processedParams as Record<string, string>)}`
@@ -119,4 +120,4 @@ export class HttpClient {
   }
 }
 
-export const httpClient = new HttpClient(import.meta.env["VITE_API_BASE_URL"] || "/api");
+export const httpClient = new HttpClient(import.meta.env["VITE_API_BASE_URL"] || "/api/v1");

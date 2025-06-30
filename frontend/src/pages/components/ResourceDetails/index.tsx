@@ -64,6 +64,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({ resource, onCl
               className="resource-details-pdf"
               title="PDF Preview"
               onLoad={() => URL.revokeObjectURL(pdfUrl)}
+              allow="fullscreen"
             />
           );
         }

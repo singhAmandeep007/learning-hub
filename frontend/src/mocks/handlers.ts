@@ -4,8 +4,10 @@ import type { Resource, Tag } from "../types";
 
 import { withDelay } from "./middleware";
 
+const BASE_URL = "api/v1/resources";
+
 export const handlers = [
-  http.get("api/resources", () => {
+  http.get(BASE_URL, () => {
     return HttpResponse.json({
       data: resources,
       hasMore: false,
@@ -20,7 +22,7 @@ export const handlers = [
     );
   }),
 
-  http.get("api/resources/:id", ({ params }) => {
+  http.get(BASE_URL + "/:id", ({ params }) => {
     const resource = resources.find((resource) => resource.id === params.id);
 
     return HttpResponse.json(resource);
@@ -35,12 +37,30 @@ export const handlers = [
   }),
 
   http.post(
-    "api/resources",
+    BASE_URL,
     withDelay(1000, async ({ request }) => {
       const formData = await request.formData();
-      console.log("Create resource formdata", formData);
 
-      return HttpResponse.json(resources[0], { status: 201 });
+      const newResource: Resource = {
+        id: crypto.randomUUID(),
+
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+
+        type: formData.get("type") as Resource["type"],
+        url: (formData.get("url") as string) || "",
+        thumbnailUrl: (formData.get("thumbnailUrl") as string | undefined) || "",
+        tags: (formData.get("tags") as string)
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      resources.push(newResource);
+
+      return HttpResponse.json(newResource, { status: 201 });
 
       return HttpResponse.json(
         {
@@ -52,7 +72,7 @@ export const handlers = [
     })
   ),
 
-  http.patch("api/resources/:id", async ({ params, request }) => {
+  http.patch(BASE_URL + "/:id", async ({ params, request }) => {
     const resource = resources.find((resource) => resource.id === params.id);
 
     const formData = await request.formData();
@@ -69,7 +89,7 @@ export const handlers = [
     );
   }),
 
-  http.delete("api/resources/:id", async ({ params }) => {
+  http.delete(BASE_URL + "/:id", async ({ params }) => {
     resources = resources.filter((resource) => resource.id !== params.id);
 
     return HttpResponse.json({}, { status: 200 });
@@ -83,7 +103,7 @@ export const handlers = [
     );
   }),
 
-  http.get("api/tags", () => {
+  http.get(BASE_URL + "/tags", () => {
     return HttpResponse.json(tags);
 
     return HttpResponse.json(
@@ -113,7 +133,7 @@ let resources: Resource[] = [
     description: "This is a test video tutorial 1",
     type: "video",
     url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    thumbnailUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
+    thumbnailUrl: "https://picsum.photos/id/237/536/354",
     tags: ["test", "video", "tutorial"],
     createdAt: "2025-06-03T04:48:28.522788Z",
     updatedAt: "2025-06-03T04:48:28.522788Z",
@@ -134,7 +154,7 @@ let resources: Resource[] = [
     description: "This is a test PDF document 1",
     type: "pdf",
     url: "https://s24.q4cdn.com/216390268/files/doc_downloads/test.pdf",
-    thumbnailUrl: "https://t4.ftcdn.net/jpg/01/67/19/37/360_F_167193773_nI3NaWJMBdTTvz1EcBmqvjoeAW0WGzlu.jpg",
+    thumbnailUrl: "https://picsum.photos/id/237/536/354",
     tags: ["test", "pdf", "documentation"],
     createdAt: "2025-06-03T04:48:28.471915Z",
     updatedAt: "2025-06-03T04:48:28.471915Z",

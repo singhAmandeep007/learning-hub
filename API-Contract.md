@@ -7,7 +7,7 @@ This document outlines the API contract for the Learning Hub application. The AP
 ## Base URL
 
 ```
-https://example.com/api
+https://example.com/api/v1
 ```
 
 ## Admin Authentication

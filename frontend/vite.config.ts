@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const isDevMode = mode === "development";
 
   const port = env.VITE_PORT ? parseInt(env.VITE_PORT, 10) : 3000;
-  const apiBaseURL = env.VITE_API_BASE_URL || "/api";
+  const apiBaseURL = env.VITE_API_BASE_URL || "/api/v1";
   const proxyApiHost = env.VITE_PROXY_API_HOST || "http://localhost:8000";
 
   return {

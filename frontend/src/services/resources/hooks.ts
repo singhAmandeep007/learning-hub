@@ -15,12 +15,13 @@ import {
 } from "../../types";
 
 import { useMutationWithFlash, useQueryWithFlash } from "../../hooks";
+import { tagsKeys } from "../tags/hooks";
 
 // Query Keys
 export const resourcesKeys = {
   all: ["resources"] as const,
   lists: () => [...resourcesKeys.all, "list"] as const,
-  list: (params?: GetResourcesParams) => [...resourcesKeys.lists(), params] as const,
+  list: (params?: GetResourcesParams) => [...resourcesKeys.lists(), JSON.stringify(params)] as const,
   details: () => [...resourcesKeys.all, "detail"] as const,
   detail: (id: string | number) => [...resourcesKeys.details(), id] as const,
 } as const;
@@ -34,10 +35,11 @@ export function useResources(
   >
 ) {
   return useQueryWithFlash({
-    queryKey: resourcesKeys.lists(),
+    queryKey: resourcesKeys.list(params),
     queryFn: () => resourcesApi.getAll(params),
     retry: false,
     errorMessage: "Failed to load resources",
+    refetchOnWindowFocus: false,
     ...options,
   });
 }
@@ -52,6 +54,7 @@ export function useResource(
     queryFn: () => resourcesApi.getById(payload),
     retry: false,
     errorMessage: "Failed to load resource",
+    refetchOnWindowFocus: false,
     ...options,
   });
 }
@@ -61,18 +64,21 @@ export function useCreateResource(
   options?: Omit<UseMutationOptions<CreateResourceResponse, Error, CreateResourcePayload, unknown>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
+  const { onSuccess, ...restOptions } = options || {};
 
   return useMutationWithFlash({
     mutationFn: resourcesApi.create,
     onSuccess: (data, variables, context) => {
       // Invalidate and refetch resources list
       queryClient.invalidateQueries({ queryKey: resourcesKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: tagsKeys.lists() });
 
       // Call user-provided onSuccess if exists
-      options?.onSuccess?.(data, variables, context);
+      onSuccess?.(data, variables, context);
     },
     errorMessage: "Failed to create resource",
     successMessage: "Created resource successfully",
+    ...restOptions,
   });
 }
 
@@ -81,6 +87,7 @@ export function useUpdateResource(
   options?: Omit<UseMutationOptions<UpdateResourceResponse, Error, UpdateResourcePayload, unknown>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
+  const { onSuccess, ...restOptions } = options || {};
 
   return useMutationWithFlash({
     mutationFn: resourcesApi.update,
@@ -90,13 +97,14 @@ export function useUpdateResource(
         queryKey: resourcesKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: resourcesKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: tagsKeys.lists() });
 
       // Call user-provided onSuccess if exists
-      options?.onSuccess?.(data, variables, context);
+      onSuccess?.(data, variables, context);
     },
     errorMessage: "Failed to update resource",
     successMessage: "Updated resource successfully",
-    ...options,
+    ...restOptions,
   });
 }
 
@@ -105,21 +113,22 @@ export function useDeleteResource(
   options?: Omit<UseMutationOptions<void, Error, DeleteResourcePayload, unknown>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
+  const { onSuccess, ...restOptions } = options || {};
 
   return useMutationWithFlash({
     mutationFn: resourcesApi.delete,
     onSuccess: (data, variables, context) => {
+      // Call user-provided onSuccess if exists
+      onSuccess?.(data, variables, context);
       // Remove specific resource from cache and invalidate lists
       queryClient.removeQueries({
         queryKey: resourcesKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: resourcesKeys.lists() });
-
-      // Call user-provided onSuccess if exists
-      options?.onSuccess?.(data, variables, context);
+      queryClient.invalidateQueries({ queryKey: tagsKeys.lists() });
     },
     errorMessage: "Failed to delete resource",
     successMessage: "Deleted resource successfully",
-    ...options,
+    ...restOptions,
   });
 }

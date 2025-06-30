@@ -5,6 +5,8 @@
   position: relative;
   width: 100%;
 
+  font-size: 12px;
+
   .selected-items-container {
     display: flex;
     flex-wrap: wrap;
@@ -30,9 +32,10 @@
     color: $neutral-50;
     border-radius: $border-radius-full;
     padding: $spacing-1 $spacing-2;
-    font-size: 12px;
     font-weight: 500;
     white-space: nowrap; // Prevent text from wrapping inside the tag
+
+    font-size: 10px;
 
     &-new {
       // Style for newly added tags
@@ -66,7 +69,6 @@
     border: none;
     outline: none;
     padding: 0 $spacing-1;
-    font-size: 12px;
     color: $neutral-800;
     min-width: 80px; // Ensure input is always visible even with many tags
     background-color: transparent; // Ensure it blends with the container
