@@ -56,3 +56,16 @@ chmod +x resources.sh
 
 ./resources.sh
 ```
+
+
+## Testing docker locally
+
+### Build the Docker image
+```bash
+docker build -t learning-hub-backend-prod -f backend/Dockerfile.prod backend
+```
+
+### Run the Docker container
+```bash
+docker run --rm -it --name test-backend-prod -p 8000:8000 -e ENV_MODE=prod -e FIREBASE_PROJECT_ID=learning-hub-81cc6 -e FIREBASE_CREDENTIALS_FILE=/app/firebase_credentials.json -e ADMIN_SECRET=your-secure-admin-secret -e CORS_ORIGINS=http://localhost:3000 -v $(pwd)/backend/firebase_credentials.json:/app/firebase_credentials.json:ro learning-hub-backend-prod
+```

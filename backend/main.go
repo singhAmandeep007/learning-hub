@@ -93,6 +93,7 @@ func getEnvMode() string {
 	envMode := os.Getenv("ENV_MODE")
 	if envMode == "" {
 		envMode = constants.EnvModeProd // Default to prod mode if not set
+		os.Setenv("ENV_MODE", envMode)
 	}
 	// Requires ENV_MODE to be set in docker-compose.yml or in system: "dev" or "prod"
 	if envMode != constants.EnvModeDev && envMode != constants.EnvModeProd {

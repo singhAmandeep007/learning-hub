@@ -1,5 +1,6 @@
 # Build arguments
 ARG GO_VERSION=1.24
+ARG PORT=8000
 
 # Base stage
 FROM golang:${GO_VERSION}-alpine AS base
@@ -24,7 +25,7 @@ RUN go mod download && go mod verify
 COPY . .
 
 # Expose port
-EXPOSE 8000
+EXPOSE ${PORT}
 
 # Wait for Firebase emulator then run air
 CMD sleep 10 && air -c .air.toml

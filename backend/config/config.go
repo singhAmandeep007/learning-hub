@@ -35,7 +35,7 @@ func LoadConfig() error {
 	config := &EnvConfig{}
 
 	// Load string variables with defaults
-	config.ENV_MODE = getEnvOrDefault("ENV_MODE", constants.EnvModeDev)
+	config.ENV_MODE = getEnvOrDefault("ENV_MODE", constants.EnvModeProd)
 	config.ADMIN_SECRET = getEnvOrDefault("ADMIN_SECRET", "your-admin-secret-key")
 
 	config.PORT = getEnvOrDefault("PORT", "8000")

@@ -22,6 +22,13 @@ npm install -g sass-migrator
 sass-migrator module path-to-scss-file.scss
 ```
 
+## Docker
+
+```bash
+docker build -t learning-hub-frontend-prod -f frontend/Dockerfile.prod frontend
+```
+
+
 ## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

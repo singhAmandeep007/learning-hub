@@ -8,7 +8,6 @@ A comprehensive learning platform that provides resources in the form of videos,
 - React (TypeScript)
 - Vite
 - React Router
-- React Hook Form
 - React Query
 - SCSS Modules
 
