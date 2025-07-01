@@ -1,0 +1,76 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+      args:
+        GO_VERSION: 1.24
+        PORT: 8000
+    container_name: backend-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV_MODE=prod
+      - PORT=8000
+      - GIN_MODE=release
+      - CORS_ORIGINS=http://localhost:3000
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-learning-hub-81cc6}
+      - FIREBASE_CREDENTIALS_FILE=/app/firebase_credentials.json
+      - ADMIN_SECRET=${ADMIN_SECRET:-your-admin-secret-key}
+    volumes:
+      - ./backend/firebase_credentials.json:/app/firebase_credentials.json:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NODE_VERSION: 22
+        PORT: 3000
+    container_name: frontend-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=/api/v1
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:noexec,nosuid,size=50m
+      - /var/run:noexec,nosuid,size=10m
+      - /tmp:noexec,nosuid,size=50m
+
+networks:
+  app-network:
+    driver: bridge

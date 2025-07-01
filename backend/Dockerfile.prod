@@ -1,0 +1,52 @@
+# Build arguments
+ARG GO_VERSION=1.24
+ARG PORT=8000
+
+# Builder stage
+FROM golang:${GO_VERSION}-alpine AS builder
+
+# Install build dependencies and ca-certificates for HTTPS connections
+RUN apk update && apk add --no-cache \
+    git \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+# Copy source code
+COPY . .
+
+# Build the application with optimizations
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./main.go
+
+# Production stage
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS connections
+RUN apk --no-cache add ca-certificates
+
+# Create a non-root user
+RUN addgroup -g 1000 -S appgroup && \
+    adduser -u 1000 -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy the binary from builder stage
+COPY --from=builder /app/main .
+
+# Change ownership to our non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose the port on which the app will run
+EXPOSE ${PORT}
+
+# Run the binary
+CMD ["./main"]
