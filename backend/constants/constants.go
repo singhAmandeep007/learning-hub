@@ -6,9 +6,9 @@ const (
 	EnvModeDev  = "dev"
 	EnvModeProd = "prod"
 
-	CollectionProducts  = "products"
-	CollectionResources = "resources"
-	CollectionTags      = "tags"
+	// Collection name suffixes - will be prefixed with product name
+	CollectionSuffixResources = "_resources"
+	CollectionSuffixTags      = "_tags"
 
 	// Valid product names
 	ProductEcomm = "ecomm"
@@ -56,4 +56,16 @@ var ValidProducts = []string{
 	ProductEcomm,
 	ProductAdmin,
 	ProductCrm,
+}
+
+// GetResourcesCollectionName returns the collection name for resources for a given product
+// product_name + "_resources"
+func GetResourcesCollectionName(product string) string {
+	return product + CollectionSuffixResources
+}
+
+// GetTagsCollectionName returns the collection name for tags for a given product
+// product_name + "_tags"
+func GetTagsCollectionName(product string) string {
+	return product + CollectionSuffixTags
 }

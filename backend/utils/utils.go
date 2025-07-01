@@ -64,14 +64,15 @@ func Max(a, b int) int {
 	return b
 }
 
-// UpdateTagUsage updates the usage count for tags in a product-specific subcollection
+// UpdateTagUsage updates the usage count for tags in a product-specific collection
 func UpdateTagUsage(ctx context.Context, product string, tags []string, delta int) {
 	for _, tag := range tags {
 		if tag == "" {
 			continue
 		}
 
-		tagRef := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionTags).Doc(tag)
+		collectionName := constants.GetTagsCollectionName(product)
+		tagRef := firebase.FirestoreClient.Collection(collectionName).Doc(tag)
 
 		// Use a transaction to ensure atomicity
 		err := firebase.FirestoreClient.RunTransaction(ctx, func(_ context.Context, tx *firestore.Transaction) error {

@@ -22,7 +22,7 @@ import (
 // GetResources handles GET /resources
 // Supports filtering by type, tags, and search, as well as pagination using cursor and limit.
 // Query Params:
-//   - type: Filter by resource type ("all", "video", "pdf", "article")
+//   - type: Filter by resource type ("video", "pdf", "article")
 //   - tags: Comma-separated list of tags to filter by
 //   - search: Search string for title/description
 //   - cursor: Offset for pagination (as stringified int)
@@ -34,9 +34,9 @@ func GetResources(c *gin.Context) {
 	product := middleware.GetProductFromContext(c)
 
 	// Parse query parameters
-	typeFilter := c.DefaultQuery("type", "all") // "all" | "video" | "pdf" | "article"
-	tagsParam := c.Query("tags")                // "onboarding,tutorial" | "onboarding"
-	search := c.Query("search")                 // "getting%20started" | "v1.2"
+	typeFilter := c.Query("type") // "video" | "pdf" | "article"
+	tagsParam := c.Query("tags")  // "onboarding,tutorial" | "onboarding"
+	search := c.Query("search")   // "getting%20started" | "v1.2"
 	cursor := c.Query("cursor")
 	limitStr := c.DefaultQuery("limit", "20")
 
@@ -46,11 +46,11 @@ func GetResources(c *gin.Context) {
 		limit = constants.DefaultPageSize
 	}
 
-	// Build Firestore query with product-specific subcollection
-	query := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).OrderBy("createdAt", firestore.Desc)
+	// Build Firestore query with product-specific collection
+	query := firebase.FirestoreClient.Collection(constants.GetResourcesCollectionName(product)).OrderBy("createdAt", firestore.Desc)
 
 	// Apply type filter
-	if typeFilter != "all" && utils.IsValidResourceType(typeFilter) {
+	if utils.IsValidResourceType(typeFilter) {
 		query = query.Where("type", "==", typeFilter)
 	}
 
@@ -75,7 +75,7 @@ func GetResources(c *gin.Context) {
 	docs, err := query.Limit(limit + 1).Documents(ctx).GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.QueryFailed,
+			Error:   fmt.Sprintf("%s:%v", constants.QueryFailed, err),
 			Message: "Failed to fetch resources",
 		})
 		return
@@ -136,11 +136,12 @@ func GetResource(c *gin.Context) {
 	// Get product from context (validated by middleware)
 	product := middleware.GetProductFromContext(c)
 
-	// Get document from product-specific subcollection
-	doc, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	// Get document from product-specific collection
+	collectionName := constants.GetResourcesCollectionName(product)
+	doc, err := firebase.FirestoreClient.Collection(collectionName).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
-			Error:   constants.NotFound,
+			Error:   fmt.Sprintf("%s:%v", constants.NotFound, err),
 			Message: "Resource not found",
 		})
 		return
@@ -149,7 +150,7 @@ func GetResource(c *gin.Context) {
 	var resource models.Resource
 	if err := doc.DataTo(&resource); err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.DataConversionFailed,
+			Error:   fmt.Sprintf("%s:%v", err, constants.DataConversionFailed),
 			Message: "Failed to process resource data",
 		})
 		return
@@ -280,11 +281,12 @@ func CreateResource(c *gin.Context) {
 		}
 	}
 
-	// Save to Firestore in product-specific subcollection
-	docRef, _, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Add(ctx, resource)
+	// Save to Firestore in product-specific collection
+	collectionName := constants.GetResourcesCollectionName(product)
+	docRef, _, err := firebase.FirestoreClient.Collection(collectionName).Add(ctx, resource)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.MutationFailed,
+			Error:   fmt.Sprintf("%s:%v", constants.MutationFailed, err),
 			Message: "Failed to save resource",
 		})
 		return
@@ -308,8 +310,9 @@ func UpdateResource(c *gin.Context) {
 	// Get product from context (validated by middleware)
 	product := middleware.GetProductFromContext(c)
 
-	// Get existing resource from product-specific subcollection
-	doc, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	// Get existing resource from product-specific collection
+	collectionName := constants.GetResourcesCollectionName(product)
+	doc, err := firebase.FirestoreClient.Collection(collectionName).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   constants.NotFound,
@@ -468,11 +471,12 @@ func UpdateResource(c *gin.Context) {
 		}
 	}
 
-	// Save updated resource to product-specific subcollection
-	_, err = firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Set(ctx, updatedResource)
+	// Save updated resource to product-specific collection
+	collectionName = constants.GetResourcesCollectionName(product)
+	_, err = firebase.FirestoreClient.Collection(collectionName).Doc(id).Set(ctx, updatedResource)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.MutationFailed,
+			Error:   fmt.Sprintf("%s,%v", constants.MutationFailed, err),
 			Message: "Failed to update resource",
 		})
 		return
@@ -497,8 +501,9 @@ func DeleteResource(c *gin.Context) {
 	// Get product from context (validated by middleware)
 	product := middleware.GetProductFromContext(c)
 
-	// Get existing resource to clean up files from product-specific subcollection
-	doc, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Get(ctx)
+	// Get existing resource to clean up files from product-specific collection
+	collectionName := constants.GetResourcesCollectionName(product)
+	doc, err := firebase.FirestoreClient.Collection(collectionName).Doc(id).Get(ctx)
 	if err != nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   constants.NotFound,
@@ -510,7 +515,7 @@ func DeleteResource(c *gin.Context) {
 	var resource models.Resource
 	if err := doc.DataTo(&resource); err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.DataConversionFailed,
+			Error:   fmt.Sprintf("%s,%v", constants.DataConversionFailed, err),
 			Message: "Failed to process resource data",
 		})
 		return
@@ -527,11 +532,12 @@ func DeleteResource(c *gin.Context) {
 	// Update tag usage counts
 	utils.UpdateTagUsage(ctx, product, resource.Tags, -1)
 
-	// Delete from Firestore product-specific subcollection
-	_, err = firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionResources).Doc(id).Delete(ctx)
+	// Delete from Firestore product-specific collection
+	collectionName = constants.GetResourcesCollectionName(product)
+	_, err = firebase.FirestoreClient.Collection(collectionName).Doc(id).Delete(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.MutationFailed,
+			Error:   fmt.Sprintf("%s:%v", constants.MutationFailed, err),
 			Message: "Failed to delete resource",
 		})
 		return

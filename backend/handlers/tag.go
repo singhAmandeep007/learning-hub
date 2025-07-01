@@ -20,8 +20,9 @@ func GetTags(c *gin.Context) {
 	// Get product from context (validated by middleware)
 	product := middleware.GetProductFromContext(c)
 
-	// Get tags from product-specific subcollection
-	docs, err := firebase.FirestoreClient.Collection(constants.CollectionProducts).Doc(product).Collection(constants.CollectionTags).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
+	// Get tags from product-specific collection
+	collectionName := constants.GetTagsCollectionName(product)
+	docs, err := firebase.FirestoreClient.Collection(collectionName).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
 
 	if err != nil {
 		log.Printf("Error fetching tags from Firestore: %v\n", err)
