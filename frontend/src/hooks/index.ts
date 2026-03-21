@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 
-import { useReactQueryFlash } from "../components/Flash";
+import { useReactQueryFlash } from "../components/Flash/useReactQueryFlash";
 
 import { type ResourcesFilters, type Tag, RESOURCE_TYPES } from "../types";
 

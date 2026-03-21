@@ -1,15 +1,10 @@
-import { useState, useCallback, lazy } from "react";
+import { useState, useCallback } from "react";
 import { Video, File, ExternalLink, FileText, Eye, Edit3, Trash2, Tag } from "lucide-react";
 
 import { type Resource, RESOURCE_TYPES, type ResourceType } from "../../../types";
+import { ResourceDetails } from "../ResourceDetails";
 
 import "./ResourceCard.scss";
-
-const ResourceDetails = lazy(() =>
-  import("../ResourceDetails").then((module) => ({
-    default: module.ResourceDetails,
-  }))
-);
 
 interface ResourceCardProps {
   resource: Resource;

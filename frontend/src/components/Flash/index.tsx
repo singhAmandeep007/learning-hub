@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import { ReactQueryFlashContext } from "./flashContext";
 
 import "./Flash.scss";
 
@@ -10,21 +11,6 @@ interface Notification {
   type: "success" | "error" | "info" | "warning";
   duration?: number;
 }
-
-interface ReactQueryFlashContextType {
-  addNotification: (message: string, type?: Notification["type"], duration?: number) => void;
-  showSuccess: (message: string, duration?: number) => void;
-  showError: (message: string, duration?: number) => void;
-  showInfo: (message: string, duration?: number) => void;
-  showWarning: (message: string, duration?: number) => void;
-  // React Query specific helpers
-  showQuerySuccess: (message?: string, duration?: number) => void;
-  showQueryError: (error: any, customMessage?: string, duration?: number) => void;
-  showMutationSuccess: (message?: string, duration?: number) => void;
-  showMutationError: (error: any, customMessage?: string, duration?: number) => void;
-}
-
-const ReactQueryFlashContext = createContext<ReactQueryFlashContextType | undefined>(undefined);
 
 export const ReactQueryFlashProvider: React.FC<{
   children: React.ReactNode;
@@ -145,14 +131,6 @@ export const ReactQueryFlashProvider: React.FC<{
       </div>
     </ReactQueryFlashContext.Provider>
   );
-};
-
-export const useReactQueryFlash = () => {
-  const context = useContext(ReactQueryFlashContext);
-  if (context === undefined) {
-    throw new Error("useReactQueryFlash must be used within a ReactQueryFlashProvider");
-  }
-  return context;
 };
 
 interface ReactQueryFlashNotificationProps {

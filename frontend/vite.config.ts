@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
   const proxyApiHost = env.VITE_PROXY_API_HOST || "http://localhost:8000";
 
   return {
+    plugins: [react()],
     server: {
       port: port,
       strictPort: true,
@@ -25,16 +26,30 @@ export default defineConfig(({ mode }) => {
           },
         },
       }),
-      plugins: [react()],
-      build: {
-        outDir: "dist",
-        sourcemap: false,
-        minify: "esbuild",
-        rollupOptions: {
-          output: {
-            manualChunks: {
-              vendor: ["react", "react-dom"],
-            },
+    },
+    build: {
+      outDir: "dist",
+      sourcemap: false,
+      rolldownOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return;
+            }
+
+            if (id.includes("react") || id.includes("react-dom") || id.includes("scheduler")) {
+              return "react-vendor";
+            }
+
+            if (id.includes("@tanstack")) {
+              return "query-vendor";
+            }
+
+            if (id.includes("@tiptap") || id.includes("prosemirror") || id.includes("@floating-ui")) {
+              return "editor-vendor";
+            }
+
+            return "vendor";
           },
         },
       },
