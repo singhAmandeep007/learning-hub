@@ -1,4 +1,5 @@
-@baseUrl = http://localhost:8000/api/v1/ecomm/resources
+@product = ecomm
+@baseUrl = http://localhost:8000/api/v1/{{product}}/resources
 
 ###
 # Get all resources (default pagination)
@@ -6,76 +7,76 @@ GET {{baseUrl}}/ HTTP/1.1
 
 ###
 # Get all types (explicit)
-curl "{{baseUrl}}?type=all"
+GET {{baseUrl}}?type=all HTTP/1.1
 
 ###
 # With custom page size
-curl "{{baseUrl}}?limit=10"
+GET {{baseUrl}}?limit=10 HTTP/1.1
 
 ###
 # Type filtering
 # Get only videos
-curl "{{baseUrl}}?type=video"
+GET {{baseUrl}}?type=video HTTP/1.1
 
 ###
 # Get only PDFs
-curl "{{baseUrl}}?type=pdf"
+GET {{baseUrl}}?type=pdf HTTP/1.1
 
 ###
 # Get only articles
-curl "{{baseUrl}}?type=article"
+GET {{baseUrl}}?type=article HTTP/1.1
 
 ###
 # Tag filtering
 # Single tag
-curl "{{baseUrl}}?tags=onboarding"
+GET {{baseUrl}}?tags=buying%20guide HTTP/1.1
 
 ###
 # Multiple tags (OR condition)
-curl "{{baseUrl}}?tags=onboarding,tutorial,basics"
+GET {{baseUrl}}?tags=buying%20guide,product%20comparison,recommendations HTTP/1.1
 
 ###
 # URL encoded for special characters
-curl "{{baseUrl}}?tags=get-started,how-to"
+GET {{baseUrl}}?tags=best%20sellers,new%20arrivals HTTP/1.1
 
 ###
 # Search functionality
 # Search in title and description
-curl "{{baseUrl}}?search=getting%20started"
+GET {{baseUrl}}?search=buying%20guide HTTP/1.1
 
 ###
 # URL encoded search
-curl "{{baseUrl}}?search=test%20PDF%20document"
+GET {{baseUrl}}?search=product%20comparison HTTP/1.1
 
 ###
 # Search with special characters
-curl "{{baseUrl}}?search=API%20%26%20Integration"
+GET {{baseUrl}}?search=returns%20%26%20warranty HTTP/1.1
 
 ###
 # Combined filters
 # Type + Tags + Search
-curl "{{baseUrl}}?type=video&tags=onboarding,tutorial&search=introduction&limit=5"
+GET {{baseUrl}}?type=video&tags=tutorial,demo&search=comparison&limit=5 HTTP/1.1
 
 ###
 # All filters with pagination
-curl "{{baseUrl}}?type=pdf&tags=documentation&search=guide&limit=10&cursor=20"
+GET {{baseUrl}}?type=pdf&tags=reference,manual&search=guide&limit=10&cursor=20 HTTP/1.1
 
 ###
 # Pagination Examples
 # First page
-curl "{{baseUrl}}?limit=5"
+GET {{baseUrl}}?limit=5 HTTP/1.1
 
 ###
 # Second page (using cursor from first response)
-curl "{{baseUrl}}?limit=5&cursor=5"
+GET {{baseUrl}}?limit=5&cursor=5 HTTP/1.1
 
 ###
 # Third page
-curl "{{baseUrl}}?limit=5&cursor=10"
+GET {{baseUrl}}?limit=5&cursor=10 HTTP/1.1
 
 
 # GET Eg.
-# curl -X GET "http://localhost:8000/api/v1/ecomm/resources"
+# curl -X GET "http://localhost:8000/api/v1/{{product}}/resources"
 
 # POST Eg.
 # file required in case video or pdf
@@ -83,29 +84,26 @@ curl "{{baseUrl}}?limit=5&cursor=10"
 # thumbnail optional
 # thumbnailUrl optional
 
-# curl -X POST "http://localhost:8000/api/v1/ecomm/resources" \
-# 	-H "AdminSecret: your-admin-secret-key" \
-# 	-F "title=Test PDF Document 1" \
-# 	-F "description=updated descr.wd" \
-# 	-F "tags=new space,optimus,tis,external" \
+# curl -X POST "http://localhost:8000/api/v1/{{product}}/resources" \
+# 	-F "title=Laptop Buying Guide" \
+# 	-F "description=Detailed guide for selecting a laptop by budget and usage" \
+# 	-F "tags=buying guide,comparison,best sellers" \
 # 	-F "type=article" \
-# 	-F "url=https://pkg.go.dev/cloud.google.com/go/firestore@v1.18.0" \
-# 	-F "thumbnailUrl=https://vsprod.vijaysales.com/media/catalog/product/2/3/232306-image.jpg" \
-# 	-F "file=@./pdfs/pdf1.pdf" \
-# 	-F "thumbnail=@./images/image2.webp"
+# 	-F "url=https://example-store.com/blog/laptop-buying-guide" \
+# 	-F "thumbnailUrl=https://cdn.example-store.com/images/laptop-guide-cover.jpg" \
+# 	-F "file=@./pdfs/ecommerce_catalog.pdf" \
+# 	-F "thumbnail=@./images/ecommerce_product.webp"
 
 # PATCH Eg.
-# curl -X PATCH "http://localhost:8000/api/v1/ecomm/resources/6Ihi4wRZwra7iBJVXceF" \
-#   -H "AdminSecret: your-admin-secret-key" \
+# curl -X PATCH "http://localhost:8000/api/v1/{{product}}/resources/6Ihi4wRZwra7iBJVXceF" \
 #   -F "title=Post updated" \
-# 	-F "description=updated descr.wd" \
-# 	-F "tags=new space,optimus,tis,external" \
-# 	-F "url=https://www.allthefood.ie/single-post/tr" \
-# 	-F "thumbnail=@./images/image2.webp" \
+# 	-F "description=Updated product comparison notes" \
+# 	-F "tags=comparison,recommendations,premium picks" \
+# 	-F "url=https://example-store.com/blog/product-comparison" \
+# 	-F "thumbnail=@./images/ecommerce_product.webp" \
 # 	-F "type=pdf" \
-# 	-F "file=@./pdfs/pdf1.pdf"
+# 	-F "file=@./pdfs/ecommerce_simple.pdf"
 
 # DELETE Eg.
-# curl -X DELETE "http://localhost:8000/api/v1/ecomm/resources/6Ihi4wRZwra7iBJVXceF" \
-#   -H "AdminSecret: your-admin-secret-key"
+# curl -X DELETE "http://localhost:8000/api/v1/{{product}}/resources/6Ihi4wRZwra7iBJVXceF"
 

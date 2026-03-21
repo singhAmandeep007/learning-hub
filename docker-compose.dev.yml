@@ -2,7 +2,7 @@ services:
   # Firebase Emulator
   firebase-emulator:
     image: andreysenov/firebase-tools:14.2.0-node-22
-    container_name: firebase-emulator
+    container_name: learninghub-firebase-emulator
     ports:
       - "4000:4000" # Emulator UI
       - "8080:8080" # Firestore
@@ -13,15 +13,16 @@ services:
       - ./backend/firestore.rules:/home/node/firestore.rules
       - ./backend/storage.rules:/home/node/storage.rules
       - ./backend/firestore.indexes.json:/home/node/firestore.indexes.json
-    command: firebase emulators:start --project learning-hub-81cc6
+    command: firebase emulators:start --project learninghub-81cc6
     networks:
       - app-network
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    container_name: backend
+    container_name: learninghub-backend
     ports:
       - "8000:8000" # Main server
     volumes:
@@ -31,9 +32,12 @@ services:
       - ENV_MODE=dev
       - PORT=8000
       - CORS_ORIGINS=http://localhost:3000
-      - FIREBASE_PROJECT_ID=learning-hub-81cc6
+      - FIREBASE_PROJECT_ID=learninghub-81cc6
       - FIRESTORE_EMULATOR_HOST=firebase-emulator:8080
       - FIREBASE_STORAGE_EMULATOR_HOST=firebase-emulator:9199
+      - FIREBASE_DB_ID=learninghub
+      - FIREBASE_STORAGE_BUCKET=learninghub-81cc6.firebasestorage.app
+    command: sh -c "until curl -f http://firebase-emulator:4000; do echo 'Waiting for Firebase...'; sleep 5; done && air -c .air.toml"
     depends_on:
       - firebase-emulator
     networks:
@@ -45,7 +49,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: frontend
+    container_name: learninghub-frontend
     ports:
       - "3000:3000"
     volumes:
@@ -56,6 +60,9 @@ services:
       - VITE_PROXY_API_HOST=http://backend:8000
       - VITE_PORT=3000
       - VITE_API_BASE_URL=/api/v1
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=8000
+    command: sh -c "until curl -f http://backend:8000/health; do echo 'Waiting for Backend...'; sleep 5; done && npm run dev"
     depends_on:
       - backend
     networks:

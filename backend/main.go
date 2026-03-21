@@ -1,54 +1,98 @@
 package main
 
 import (
-	"log"
+	"context"
 	"net/http"
-	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"learning-hub/config"
-	"learning-hub/constants"
-	"learning-hub/firebase"
-	"learning-hub/handlers"
-	"learning-hub/middleware"
+	"learninghub/config"
+	"learninghub/constants"
+	"learninghub/firebase"
+	"learninghub/handlers"
+	"learninghub/middleware"
+	logger "learninghub/pkg/logger"
+	"learninghub/utils"
 )
 
 func main() {
+	// Create context that listens for the interrupt signal from the OS.
+	signalCtx, signalCtxStop := signal.NotifyContext(context.Background(),
+		syscall.SIGINT,  // Ctrl+C
+		syscall.SIGQUIT, // Ctrl+\
+		syscall.SIGTERM, // ask a program to terminate
+	)
+	defer signalCtxStop()
+
+	// Initialize logger
+	logger.InitGlobal(
+		logger.WithServiceName("learninghub-server"),
+		logger.WithDefaultDestinations(logger.FileLogger, logger.ConsoleLogger),
+		logger.WithConsoleDestination(),
+		logger.WithFileDestination(utils.ResolvePathFromProjectRoot("logs/learninghub-server.log"), 10, 5, 30, true),
+		logger.WithMinLevel(logger.DebugLevel),
+	)
+	defer logger.CloseGlobal()
+
 	// Populate AppConfig with env variables
 	err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
-		return
+		logger.Infof("Error loading configuration: %v", err)
 	}
 
 	// Initialize Firebase
 	err = firebase.InitializeFirebase()
 	if err != nil {
-		log.Fatalf("Failed to initialize Firebase: %v", err)
-		return
+		logger.Infof("Failed to initialize Firebase: %v", err)
 	}
-	defer func() {
-		if err := firebase.CloseFirebase(); err != nil {
-			log.Printf("Error during Firebase cleanup: %v", err)
-		}
-	}()
 
 	// Setup Gin router
 	r := setupRouter()
-
 	port := config.AppConfig.PORT
 
-	log.Printf("Server starting on port %s", port)
-	if err := r.Run(":" + port); err != nil {
-		log.Fatal("Failed to start server:", err)
-		return
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
 	}
+
+	// Initializing the server in a goroutine so that it won't block the graceful shutdown handling below
+	go func() {
+		logger.Infof("Server starting on port %s", port)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// listen for the interrupt signal
+	<-signalCtx.Done()
+
+	// Restore default behavior on the interrupt signal and notify user of shutdown.
+	signalCtxStop()
+	logger.Infof("shutting down gracefully, press Ctrl+C again to force")
+
+	// The context is used to inform the server it has 5 seconds to finish the request it is currently handling
+	shutdownCtx, shutdownCtxStop := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCtxStop()
+
+	// Shutdown server
+	logger.Infof("Shutting down HTTP server...")
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Infof("Closing Firebase connections...")
+		firebase.CloseFirebase()
+		logger.Fatalf("Server forced to shutdown: %v\n", err)
+	}
+
+	logger.Infof("Closing Firebase connections...")
+	firebase.CloseFirebase()
+
+	logger.Infof("Server exiting")
 }
 
 func setupRouter() *gin.Engine {
-	envMode := getEnvMode()
+	envMode := config.AppConfig.ENV_MODE
 	if envMode == constants.EnvModeProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -62,7 +106,7 @@ func setupRouter() *gin.Engine {
 	// 	r.Use(middleware.DelayMiddleware(1000 * time.Millisecond))
 	// }
 
-	r.Use(middleware.NewRateLimiterMiddleware(100, time.Minute).RateLimiter())
+	r.Use(middleware.NewRateLimiterMiddleware(20, time.Minute).RateLimiterForMethods("POST", "PUT", "PATCH", "DELETE"))
 
 	// API routes
 	// /api/v1/:product/resources
@@ -73,9 +117,9 @@ func setupRouter() *gin.Engine {
 		{
 			productGroup.GET("/resources", handlers.GetResources)
 			productGroup.GET("/resources/:id", handlers.GetResource)
-			productGroup.POST("/resources", middleware.AdminAuthMiddleware(), handlers.CreateResource)
-			productGroup.PATCH("/resources/:id", middleware.AdminAuthMiddleware(), handlers.UpdateResource)
-			productGroup.DELETE("/resources/:id", middleware.AdminAuthMiddleware(), handlers.DeleteResource)
+			productGroup.POST("/resources", handlers.CreateResource)
+			productGroup.PATCH("/resources/:id", handlers.UpdateResource)
+			productGroup.DELETE("/resources/:id", handlers.DeleteResource)
 
 			productGroup.GET("/tags", handlers.GetTags)
 		}
@@ -87,18 +131,4 @@ func setupRouter() *gin.Engine {
 	})
 
 	return r
-}
-
-func getEnvMode() string {
-	envMode := os.Getenv("ENV_MODE")
-	if envMode == "" {
-		envMode = constants.EnvModeProd // Default to prod mode if not set
-		os.Setenv("ENV_MODE", envMode)
-	}
-	// Requires ENV_MODE to be set in docker-compose.yml or in system: "dev" or "prod"
-	if envMode != constants.EnvModeDev && envMode != constants.EnvModeProd {
-		log.Fatalf("ENV_MODE environment variable is not set. Please set it to 'dev' or 'prod'.")
-		return ""
-	}
-	return envMode
 }

@@ -40,6 +40,7 @@ export function useResources(
     retry: false,
     errorMessage: "Failed to load resources",
     refetchOnWindowFocus: false,
+    staleTime: Infinity,
     ...options,
   });
 }

@@ -1,3 +1,4 @@
-@baseUrl = http://localhost:8000/api/v1/ecomm/tags
+@product = ecomm
+@baseUrl = http://localhost:8000/api/v1/{{product}}/tags
 
 GET {{baseUrl}} HTTP/1.1

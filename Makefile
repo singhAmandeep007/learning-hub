@@ -4,7 +4,7 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-.PHONY: dev-local prod-local stop-services install-tools install-deps clean help
+.PHONY: dev-local stop-services install-tools install-deps clean help
 
 # Function to wait for a port to be open
 # Usage: $(call wait_for_port, <port_number>, <service_name>)
@@ -24,27 +24,16 @@ dev-local:
 	@cd backend && firebase emulators:start --only firestore,storage &
 	$(call wait_for_port, 4000, Firebase Emulators)
 	@echo "$(YELLOW)Starting backend server with Air...$(NC)"
-	@cd backend && ENV_MODE=dev air -c .air.toml &
+	@cd backend && ENV_MODE=dev CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173 FIREBASE_PROJECT_ID=learninghub-81cc6 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199 air -c .air.toml &
 	$(call wait_for_port, 8000, Backend Server)
+	@echo "$(YELLOW)Setting up Node.js version...$(NC)"
+	@cd frontend && bash -c "source ~/.nvm/nvm.sh && nvm use"
 	@echo "$(YELLOW)Starting frontend development server...$(NC)"
 	@cd frontend && npm run dev &
 	@echo "$(GREEN)All services started!$(NC) Run $(RED)make stop-services$(NC) in a new terminal to stop all services."
 	@echo "$(GREEN)Backend: http://localhost:8000$(NC)"
 	@echo "$(GREEN)Frontend: http://localhost:3000$(NC)"
 	@echo "$(GREEN)Firebase UI: http://localhost:4000$(NC)"
-	@wait
-
-# Production-like local environment
-prod-local:
-	@echo "$(GREEN)Starting production firebase in local environment...$(NC)"
-	@echo "$(YELLOW)Starting backend server with Air...$(NC)"
-	@cd backend && ENV_MODE=prod air -c .air.toml &
-	$(call wait_for_port, 8000, Backend Server)
-	@echo "$(YELLOW)Building and serving frontend...$(NC)"
-	@cd frontend && npm run dev &
-	@echo "$(GREEN)All services started!$(NC) Run $(RED)make stop-services$(NC) in a new terminal to stop all services."
-	@echo "$(GREEN)Backend: http://localhost:8000$(NC)"
-	@echo "$(GREEN)Frontend: http://localhost:3000$(NC)"
 	@wait
 
 # Stop all running services
@@ -62,7 +51,7 @@ install-tools:
 	@echo "$(YELLOW)Installing Firebase CLI...$(NC)"
 	@npm install -g firebase-tools@14.2.0
 	@echo "$(YELLOW)Installing Air (Go hot reload)...$(NC)"
-	@go install github.com/air-verse/air@latest
+	@go install github.com/air-verse/air@v1.52.3
 	@echo "$(GREEN)Global tools installed successfully!$(NC)"
 
 # Install dependencies
@@ -70,16 +59,31 @@ install-deps:
 	@echo "$(GREEN)Installing frontend dependencies...$(NC)"
 	@cd frontend && npm install
 	@echo "$(GREEN)Installing backend dependencies...$(NC)"
-	@cd backend && go mod tidy
+	@cd backend && go mod download && go mod verify
 
+# Docker dev environment
 docker-dev:
-	@echo "🚀 Starting development environment with docker..."
-	docker-compose -f docker-compose.dev.yml up --build
+	@echo "$(GREEN)🚀 Starting development environment with docker...$(NC)"
+	@echo "$(YELLOW)Stopping existing containers and removing volumes...$(NC)"
+	docker compose -f docker-compose.dev.yml down -v 2>/dev/null || true
+	@echo "$(YELLOW)Building containers...$(NC)"
+	docker compose -f docker-compose.dev.yml build
+	@echo "$(YELLOW)Starting containers...$(NC)"
+	docker compose -f docker-compose.dev.yml up
+
+docker-dev-no-cache:
+	@echo "$(GREEN)🚀 Starting development environment with docker...$(NC)"
+	@echo "$(YELLOW)Stopping existing containers and removing volumes...$(NC)"
+	docker compose -f docker-compose.dev.yml down -v 2>/dev/null || true
+	@echo "$(YELLOW)Building containers (no cache)...$(NC)"
+	docker compose -f docker-compose.dev.yml build --no-cache
+	@echo "$(YELLOW)Starting containers...$(NC)"
+	docker compose -f docker-compose.dev.yml up
 
 # Stop all services
 docker-dev-stop:
 	@echo "🛑 Stopping all dev docker services..."
-	docker-compose -f docker-compose.dev.yml down
+	docker compose -f docker-compose.dev.yml down
 
 # Clean build artifacts
 clean:
@@ -92,7 +96,6 @@ clean:
 help:
 	@echo "$(GREEN)Available commands:$(NC)"
 	@echo "  $(YELLOW)dev-local$(NC)          - Start development environment (hot reload)"
-	@echo "  $(YELLOW)prod-local$(NC)         - Start production-like local environment"
 	@echo "  $(YELLOW)stop-services$(NC)      - Stop all running services"
 	@echo "  $(YELLOW)docker-dev$(NC)         - Start development environment with Docker"
 	@echo "  $(YELLOW)docker-dev-stop$(NC)    - Stop all dev docker services"
@@ -100,3 +103,18 @@ help:
 	@echo "  $(YELLOW)install-deps$(NC)       - Install all dependencies"
 	@echo "  $(YELLOW)clean$(NC)              - Clean build artifacts"
 	@echo "  $(YELLOW)help$(NC)               - Show this help message"
+
+# Perform deep Docker cleanup
+docker-clean:
+	@echo "$(YELLOW)Performing deep Docker cleanup...$(NC)"
+	@docker compose -f docker-compose.dev.yml down --rmi all --volumes --remove-orphans
+	@docker system prune -af --volumes
+	@echo "$(GREEN)Docker environment cleaned$(NC)"
+
+status:
+	@echo "$(YELLOW)Docker status:$(NC)"
+	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+	@echo "\n Volume usage:"
+	@docker volume ls
+	@echo "\n Image usage:"
+	@docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"

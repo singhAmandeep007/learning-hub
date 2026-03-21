@@ -1,13 +1,11 @@
 package middleware
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
-	"learning-hub/constants"
-	"learning-hub/models"
-	"learning-hub/utils"
+	"learninghub/constants"
+	"learninghub/errors"
+	"learninghub/utils"
 )
 
 // ProductValidationMiddleware validates product parameter and adds it to context
@@ -16,10 +14,7 @@ func ProductValidationMiddleware() gin.HandlerFunc {
 		product := c.Param(constants.ProductParamKey)
 
 		if !utils.IsValidProduct(product) {
-			c.AbortWithStatusJSON(http.StatusBadRequest, models.ErrorResponse{
-				Error:   constants.InvalidParam,
-				Message: "Invalid product parameter",
-			})
+			errors.AbortWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
 			return
 		}
 
@@ -30,7 +25,16 @@ func ProductValidationMiddleware() gin.HandlerFunc {
 }
 
 // GetProductFromContext extracts product from gin context
-func GetProductFromContext(c *gin.Context) string {
-	product := c.MustGet(constants.ProductContextKey)
-	return product.(string)
+func GetProductFromContext(c *gin.Context) (string, bool) {
+	value, exists := c.Get(constants.ProductContextKey)
+	if !exists {
+		return "", false
+	}
+
+	product, ok := value.(string)
+	if !ok {
+		return "", false
+	}
+
+	return product, true
 }

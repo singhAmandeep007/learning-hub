@@ -1,13 +1,13 @@
 import { http, HttpResponse } from "msw";
 
-import type { Resource, Tag } from "../types";
+import { DEFAULT_PRODUCT, type Resource, type Tag } from "../types";
 
 import { withDelay } from "./middleware";
 
-const BASE_URL = "api/v1/resources";
+const BASE_URL = `/api/v1/${DEFAULT_PRODUCT}`;
 
 export const handlers = [
-  http.get(BASE_URL, () => {
+  http.get(BASE_URL + "/resources", () => {
     return HttpResponse.json({
       data: resources,
       hasMore: false,
@@ -22,7 +22,7 @@ export const handlers = [
     );
   }),
 
-  http.get(BASE_URL + "/:id", ({ params }) => {
+  http.get(BASE_URL + "/resources/:id", ({ params }) => {
     const resource = resources.find((resource) => resource.id === params.id);
 
     return HttpResponse.json(resource);
@@ -37,7 +37,7 @@ export const handlers = [
   }),
 
   http.post(
-    BASE_URL,
+    BASE_URL + "/resources",
     withDelay(1000, async ({ request }) => {
       const formData = await request.formData();
 
@@ -72,24 +72,35 @@ export const handlers = [
     })
   ),
 
-  http.patch(BASE_URL + "/:id", async ({ params, request }) => {
+  http.patch(BASE_URL + "/resources/:id", async ({ params, request }) => {
     const resource = resources.find((resource) => resource.id === params.id);
+
+    if (!resource) {
+      return HttpResponse.json(
+        {
+          error: "invalid",
+          message: "Resource not found",
+        },
+        { status: 404 }
+      );
+    }
 
     const formData = await request.formData();
     console.log("Update resource formdata", formData);
 
-    return HttpResponse.json(resource);
+    if (formData.get("title")) resource.title = formData.get("title") as string;
+    if (formData.get("description")) resource.description = formData.get("description") as string;
+    if (formData.get("tags")) {
+      resource.tags = (formData.get("tags") as string)
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+    }
 
-    return HttpResponse.json(
-      {
-        error: "invalid",
-        message: "something went wrong",
-      },
-      { status: 500 }
-    );
+    return HttpResponse.json(resource);
   }),
 
-  http.delete(BASE_URL + "/:id", async ({ params }) => {
+  http.delete(BASE_URL + "/resources/:id", async ({ params }) => {
     resources = resources.filter((resource) => resource.id !== params.id);
 
     return HttpResponse.json({}, { status: 200 });
@@ -106,13 +117,13 @@ export const handlers = [
   http.get(BASE_URL + "/tags", () => {
     return HttpResponse.json(tags);
 
-    return HttpResponse.json(
-      {
-        error: "invalid",
-        message: "something went wrong",
-      },
-      { status: 500 }
-    );
+    // return HttpResponse.json(
+    //   {
+    //     error: "invalid",
+    //     message: "something went wrong",
+    //   },
+    //   { status: 500 }
+    // );
   }),
 ];
 

@@ -14,28 +14,10 @@ services:
       - PORT=8000
       - GIN_MODE=release
       - CORS_ORIGINS=http://localhost:3000
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-learning-hub-81cc6}
-      - FIREBASE_CREDENTIALS_FILE=/app/firebase_credentials.json
-      - ADMIN_SECRET=${ADMIN_SECRET:-your-admin-secret-key}
-    volumes:
-      - ./backend/firebase_credentials.json:/app/firebase_credentials.json:ro
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-learninghub-81cc6}
     networks:
       - app-network
     restart: unless-stopped
-
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 512M
-        reservations:
-          cpus: "0.5"
-          memory: 256M
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp:noexec,nosuid,size=100m
 
   frontend:
     build:
@@ -50,26 +32,13 @@ services:
     environment:
       - NODE_ENV=production
       - VITE_API_BASE_URL=/api/v1
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=8000
     depends_on:
       - backend
     networks:
       - app-network
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /var/cache/nginx:noexec,nosuid,size=50m
-      - /var/run:noexec,nosuid,size=10m
-      - /tmp:noexec,nosuid,size=50m
 
 networks:
   app-network:

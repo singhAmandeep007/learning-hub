@@ -56,6 +56,15 @@
 
     &:hover {
       background-color: color.adjust($primary-color, $lightness: -5%);
+
+      &:disabled {
+        color: $neutral-400;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
@@ -157,7 +166,7 @@
     height: 0;
     border-left: 4px solid transparent;
     border-right: 4px solid transparent;
-    border-top: 5px solid $neutral-500; // Adjust color as needed
+    border-top: 5px solid $neutral-500;
     pointer-events: none;
   }
 

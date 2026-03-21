@@ -3,20 +3,20 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 
-	"learning-hub/constants"
-	"learning-hub/firebase"
-	"learning-hub/middleware"
-	"learning-hub/models"
-	"learning-hub/utils"
+	"learninghub/constants"
+	"learninghub/db"
+	"learninghub/errors"
+	"learninghub/middleware"
+	"learninghub/models"
+	"learninghub/pkg/logger"
+	"learninghub/utils"
 )
 
 // GetResources handles GET /resources
@@ -31,14 +31,19 @@ func GetResources(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Get product from context (validated by middleware)
-	product := middleware.GetProductFromContext(c)
+	product, exists := middleware.GetProductFromContext(c)
+
+	if !exists {
+		errors.RespondWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
+		return
+	}
 
 	// Parse query parameters
-	typeFilter := c.Query("type") // "video" | "pdf" | "article"
-	tagsParam := c.Query("tags")  // "onboarding,tutorial" | "onboarding"
-	search := c.Query("search")   // "getting%20started" | "v1.2"
-	cursor := c.Query("cursor")
-	limitStr := c.DefaultQuery("limit", "20")
+	typeFilter := c.Query(constants.QueryParamType) // "video" | "pdf" | "article"
+	tagsParam := c.Query(constants.QueryParamTags)  // "onboarding,tutorial" | "onboarding"
+	search := c.Query(constants.QueryParamSearch)   // "getting%20started" | "v1.2"
+	cursor := c.Query(constants.QueryParamCursor)
+	limitStr := c.DefaultQuery(constants.QueryParamLimit, constants.DefaultLimitValue)
 
 	// set to default page size if error in conversion or limit <= 0 or greator than max page size
 	limit, err := strconv.Atoi(limitStr)
@@ -46,38 +51,31 @@ func GetResources(c *gin.Context) {
 		limit = constants.DefaultPageSize
 	}
 
-	// Build Firestore query with product-specific collection
-	query := firebase.FirestoreClient.Collection(constants.GetResourcesCollectionName(product)).OrderBy("createdAt", firestore.Desc)
+	// Create database services
+	database := db.New()
+	resourceService := db.NewResourceService(database)
 
-	// Apply type filter
-	if utils.IsValidResourceType(typeFilter) {
-		query = query.Where("type", "==", typeFilter)
-	}
-
-	// Apply tags filter
+	// Prepare query parameters
+	var tags []string
 	if tagsParam != "" {
-		tags := utils.NormalizeTags(strings.Split(tagsParam, ","))
-		if len(tags) > 0 {
-			query = query.Where("tags", "array-contains-any", tags)
-		}
+		tags = utils.NormalizeTags(strings.Split(tagsParam, ","))
 	}
 
-	// Apply cursor for pagination
-	if cursor != "" {
-		offset, err := strconv.Atoi(cursor)
-		if err == nil && offset >= 0 {
-			// skips the records
-			query = query.Offset(offset)
-		}
+	var validTypeFilter string
+	if utils.IsValidResourceType(typeFilter) {
+		validTypeFilter = typeFilter
 	}
 
-	// Execute query with limit
-	docs, err := query.Limit(limit + 1).Documents(ctx).GetAll()
+	// Execute query with limit + 1 to check for more results
+	docs, err := resourceService.List(ctx, db.ResourceQuery{
+		Product: product,
+		Type:    validTypeFilter,
+		Tags:    tags,
+		Cursor:  cursor,
+		Limit:   limit + 1,
+	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s:%v", constants.QueryFailed, err),
-			Message: "Failed to fetch resources",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrQueryFailed, "Failed to fetch resources", err.Error())
 		return
 	}
 
@@ -87,7 +85,7 @@ func GetResources(c *gin.Context) {
 	for _, doc := range docs {
 		var resource models.Resource
 		if err := doc.DataTo(&resource); err != nil {
-			log.Printf("Error converting document %s: %v", doc.Ref.ID, err)
+			logger.Infof("Error converting document %s: %v", doc.Ref.ID, err)
 			continue
 		}
 		resource.ID = doc.Ref.ID
@@ -99,6 +97,21 @@ func GetResources(c *gin.Context) {
 				!strings.Contains(strings.ToLower(resource.Description), searchLower) {
 				continue
 			}
+		}
+
+		// Convert URLs to signed URLs before adding to response
+		signedURL, signedThumbnailURL, err := utils.ConvertResourceURLsToSigned(
+			ctx,
+			resource.URL,
+			resource.ThumbnailURL,
+			constants.DefaultSignedURLExpiration,
+		)
+		if err != nil {
+			logger.Infof("Error generating signed URLs for resource %s: %v", resource.ID, err)
+			// Continue with original URLs if signing fails
+		} else {
+			resource.URL = signedURL
+			resource.ThumbnailURL = signedThumbnailURL
 		}
 
 		// Only add if we haven't reached the limit
@@ -134,28 +147,46 @@ func GetResource(c *gin.Context) {
 	id := c.Param("id")
 
 	// Get product from context (validated by middleware)
-	product := middleware.GetProductFromContext(c)
+	product, exists := middleware.GetProductFromContext(c)
+
+	if !exists {
+		errors.RespondWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
+		return
+	}
+
+	// Create database services
+	database := db.New()
+	resourceService := db.NewResourceService(database)
 
 	// Get document from product-specific collection
-	collectionName := constants.GetResourcesCollectionName(product)
-	doc, err := firebase.FirestoreClient.Collection(collectionName).Doc(id).Get(ctx)
+	doc, err := resourceService.GetByID(ctx, product, id)
+
 	if err != nil {
-		c.JSON(http.StatusNotFound, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s:%v", constants.NotFound, err),
-			Message: "Resource not found",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrResourceNotFound, "Resource not found", err.Error())
 		return
 	}
 
 	var resource models.Resource
 	if err := doc.DataTo(&resource); err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s:%v", err, constants.DataConversionFailed),
-			Message: "Failed to process resource data",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrDataConversionFailed, "Failed to process resource data", err.Error())
 		return
 	}
 	resource.ID = doc.Ref.ID
+
+	// Convert URLs to signed URLs before returning
+	signedURL, signedThumbnailURL, err := utils.ConvertResourceURLsToSigned(
+		ctx,
+		resource.URL,
+		resource.ThumbnailURL,
+		constants.DefaultSignedURLExpiration,
+	)
+	if err != nil {
+		logger.Infof("Error generating signed URLs for resource %s: %v", resource.ID, err)
+		// Continue with original URLs if signing fails
+	} else {
+		resource.URL = signedURL
+		resource.ThumbnailURL = signedThumbnailURL
+	}
 
 	c.JSON(http.StatusOK, resource)
 }
@@ -170,20 +201,28 @@ func CreateResource(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Get product from context (validated by middleware)
-	product := middleware.GetProductFromContext(c)
+	product, exists := middleware.GetProductFromContext(c)
+	if !exists {
+		errors.RespondWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
+		return
+	}
 
 	contentType := c.GetHeader("Content-Type")
 
 	// Check if it's actually a multipart form
 	if contentType == "" || !strings.Contains(contentType, "multipart/form-data") {
-		c.JSON(http.StatusBadGateway, models.ErrorResponse{
-			Error:   constants.InvalidContentType,
-			Message: "Request must be multipart/form-data",
-		})
+		errors.RespondWithError(c, errors.ErrInvalidContentType, "Request must be multipart/form-data")
 		return
 	}
 
-	// error handling for max memory
+	// Check Content-Length before parsing multipart form
+	contentLength := c.Request.ContentLength
+	if contentLength > constants.MaxFileSize {
+		errors.RespondWithError(c, errors.ErrFileTooLarge, fmt.Sprintf("Request size too large. Maximum size is %d MB", constants.MaxFileSize/(1<<20)))
+		return
+	}
+
+	// Parse multipart form with MaxFileSize limit
 	if err := c.Request.ParseMultipartForm(constants.MaxFileSize); err != nil {
 		handleMultipartFormError(c, err)
 		return
@@ -201,52 +240,40 @@ func CreateResource(c *gin.Context) {
 
 	// Extract form fields
 	resource := models.Resource{
-		Title:       c.PostForm("title"),
-		Description: c.PostForm("description"),
-		Type:        c.PostForm("type"),
+		Title:       c.PostForm(constants.FormFieldTitle),
+		Description: c.PostForm(constants.FormFieldDescription),
+		Type:        c.PostForm(constants.FormFieldType),
 
-		URL:          c.PostForm("url"),
-		ThumbnailURL: c.PostForm("thumbnailUrl"),
-		Tags:         utils.NormalizeTags(strings.Split(c.PostForm("tags"), ",")),
+		URL:          c.PostForm(constants.FormFieldURL),
+		ThumbnailURL: c.PostForm(constants.FormFieldThumbnailURL),
+		Tags:         utils.NormalizeTags(strings.Split(c.PostForm(constants.FormFieldTags), ",")),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 
 	// Validate required fields
 	if resource.Title == "" || resource.Description == "" || resource.Type == "" {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error:   constants.InvalidPayload,
-			Message: "Title, description, and type are required",
-		})
+		errors.RespondWithError(c, errors.ErrMissingRequired, "Title, description, and type are required")
 		return
 	}
 
 	// Validate resource type
 	if !utils.IsValidResourceType(resource.Type) {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error:   constants.InvalidPayload,
-			Message: "Type must be 'video', 'pdf', or 'article'",
-		})
+		errors.RespondWithError(c, errors.ErrUnsupportedType, "Type must be 'video', 'pdf', or 'article'")
 		return
 	}
 
 	// Check if resource type is article AND url is not provided
 	if resource.Type == constants.ResourceTypeArticle && resource.URL == "" {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error:   constants.InvalidPayload,
-			Message: "Url must be provided for 'article'",
-		})
+		errors.RespondWithError(c, errors.ErrMissingRequired, "URL must be provided for 'article' type")
 		return
 	}
 
 	// Handle file uploads for video and pdf types if url is not provided
 	if (resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF) && resource.URL == "" {
-		file, header, err := c.Request.FormFile("file")
+		file, header, err := c.Request.FormFile(constants.FormFieldFile)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, models.ErrorResponse{
-				Error:   constants.InvalidPayload,
-				Message: fmt.Sprintf("File is required for %s resources", resource.Type),
-			})
+			errors.RespondWithErrorDetails(c, errors.ErrMissingRequired, fmt.Sprintf("File is required for %s resources", resource.Type), err.Error())
 			return
 		}
 		// successfully opened the file
@@ -255,10 +282,13 @@ func CreateResource(c *gin.Context) {
 		// Upload file to Cloud Storage
 		url, err := utils.UploadFile(ctx, file, header, product, resource.Type)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-				Error:   constants.UploadFailed,
-				Message: "Failed to upload file",
-			})
+			// Check if this is a file validation error
+			if strings.Contains(err.Error(), constants.ErrFileValidationFailed) {
+				logger.Warnf("File validation failed: %v", err)
+				errors.RespondWithErrorDetails(c, errors.ErrInvalidFileType, "Invalid file type", fileTypeErrorDetail(resource.Type))
+				return
+			}
+			errors.RespondWithErrorDetails(c, errors.ErrUploadFailed, "Failed to upload file", err.Error())
 			return
 		}
 		resource.URL = url.PublicURL
@@ -267,28 +297,34 @@ func CreateResource(c *gin.Context) {
 	// Handle thumbnail upload if thumbnail url not provided
 	if resource.ThumbnailURL == "" {
 		// Handle thumbnail upload (optional)
-		thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail")
+		thumbnailFile, thumbnailHeader, err := c.Request.FormFile(constants.FormFieldThumbnail)
 		if err == nil {
 			defer thumbnailFile.Close()
 
-			thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, product, "image")
+			thumbnailURL, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, product, constants.ResourceTypeImage)
 
 			if err != nil {
-				log.Printf("Failed to upload thumbnail: %v", err)
+				// Check if this is a file validation error for thumbnail
+				if strings.Contains(err.Error(), constants.ErrFileValidationFailed) {
+					logger.Warnf("Thumbnail validation failed: %v", err)
+					errors.RespondWithErrorDetails(c, errors.ErrInvalidFileType, "Invalid thumbnail file type", fileTypeErrorDetail(constants.ResourceTypeImage))
+					return
+				}
+				logger.Infof("Failed to upload thumbnail: %v", err)
 			} else {
 				resource.ThumbnailURL = thumbnailURL.PublicURL
 			}
 		}
 	}
 
+	// Create database services
+	database := db.New()
+	resourceService := db.NewResourceService(database)
+
 	// Save to Firestore in product-specific collection
-	collectionName := constants.GetResourcesCollectionName(product)
-	docRef, _, err := firebase.FirestoreClient.Collection(collectionName).Add(ctx, resource)
+	docRef, err := resourceService.Create(ctx, product, resource)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s:%v", constants.MutationFailed, err),
-			Message: "Failed to save resource",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrMutationFailed, "Failed to save resource", err.Error())
 		return
 	}
 
@@ -296,6 +332,21 @@ func CreateResource(c *gin.Context) {
 	utils.UpdateTagUsage(ctx, product, resource.Tags, 1)
 
 	resource.ID = docRef.ID
+
+	// Convert URLs to signed URLs before returning
+	signedURL, signedThumbnailURL, err := utils.ConvertResourceURLsToSigned(
+		ctx,
+		resource.URL,
+		resource.ThumbnailURL,
+		constants.DefaultSignedURLExpiration,
+	)
+	if err != nil {
+		logger.Infof("Error generating signed URLs for new resource: %v", err)
+	} else {
+		resource.URL = signedURL
+		resource.ThumbnailURL = signedThumbnailURL
+	}
+
 	c.JSON(http.StatusCreated, resource)
 }
 
@@ -308,25 +359,26 @@ func UpdateResource(c *gin.Context) {
 	id := c.Param("id")
 
 	// Get product from context (validated by middleware)
-	product := middleware.GetProductFromContext(c)
+	product, exists := middleware.GetProductFromContext(c)
+	if !exists {
+		errors.RespondWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
+		return
+	}
+
+	// Create database services
+	database := db.New()
+	resourceService := db.NewResourceService(database)
 
 	// Get existing resource from product-specific collection
-	collectionName := constants.GetResourcesCollectionName(product)
-	doc, err := firebase.FirestoreClient.Collection(collectionName).Doc(id).Get(ctx)
+	doc, err := resourceService.GetByID(ctx, product, id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, models.ErrorResponse{
-			Error:   constants.NotFound,
-			Message: "Resource not found",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrResourceNotFound, "Resource not found", err.Error())
 		return
 	}
 
 	var existingResource models.Resource
 	if err := doc.DataTo(&existingResource); err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.DataConversionFailed,
-			Message: "Failed to process existing resource data",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrDataConversionFailed, "Failed to process existing resource data", err.Error())
 		return
 	}
 
@@ -343,33 +395,27 @@ func UpdateResource(c *gin.Context) {
 	bytes, _ := json.Marshal(existingResource)
 	json.Unmarshal(bytes, &updatedResource)
 
-	if title, titleExists := c.GetPostForm("title"); titleExists {
+	if title, titleExists := c.GetPostForm(constants.FormFieldTitle); titleExists {
 		updatedResource.Title = title
 	}
-	if description, descriptionExists := c.GetPostForm("description"); descriptionExists {
+	if description, descriptionExists := c.GetPostForm(constants.FormFieldDescription); descriptionExists {
 		updatedResource.Description = description
 	}
-	if resourceType, typeExists := c.GetPostForm("type"); typeExists {
+	if resourceType, typeExists := c.GetPostForm(constants.FormFieldType); typeExists {
 		updatedResource.Type = resourceType
 		// Validate resource type
 		if !utils.IsValidResourceType(updatedResource.Type) {
-			c.JSON(http.StatusBadRequest, models.ErrorResponse{
-				Error:   constants.InvalidPayload,
-				Message: "Type must be 'video', 'pdf', or 'article'",
-			})
+			errors.RespondWithError(c, errors.ErrUnsupportedType, "Type must be 'video', 'pdf', or 'article'")
 			return
 		}
 
 		// Check if trying to change resource type
 		if existingResource.Type != updatedResource.Type {
-			c.JSON(http.StatusBadRequest, models.ErrorResponse{
-				Error:   constants.InvalidPayload,
-				Message: "Resource type cannot be changed",
-			})
+			errors.RespondWithError(c, errors.ErrInvalidParam, "Resource type cannot be changed")
 			return
 		}
 	}
-	if tagsStr, tagsStrExists := c.GetPostForm("tags"); tagsStrExists {
+	if tagsStr, tagsStrExists := c.GetPostForm(constants.FormFieldTags); tagsStrExists {
 		oldTags = existingResource.Tags
 		newTags = utils.NormalizeTags(strings.Split(tagsStr, ","))
 
@@ -378,22 +424,19 @@ func UpdateResource(c *gin.Context) {
 	updatedResource.UpdatedAt = time.Now()
 
 	// Handle URL and file updates
-	urlFromForm, urlFromFormExists := c.GetPostForm("url")
-	_, fileExists := c.Request.MultipartForm.File["file"]
+	urlFromForm, urlFromFormExists := c.GetPostForm(constants.FormFieldURL)
+	_, fileExists := c.Request.MultipartForm.File[constants.FormFieldFile]
 
 	// If both URL and file are provided, return error
 	if urlFromFormExists && fileExists {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error:   constants.InvalidPayload,
-			Message: "Either provide url or file",
-		})
+		errors.RespondWithError(c, errors.ErrInvalidParam, "Either provide url or file")
 		return
 	}
 
 	if urlFromFormExists {
 		if existingResource.URL != "" {
 			if err = utils.DeleteFileFromURL(ctx, existingResource.URL); err != nil {
-				log.Printf("Failed to delete old file: %v", err)
+				logger.Infof("Failed to delete old file: %v", err)
 			}
 		}
 
@@ -402,23 +445,26 @@ func UpdateResource(c *gin.Context) {
 
 	if fileExists && (existingResource.Type == constants.ResourceTypeVideo || existingResource.Type == constants.ResourceTypePDF) {
 		// User provided a new file to upload
-		if file, header, err := c.Request.FormFile("file"); err == nil {
+		if file, header, err := c.Request.FormFile(constants.FormFieldFile); err == nil {
 			defer file.Close()
 
 			// Delete old file if it was stored in our storage
 			if existingResource.URL != "" {
 				if err = utils.DeleteFileFromURL(ctx, existingResource.URL); err != nil {
-					log.Printf("Failed to delete old file: %v", err)
+					logger.Infof("Failed to delete old file: %v", err)
 				}
 			}
 
 			// Upload new file
 			uploadResult, err := utils.UploadFile(ctx, file, header, product, existingResource.Type)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-					Error:   constants.UploadFailed,
-					Message: "Failed to upload new file",
-				})
+				// Check if this is a file validation error
+				if strings.Contains(err.Error(), constants.ErrFileValidationFailed) {
+					logger.Warnf("File validation failed: %v", err)
+					errors.RespondWithErrorDetails(c, errors.ErrInvalidFileType, "Invalid file type", fileTypeErrorDetail(existingResource.Type))
+					return
+				}
+				errors.RespondWithErrorDetails(c, errors.ErrUploadFailed, "Failed to upload new file", err.Error())
 				return
 			}
 			updatedResource.URL = uploadResult.PublicURL
@@ -426,15 +472,12 @@ func UpdateResource(c *gin.Context) {
 	}
 
 	// Handle thumbnail URL and file updates
-	thumbnailURLFromForm, thumbnailURLFromFormExists := c.GetPostForm("thumbnailUrl")
-	_, thumbnailFileExists := c.Request.MultipartForm.File["thumbnail"]
+	thumbnailURLFromForm, thumbnailURLFromFormExists := c.GetPostForm(constants.FormFieldThumbnailURL)
+	_, thumbnailFileExists := c.Request.MultipartForm.File[constants.FormFieldThumbnail]
 
 	// If both thumbnail URL and thumbnail file are provided, return error
 	if thumbnailURLFromFormExists && thumbnailFileExists {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error:   constants.InvalidPayload,
-			Message: "Either provide url or thumbnail",
-		})
+		errors.RespondWithError(c, errors.ErrInvalidParam, "Either provide url or thumbnail")
 		return
 	}
 
@@ -443,7 +486,7 @@ func UpdateResource(c *gin.Context) {
 		// Delete old thumbnail if it was stored in our storage
 		if existingResource.ThumbnailURL != "" {
 			if err = utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
-				log.Printf("Failed to delete old thumbnail: %v", err)
+				logger.Infof("Failed to delete old thumbnail: %v", err)
 			}
 		}
 		updatedResource.ThumbnailURL = thumbnailURLFromForm
@@ -451,20 +494,26 @@ func UpdateResource(c *gin.Context) {
 
 	if thumbnailFileExists {
 		// User provided a new thumbnail file to upload
-		if thumbnailFile, thumbnailHeader, err := c.Request.FormFile("thumbnail"); err == nil {
+		if thumbnailFile, thumbnailHeader, err := c.Request.FormFile(constants.FormFieldThumbnail); err == nil {
 			defer thumbnailFile.Close()
 
 			// Delete old thumbnail if it was stored in our storage
 			if existingResource.ThumbnailURL != "" {
 				if err = utils.DeleteFileFromURL(ctx, existingResource.ThumbnailURL); err != nil {
-					log.Printf("Failed to delete old thumbnail: %v", err)
+					logger.Infof("Failed to delete old thumbnail: %v", err)
 				}
 			}
 
 			// Upload new thumbnail
-			thumbnailResult, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, product, "image")
+			thumbnailResult, err := utils.UploadFile(ctx, thumbnailFile, thumbnailHeader, product, constants.ResourceTypeImage)
 			if err != nil {
-				log.Printf("Failed to upload thumbnail: %v", err)
+				// Check if this is a file validation error for thumbnail
+				if strings.Contains(err.Error(), constants.ErrFileValidationFailed) {
+					logger.Warnf("Thumbnail validation failed: %v", err)
+					errors.RespondWithErrorDetails(c, errors.ErrInvalidFileType, "Invalid thumbnail file type", fileTypeErrorDetail(constants.ResourceTypeImage))
+					return
+				}
+				logger.Infof("Failed to upload thumbnail: %v", err)
 			} else {
 				updatedResource.ThumbnailURL = thumbnailResult.PublicURL
 			}
@@ -472,13 +521,9 @@ func UpdateResource(c *gin.Context) {
 	}
 
 	// Save updated resource to product-specific collection
-	collectionName = constants.GetResourcesCollectionName(product)
-	_, err = firebase.FirestoreClient.Collection(collectionName).Doc(id).Set(ctx, updatedResource)
+	err = resourceService.Update(ctx, product, id, updatedResource)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s,%v", constants.MutationFailed, err),
-			Message: "Failed to update resource",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrMutationFailed, "Failed to update resource", err.Error())
 		return
 	}
 
@@ -489,6 +534,21 @@ func UpdateResource(c *gin.Context) {
 	}
 
 	updatedResource.ID = id
+
+	// Convert URLs to signed URLs before returning
+	signedURL, signedThumbnailURL, err := utils.ConvertResourceURLsToSigned(
+		ctx,
+		updatedResource.URL,
+		updatedResource.ThumbnailURL,
+		constants.DefaultSignedURLExpiration,
+	)
+	if err != nil {
+		logger.Infof("Error generating signed URLs for updated resource: %v", err)
+	} else {
+		updatedResource.URL = signedURL
+		updatedResource.ThumbnailURL = signedThumbnailURL
+	}
+
 	c.JSON(http.StatusOK, updatedResource)
 }
 
@@ -499,47 +559,48 @@ func DeleteResource(c *gin.Context) {
 	id := c.Param("id")
 
 	// Get product from context (validated by middleware)
-	product := middleware.GetProductFromContext(c)
+	product, exists := middleware.GetProductFromContext(c)
+	if !exists {
+		errors.RespondWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
+		return
+	}
+
+	// Create database services
+	database := db.New()
+	resourceService := db.NewResourceService(database)
 
 	// Get existing resource to clean up files from product-specific collection
-	collectionName := constants.GetResourcesCollectionName(product)
-	doc, err := firebase.FirestoreClient.Collection(collectionName).Doc(id).Get(ctx)
+	doc, err := resourceService.GetByID(ctx, product, id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, models.ErrorResponse{
-			Error:   constants.NotFound,
-			Message: "Resource not found",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrResourceNotFound, "Resource not found", err.Error())
 		return
 	}
 
 	var resource models.Resource
 	if err := doc.DataTo(&resource); err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s,%v", constants.DataConversionFailed, err),
-			Message: "Failed to process resource data",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrDataConversionFailed, "Failed to process resource data", err.Error())
 		return
 	}
 
 	// Delete files from Cloud Storage
 	if resource.URL != "" {
-		utils.DeleteFileFromURL(ctx, resource.URL)
+		if err := utils.DeleteFileFromURL(ctx, resource.URL); err != nil {
+			logger.Infof("Failed to delete file: %v", err)
+		}
 	}
 	if resource.ThumbnailURL != "" {
-		utils.DeleteFileFromURL(ctx, resource.ThumbnailURL)
+		if err := utils.DeleteFileFromURL(ctx, resource.ThumbnailURL); err != nil {
+			logger.Infof("Failed to delete thumbnail: %v", err)
+		}
 	}
 
 	// Update tag usage counts
 	utils.UpdateTagUsage(ctx, product, resource.Tags, -1)
 
 	// Delete from Firestore product-specific collection
-	collectionName = constants.GetResourcesCollectionName(product)
-	_, err = firebase.FirestoreClient.Collection(collectionName).Doc(id).Delete(ctx)
+	err = resourceService.Delete(ctx, product, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   fmt.Sprintf("%s:%v", constants.MutationFailed, err),
-			Message: "Failed to delete resource",
-		})
+		errors.RespondWithErrorDetails(c, errors.ErrMutationFailed, "Failed to delete resource", err.Error())
 		return
 	}
 
@@ -549,19 +610,28 @@ func DeleteResource(c *gin.Context) {
 // handleMultipartFormError handles errors from ParseMultipartForm
 //   - returns appropriate error response
 func handleMultipartFormError(c *gin.Context, err error) {
-	log.Printf("ParseMultipartForm error: %v", err)
+	logger.Infof("ParseMultipartForm error: %v", err)
 
-	var message string
 	if strings.Contains(err.Error(), "too large") {
-		message = fmt.Sprintf("File too large. Maximum size is %d MB", constants.MaxFileSize/(1<<20))
+		errors.RespondWithErrorDetails(c, errors.ErrFileTooLarge, fmt.Sprintf("File too large. Maximum size is %d MB", constants.MaxFileSize/(1<<20)), err.Error())
 	} else if strings.Contains(err.Error(), "no multipart boundary") {
-		message = "Invalid multipart form data - no boundary found"
+		errors.RespondWithErrorDetails(c, errors.ErrInvalidContentType, "Invalid multipart form data - no boundary found", err.Error())
 	} else {
-		message = fmt.Sprintf("Failed to parse form data: %v", err)
+		errors.RespondWithErrorDetails(c, errors.ErrInvalidPayload, fmt.Sprintf("Failed to parse form data: %v", err), err.Error())
 	}
+}
 
-	c.JSON(http.StatusBadRequest, models.ErrorResponse{
-		Error:   constants.InvalidPayload,
-		Message: message,
-	})
+// fileTypeErrorDetail returns a user-friendly error message for file validation failures
+// based on the resource type.
+func fileTypeErrorDetail(resourceType string) string {
+	switch resourceType {
+	case constants.ResourceTypeVideo:
+		return "Only MP4 and WebM video formats are supported"
+	case constants.ResourceTypePDF:
+		return "Only PDF files are supported"
+	case constants.ResourceTypeImage:
+		return "The uploaded file is not a supported image format"
+	default:
+		return "The uploaded file type is not supported"
+	}
 }

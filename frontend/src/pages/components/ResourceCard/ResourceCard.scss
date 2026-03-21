@@ -72,6 +72,15 @@
       &.resource-card-action-btn-delete {
         color: $error-color;
       }
+
+      &:disabled {
+        color: $neutral-400;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 

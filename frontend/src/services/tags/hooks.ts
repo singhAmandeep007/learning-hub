@@ -17,6 +17,7 @@ export function useTags(
     queryKey: tagsKeys.lists(),
     queryFn: () => tagsApi.getAll(),
     retry: false,
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
     errorMessage: "Failed to load tags",
     ...options,

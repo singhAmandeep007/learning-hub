@@ -12,8 +12,6 @@ export type PaginatedResponse<T> = {
 // Products
 export const PRODUCTS = {
   ecomm: "ecomm",
-  admin: "admin",
-  crm: "crm",
 } as const;
 
 export type Product = (typeof PRODUCTS)[keyof typeof PRODUCTS];

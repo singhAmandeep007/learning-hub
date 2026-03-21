@@ -3,18 +3,16 @@ package firebase
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/storage"
 
-	firebase "firebase.google.com/go/v4"
-
 	"google.golang.org/api/option"
 
-	"learning-hub/config"
-	"learning-hub/constants"
+	"learninghub/config"
+	"learninghub/constants"
+	"learninghub/pkg/logger"
 )
 
 var (
@@ -27,6 +25,11 @@ var (
 	cancel context.CancelFunc
 )
 
+// createFirestoreClientWithDatabase creates a Firestore client for a specific database
+func createFirestoreClientWithDatabase(ctx context.Context, projectID, databaseID string, opts []option.ClientOption) (*firestore.Client, error) {
+	return firestore.NewClientWithDatabase(ctx, projectID, databaseID, opts...)
+}
+
 // InitializeFirebase initializes Firebase services
 func InitializeFirebase() error {
 	// Create a context with cancellation for proper cleanup
@@ -38,20 +41,10 @@ func InitializeFirebase() error {
 		return fmt.Errorf("error: failed to build Firebase config: %w", err)
 	}
 
-	StorageBucket = config.AppConfig.FIREBASE_PROJECT_ID + ".firebasestorage.app"
+	StorageBucket = config.AppConfig.FIREBASE_STORAGE_BUCKET
 
-	config := &firebase.Config{
-		ProjectID: config.AppConfig.FIREBASE_PROJECT_ID,
-	}
-
-	firebaseApp, err := firebase.NewApp(ctx, config, opts...)
-	if err != nil {
-		cancel()
-		return fmt.Errorf("error initializing firebase app: %w", err)
-	}
-
-	// Initialize Firestore
-	FirestoreClient, err = firebaseApp.Firestore(ctx)
+	// Create Firestore client with database
+	FirestoreClient, err = createFirestoreClientWithDatabase(ctx, config.AppConfig.FIREBASE_PROJECT_ID, config.AppConfig.FIRESTORE_DB_ID, opts)
 	if err != nil {
 		cancel()
 		return fmt.Errorf("error initializing firestore: %w", err)
@@ -81,18 +74,7 @@ func buildFirebaseConfig() (firebaseOptions []option.ClientOption, error error) 
 		// set emulator hosts
 		setEmulatorHosts()
 
-		log.Printf("Using Firebase emulator mode")
-	} else {
-		credentialsFile := config.AppConfig.FIREBASE_CREDENTIALS_FILE
-		if credentialsFile == "" {
-			return nil, fmt.Errorf("FIREBASE_CREDENTIALS_FILE is required for production mode")
-		}
-
-		if _, err := os.Stat(credentialsFile); os.IsNotExist(err) {
-			return nil, fmt.Errorf("credentials file not found: %s", credentialsFile)
-		}
-
-		opts = append(opts, option.WithCredentialsFile(credentialsFile))
+		logger.Infof("Using Firebase emulator mode")
 	}
 
 	return opts, nil
@@ -109,20 +91,24 @@ func setEmulatorHosts() {
 	os.Setenv("STORAGE_EMULATOR_HOST", firebaseStorageEmulatorHost)
 }
 
-func CloseFirebase() error {
-	var errors []error
-
+func CloseFirebase() {
 	// Close Firestore client
 	if FirestoreClient != nil {
+		logger.Infof("Closing Firestore client")
 		if err := FirestoreClient.Close(); err != nil {
-			errors = append(errors, fmt.Errorf("error closing Firestore client: %w", err))
+			logger.Infof("error closing Firestore client: %v", err)
+		} else {
+			logger.Infof("Firestore client closed successfully")
 		}
 		FirestoreClient = nil
 	}
 
 	if StorageClient != nil {
+		logger.Infof("Closing Storage client")
 		if err := StorageClient.Close(); err != nil {
-			errors = append(errors, fmt.Errorf("error closing Storage client: %w", err))
+			logger.Infof("error closing Storage client: %v", err)
+		} else {
+			logger.Infof("Storage client closed successfully")
 		}
 		StorageClient = nil
 	}
@@ -133,10 +119,5 @@ func CloseFirebase() error {
 		cancel = nil
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("errors during cleanup: %v", errors)
-	}
-
-	log.Printf("Firebase clients closed successfully")
-	return nil
+	logger.Infof("Firebase clients shutdown process completed.")
 }

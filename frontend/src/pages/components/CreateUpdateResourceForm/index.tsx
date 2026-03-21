@@ -10,6 +10,7 @@ import {
 } from "../../../types";
 
 import { SearchSelectInput, type Item } from "../../../components/SearchSelectInput";
+import { RichTextEditor } from "../RichText";
 
 import { ResourceDetails } from "../ResourceDetails";
 
@@ -88,7 +89,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
     }
   }, []);
 
-  // reset URL and file state on type chanage when create
+  // reset URL and file state on type change when create
   useEffect(() => {
     if (!resource && prevType !== formData.type) {
       setFormData((prev) => ({ ...prev, url: "", file: null }));
@@ -111,6 +112,10 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
     },
     [validationErrors]
   );
+
+  const handleDescriptionChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, description: value }));
+  };
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, fileType: "file" | "thumbnail") => {
     const file = e.target.files?.[0];
@@ -149,6 +154,16 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
     }
   }, []);
 
+  const isRichTextContentEmpty = (html: string): boolean => {
+    if (!html) return true;
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    const text = tempDiv.textContent || tempDiv.innerText || "";
+
+    return text.trim().length === 0;
+  };
+
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -156,7 +171,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
       errors.title = "Title is required";
     }
 
-    if (!formData.description?.trim()) {
+    if (!formData.description || isRichTextContentEmpty(formData.description)) {
       errors.description = "Description is required";
     }
 
@@ -222,6 +237,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
     return !!(
       formData.title &&
       formData.description &&
+      !isRichTextContentEmpty(formData.description) &&
       ((formData.type === "article" && formData.url) ||
         (["pdf", "video"].includes(formData?.type || "") && formData.file))
     );
@@ -250,6 +266,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                 className={`form-field-input ${validationErrors.title ? "form-field-input-error" : ""}`}
                 placeholder="Enter resource title..."
                 required
+                disabled={isDisabled}
               />
               {validationErrors.title && <span className="form-field-error">{validationErrors.title}</span>}
             </div>
@@ -257,15 +274,15 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
             {/* Description */}
             <div className="form-field">
               <label className="form-field-label">Description *</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
-                className={`form-field-textarea ${validationErrors.description ? "form-field-textarea-error" : ""}`}
+
+              <RichTextEditor
+                value={formData.description || "<p>Description...</p>"}
+                onChange={handleDescriptionChange}
                 placeholder="Describe what this resource covers..."
-                required
+                disabled={isDisabled}
+                className={validationErrors.description ? "error" : ""}
               />
+
               {validationErrors.description && <span className="form-field-error">{validationErrors.description}</span>}
             </div>
 
@@ -283,7 +300,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                     className={`resource-type-selector-option ${
                       formData.type === type ? "resource-type-selector-option-active" : ""
                     }`}
-                    disabled={resource && resource.type !== type}
+                    disabled={isDisabled || (resource && resource.type !== type)}
                   >
                     {getTypeIcon(type)}
                     <span className="resource-type-selector-label">{type}</span>
@@ -328,6 +345,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                     id="file-upload"
                     required={!resource}
                     ref={fileInputRef}
+                    disabled={isDisabled}
                   />
                   <label
                     htmlFor="file-upload"
@@ -365,7 +383,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                   onChange={handleInputChange}
                   className={`form-field-input ${validationErrors.url ? "form-field-input-error" : ""}`}
                   placeholder="https://example.com/article"
-                  disabled={resource && resource.url && resource.type !== "article" ? true : false}
+                  disabled={isDisabled || (resource && resource.url ? resource.type !== "article" : false)}
                 />
                 {validationErrors.url && <span className="form-field-error">{validationErrors.url}</span>}
               </div>
@@ -373,7 +391,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
 
             {/* Thumbnail Upload */}
             <div className="form-field">
-              <label className="form-field-label">Thumbnail (Optional)</label>
+              <label className="form-field-label">Thumbnail</label>
               <div className="thumbnail-upload">
                 <div className="thumbnail-upload-input-container">
                   <input
@@ -382,6 +400,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                     onChange={(e) => handleFileChange(e, "thumbnail")}
                     className="thumbnail-upload-input"
                     ref={thumbnailInputRef}
+                    disabled={isDisabled}
                   />
                 </div>
                 {thumbnailPreviewUrl && (
@@ -406,6 +425,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
               </div>
             </div>
           </div>
+
           {/* Form Actions */}
           <div className="form-actions">
             <button
@@ -474,7 +494,7 @@ function getResourcePayload(resource: Resource | undefined, formData: TFormData)
       type: formData.type!,
       ...(formData.tags ? { tags: formData.tags.join(",") } : {}),
       ...(formData.url && { url: formData.url }),
-      ...(formData.thumbnailUrl && { url: formData.thumbnailUrl }),
+      ...(formData.thumbnailUrl && { thumbnailUrl: formData.thumbnailUrl }),
       ...(formData.file && { file: formData.file }),
       ...(formData.thumbnail && { thumbnail: formData.thumbnail }),
     };

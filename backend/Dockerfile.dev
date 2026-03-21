@@ -9,11 +9,12 @@ FROM golang:${GO_VERSION}-alpine AS base
 RUN apk update && apk add --no-cache \
     git \
     bash \
+    curl \
     ca-certificates \
     && rm -rf /var/cache/apk/*
 
 # Install air for hot reloading
-RUN go install github.com/air-verse/air@latest
+RUN go install github.com/air-verse/air@v1.52.3
 
 WORKDIR /app
 
@@ -27,5 +28,5 @@ COPY . .
 # Expose port
 EXPOSE ${PORT}
 
-# Wait for Firebase emulator then run air
-CMD sleep 10 && air -c .air.toml
+# Start run air
+CMD ["air", "-c", ".air.toml"]

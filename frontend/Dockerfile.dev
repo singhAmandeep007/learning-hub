@@ -1,13 +1,24 @@
 ARG NODE_VERSION=22
 ARG PORT=3000
-
 FROM node:${NODE_VERSION}-alpine
+
+RUN apk add --no-cache \
+    ca-certificates \
+    curl \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
-# Copy package files
+# Clear npm cache and set registry
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm cache clean --force
+
+# Copy package files and npm configuration
 COPY package*.json ./
-RUN npm install
+COPY .npmrc ./
+
+# Install dependencies with clean cache and verbose logging
+RUN npm install --verbose
 
 # Copy source code
 COPY . .
@@ -16,4 +27,4 @@ COPY . .
 EXPOSE ${PORT}
 
 # Start development server
-CMD sleep 20 && npm run dev
+CMD ["npm", "run", "dev"]

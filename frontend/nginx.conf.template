@@ -1,0 +1,63 @@
+upstream backend {
+    server ${BACKEND_HOST}:${BACKEND_PORT};
+}
+
+server {
+		listen 3000;
+		server_name localhost;
+		
+		# Set maximum client body size for file uploads
+		client_max_body_size 500M;
+		
+		# Include common security headers
+		include /etc/nginx/conf.d/common-security-headers.conf;
+		
+		# Serve static files from here
+		root /usr/share/nginx/html;
+		index index.html;
+		
+		# API proxy configuration - forwards /api/* to backend
+		location /api/ {
+				include /etc/nginx/conf.d/common-security-headers.conf;
+				
+				# Allow large file uploads for API endpoints
+				client_max_body_size 500M;
+				
+				# Proxy to backend service - keep /api prefix
+				proxy_pass http://backend;
+				proxy_http_version 1.1;
+				# Important proxy headers
+				proxy_set_header Host $host;
+				proxy_set_header X-Real-IP $remote_addr;
+				proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+				proxy_set_header X-Forwarded-Proto $scheme;
+				
+				# Extended timeouts for file uploads and long-running requests 5 minutes
+				proxy_connect_timeout 300s;
+				proxy_send_timeout 300s;
+				proxy_read_timeout 300s;
+		}
+		
+		# Handle client-side routing - always serve index.html for non-asset requests
+		location / {
+				include /etc/nginx/conf.d/common-security-headers.conf;
+				
+				try_files $uri $uri/ /index.html;
+				
+				# Cache headers for HTML content (prevent caching of main app)
+				add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+				add_header Pragma "no-cache" always;
+				add_header Expires "0" always;
+		}
+		
+		# Cache static assets
+		location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+				include /etc/nginx/conf.d/common-security-headers.conf;
+				
+				expires 1y;
+				add_header Cache-Control "public, immutable";
+				
+				# Compress static assets
+				gzip on;
+		}
+}

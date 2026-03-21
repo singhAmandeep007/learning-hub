@@ -1,16 +1,15 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 
-	"learning-hub/constants"
-	"learning-hub/firebase"
-	"learning-hub/middleware"
-	"learning-hub/models"
+	"learninghub/db"
+	"learninghub/errors"
+	"learninghub/middleware"
+	"learninghub/models"
+	"learninghub/pkg/logger"
 )
 
 // GetTags handles GET /tags
@@ -18,19 +17,20 @@ func GetTags(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// Get product from context (validated by middleware)
-	product := middleware.GetProductFromContext(c)
+	product, exists := middleware.GetProductFromContext(c)
+	if !exists {
+		errors.RespondWithError(c, errors.ErrInvalidProduct, "Invalid product parameter")
+		return
+	}
+
+	database := db.New()
+	tagService := db.NewTagService(database)
 
 	// Get tags from product-specific collection
-	collectionName := constants.GetTagsCollectionName(product)
-	docs, err := firebase.FirestoreClient.Collection(collectionName).OrderBy("usageCount", firestore.Desc).Documents(ctx).GetAll()
-
+	docs, err := tagService.List(ctx, product)
 	if err != nil {
-		log.Printf("Error fetching tags from Firestore: %v\n", err)
-
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error:   constants.QueryFailed,
-			Message: "Failed to fetch tags",
-		})
+		logger.Infof("Error fetching tags from database: %v\n", err)
+		errors.RespondWithError(c, errors.ErrQueryFailed, "Failed to fetch tags")
 		return
 	}
 
@@ -38,7 +38,7 @@ func GetTags(c *gin.Context) {
 	for _, doc := range docs {
 		var tag models.Tag
 		if err := doc.DataTo(&tag); err != nil {
-			log.Printf("Warning: Failed to unmarshal tag document ID %s: %v\n", doc.Ref.ID, err)
+			logger.Infof("Warning: Failed to unmarshal tag document ID %s: %v\n", doc.Ref.ID, err)
 			continue
 		}
 		tags = append(tags, tag)

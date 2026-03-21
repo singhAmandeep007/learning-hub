@@ -1,10 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy } from "react";
 import { Video, File, ExternalLink, FileText, Eye, Edit3, Trash2, Tag } from "lucide-react";
 
 import { type Resource, RESOURCE_TYPES, type ResourceType } from "../../../types";
 
 import "./ResourceCard.scss";
-import { ResourceDetails } from "../ResourceDetails";
+
+const ResourceDetails = lazy(() =>
+  import("../ResourceDetails").then((module) => ({
+    default: module.ResourceDetails,
+  }))
+);
 
 interface ResourceCardProps {
   resource: Resource;
@@ -88,6 +93,8 @@ export const ResourceCard = ({ resource, onEdit, onDelete }: ResourceCardProps) 
               src={resource.thumbnailUrl}
               alt="Thumbnail"
               className="resource-card-thumbnail-image"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         )}
@@ -97,7 +104,6 @@ export const ResourceCard = ({ resource, onEdit, onDelete }: ResourceCardProps) 
         )}
 
         <h3 className="resource-card-title">{resource.title}</h3>
-        <p className="resource-card-description">{resource.description}</p>
 
         <div className="resource-card-tags">
           {resource.tags.map((tag) => (

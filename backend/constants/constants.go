@@ -12,15 +12,10 @@ const (
 
 	// Valid product names
 	ProductEcomm = "ecomm"
-	ProductAdmin = "admin"
-	ProductCrm   = "crm"
 
 	DefaultPageSize = 20
 	MaxPageSize     = 100
-	MaxFileSize     = 100 << 20 // 100MB
-
-	AdminSecretHeader        = "AdminSecret"
-	AdminSecretQueryParamKey = "adminSecret"
+	MaxFileSize     = 500 << 20 // 500MB
 
 	ProductContextKey = "product"
 	ProductParamKey   = "product"
@@ -29,19 +24,33 @@ const (
 	ResourceTypeVideo   = "video"
 	ResourceTypePDF     = "pdf"
 	ResourceTypeArticle = "article"
+	ResourceTypeImage   = "image"
 
-	// Generic errors
-	InvalidParam       = "invalid_param"
-	InvalidContentType = "invalid_content_type"
-	InvalidPayload     = "invalid_payload"
-	Unauthorized       = "unauthorized"
+	// Query Parameter Names
+	QueryParamType   = "type"
+	QueryParamTags   = "tags"
+	QueryParamSearch = "search"
+	QueryParamCursor = "cursor"
+	QueryParamLimit  = "limit"
 
-	// DB specific errors
-	QueryFailed          = "query_failed"
-	MutationFailed       = "mutation_failed"
-	NotFound             = "not_found"
-	DataConversionFailed = "data_conversion_failed"
-	UploadFailed         = "upload_failed"
+	// Form Field Names
+	FormFieldTitle        = "title"
+	FormFieldDescription  = "description"
+	FormFieldType         = "type"
+	FormFieldURL          = "url"
+	FormFieldThumbnailURL = "thumbnailUrl"
+	FormFieldTags         = "tags"
+	FormFieldFile         = "file"
+	FormFieldThumbnail    = "thumbnail"
+
+	// Default Values
+	DefaultLimitValue = "20"
+
+	// URL expiration times
+	DefaultSignedURLExpiration = 60 // 1 hour
+
+	// Error message prefixes
+	ErrFileValidationFailed = "file validation failed"
 )
 
 // ResourceTypes ...
@@ -54,17 +63,15 @@ var ResourceTypes = []string{
 // ValidProducts ...
 var ValidProducts = []string{
 	ProductEcomm,
-	ProductAdmin,
-	ProductCrm,
 }
 
-// GetResourcesCollectionName returns the collection name for resources for a given product
+// GetResourcesCollectionName returns the collection name for resources for a given productMore actions
 // product_name + "_resources"
 func GetResourcesCollectionName(product string) string {
 	return product + CollectionSuffixResources
 }
 
-// GetTagsCollectionName returns the collection name for tags for a given product
+// GetTagsCollectionName returns the collection name for tags for a given productMore actions
 // product_name + "_tags"
 func GetTagsCollectionName(product string) string {
 	return product + CollectionSuffixTags

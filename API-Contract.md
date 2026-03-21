@@ -7,15 +7,7 @@ This document outlines the API contract for the Learning Hub application. The AP
 ## Base URL
 
 ```
-https://example.com/api/v1
-```
-
-## Admin Authentication
-
-Creating, updating and deleting resources API requests require admin authentication using secret:
-
-```
-AdminSecret: <secret>
+https://example.com/api
 ```
 
 ## Error Handling
@@ -55,8 +47,8 @@ GET /resources
 | search    | string | No       | Search term for resource title and description
 | type      | string | No       | Filter by resource type: 'video' or 'pdf' or 'article' or 'all'
 | tags      | string | No       | Comma separated tags
-| cursor    | number | No       | No. of items skipped  
-| limit     | number | No       | Number of items per page (default: 20, max: 100) 
+| cursor    | string | No       | No. of items skipped  
+| limit     | string | No       | No. of items per page (default: 20, max: 100) 
 
 **Response:**
 
@@ -75,7 +67,8 @@ GET /resources
       "updatedAt": "string",
     }
   ],
-  "hasMore": boolean
+  "hasMore": boolean,
+  "nextCursor": string, // Optional
 }
 ```
 
@@ -126,20 +119,15 @@ Creates a new resource.
 POST /resources
 ```
 
-**Request Body:**
-
-```json
-{
-  "title": "string",
-  "description": "string",
-  "type": "video" | "article" | "pdf",
-  "url": "string", // Optional
-  "thumbnailUrl": "string", // Optional
-  "tags": ["string"],
-}
-```
+**Request Form Data:**
 
 ```multipart/form-data
+    title: string,
+	description: string,
+	type: string,
+	url: string, // Optional
+	thumbnailUrl: string, // Optional
+	tags: string,
 	file: File,
 	thumbnail: File
 ```
@@ -180,20 +168,16 @@ PATCH /resources/{id}
 |-----------|--------|----------|-----------------|
 | id        | string | Yes      | Resource ID     |
 
-**Request Body:**
+**Request Form Data:**
 
-```json
-{
-  "title": "string",
-  "description": "string",
-  "type": "video" | "article" | "pdf",
-  "url": "string",
-  "thumbnailUrl": "string", // Optional
-  "tags": ["string"]
-}
-```
 
 ```multipart/form-data
+	title: string,
+	description: string,
+	type: string,
+	url: string, // Optional
+	thumbnailUrl: string, // Optional
+	tags: string,
 	file: File,
 	thumbnail: File
 ```

@@ -7,9 +7,3 @@ type PaginatedResponse struct {
 	HasMore    bool       `json:"hasMore"`
 	Total      int        `json:"total,omitempty"`
 }
-
-// ErrorResponse represents an API error response
-type ErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
-}

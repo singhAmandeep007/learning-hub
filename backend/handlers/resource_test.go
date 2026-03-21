@@ -3,7 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	stdErrors "errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
-	"learning-hub/constants"
-	"learning-hub/models"
+	"learninghub/constants"
+	"learninghub/errors"
 )
 
 func TestHandleMultipartFormError(t *testing.T) {
@@ -24,28 +24,28 @@ func TestHandleMultipartFormError(t *testing.T) {
 		name           string
 		err            error
 		expectedStatus int
-		expectedError  string
+		expectedError  errors.ErrorCode
 		expectedMsg    string
 	}{
 		{
 			name:           "File too large error",
-			err:            errors.New("multipart: file too large"),
+			err:            stdErrors.New("multipart: file too large"),
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  constants.InvalidPayload,
-			expectedMsg:    "File too large. Maximum size is 100 MB",
+			expectedError:  errors.ErrFileTooLarge,
+			expectedMsg:    "File too large. Maximum size is 500 MB",
 		},
 		{
 			name:           "No multipart boundary error",
-			err:            errors.New("multipart: no multipart boundary"),
+			err:            stdErrors.New("multipart: no multipart boundary"),
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  constants.InvalidPayload,
+			expectedError:  errors.ErrInvalidContentType,
 			expectedMsg:    "Invalid multipart form data - no boundary found",
 		},
 		{
 			name:           "Generic error",
-			err:            errors.New("some other error"),
+			err:            stdErrors.New("some other error"),
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  constants.InvalidPayload,
+			expectedError:  errors.ErrInvalidPayload,
 			expectedMsg:    "Failed to parse form data: some other error",
 		},
 	}
@@ -68,7 +68,7 @@ func TestHandleMultipartFormError(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
 			// Parse response body
-			var response models.ErrorResponse
+			var response errors.ErrorResponse
 			err := json.NewDecoder(w.Body).Decode(&response)
 			assert.NoError(t, err)
 
@@ -94,10 +94,10 @@ func TestHandleMultipartFormErrorWithMaxFileSize(t *testing.T) {
 	c.Request = req
 
 	// Call the function with a file too large error
-	handleMultipartFormError(c, errors.New("multipart: file too large"))
+	handleMultipartFormError(c, stdErrors.New("multipart: file too large"))
 
 	// Parse response body
-	var response models.ErrorResponse
+	var response errors.ErrorResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
 

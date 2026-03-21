@@ -61,47 +61,66 @@
 
   &-pdf {
     width: 100%;
-    height: 500px;
+    height: 300px;
     border: none;
     border-radius: $border-radius-md;
+
+    &-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+
+      &-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: $spacing-2;
+        font-size: 16px;
+        color: $primary-color;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: $spacing-4;
+        word-break: break-all;
+
+        &:hover {
+          color: color.adjust($primary-color, $lightness: -10%);
+        }
+      }
+
+      &-note {
+        color: $neutral-600;
+        font-size: 12px;
+      }
+    }
   }
 
   &-article {
     text-align: center;
     padding: $spacing-8;
-  }
 
-  &-article-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $spacing-2;
-    margin-bottom: $spacing-4;
-    font-size: 15px;
-    font-weight: 600;
-    color: $neutral-700;
-  }
+    &-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: $spacing-2;
+      font-size: 15px;
+      color: $primary-color;
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: $spacing-4;
+      word-break: break-all;
 
-  &-article-link {
-    display: inline-block;
-    background-color: $primary-color;
-    color: white;
-    padding: $spacing-3 $spacing-6;
-    border-radius: $border-radius-md;
-    text-decoration: none;
-    font-weight: 500;
-    margin-bottom: $spacing-4;
-    transition: background-color $transition-fast;
-    word-break: break-all;
-
-    &:hover {
-      background-color: color.adjust($primary-color, $lightness: -10%);
+      &:hover {
+        color: color.adjust($primary-color, $lightness: -10%);
+      }
     }
-  }
 
-  &-article-note {
-    color: $neutral-600;
-    font-size: 12px;
+    &-note {
+      color: $neutral-600;
+      font-size: 12px;
+    }
   }
 
   &-placeholder {
@@ -121,6 +140,9 @@
     padding: $spacing-4 $spacing-6;
     border-top: 1px solid $neutral-200;
     background-color: $neutral-50;
+
+    max-height: 300px;
+    overflow-y: auto;
 
     h4 {
       font-size: 13px;

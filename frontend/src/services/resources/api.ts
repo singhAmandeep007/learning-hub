@@ -29,8 +29,6 @@ const toFormData = (payload: Partial<CreateResourcePayload>): FormData => {
   return formData;
 };
 
-const adminSecret = import.meta.env["VITE_ADMIN_SECRET"] || "your-admin-secret-key";
-
 export const resourcesApi = {
   // Get all resources with optional pagination and filtering
   getAll: async (params?: GetResourcesParams, options?: RequestInit): Promise<PaginatedResponse<Resource>> => {
@@ -49,9 +47,6 @@ export const resourcesApi = {
 
     return httpClient.postFormData<CreateResourceResponse>(`/${product}/resources`, {
       body: formData,
-      headers: {
-        AdminSecret: `${adminSecret}`,
-      },
     });
   },
 
@@ -62,19 +57,12 @@ export const resourcesApi = {
 
     return httpClient.patchFormData<UpdateResourceResponse>(`/${product}/resources/${id}`, {
       body: formData,
-      headers: {
-        AdminSecret: `${adminSecret}`,
-      },
     });
   },
 
   // Delete resource
   delete: async (payload: DeleteResourcePayload): Promise<void> => {
     const product = getProductFromUrl();
-    return httpClient.delete<void>(`/${product}/resources/${payload.id}`, {
-      headers: {
-        AdminSecret: `${adminSecret}`,
-      },
-    });
+    return httpClient.delete<void>(`/${product}/resources/${payload.id}`);
   },
 };

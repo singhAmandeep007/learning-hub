@@ -2,6 +2,8 @@ import { X, Video, File, ExternalLink, FileText } from "lucide-react";
 
 import { type Resource } from "../../../types";
 
+import { RichTextViewer } from "../RichText";
+
 import "./ResourceDetails.scss";
 
 interface ResourceDetailsProps {
@@ -59,22 +61,47 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({ resource, onCl
         if (isPreview && resource.file) {
           const pdfUrl = URL.createObjectURL(resource.file);
           return (
-            <iframe
-              src={pdfUrl}
+            <object
+              data={pdfUrl}
+              type="application/pdf"
               className="resource-details-pdf"
-              title="PDF Preview"
               onLoad={() => URL.revokeObjectURL(pdfUrl)}
-              allow="fullscreen"
-            />
+            >
+              <div className="resource-details-pdf-fallback">
+                <a
+                  href={pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="resource-details-pdf-fallback-link"
+                >
+                  <ExternalLink size={16} />
+                  <span>External PDF</span>
+                </a>
+                <p className="resource-details-pdf-fallback-note">Click the link above to view the PDF in a new tab</p>
+              </div>
+            </object>
           );
         }
         if (!isPreview && resource.url) {
           return (
-            <iframe
-              src={resource.url}
+            <object
+              data={resource.url}
+              type="application/pdf"
               className="resource-details-pdf"
-              title="PDF Preview"
-            />
+            >
+              <div className="resource-details-pdf-fallback">
+                <a
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="resource-details-pdf-fallback-link"
+                >
+                  <ExternalLink size={16} />
+                  <span>External PDF</span>
+                </a>
+                <p className="resource-details-pdf-fallback-note">Click the link above to view the PDF in a new tab</p>
+              </div>
+            </object>
           );
         }
         return (
@@ -85,39 +112,17 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({ resource, onCl
         );
 
       case "article":
-        if (isPreview && resource.url) {
+        if (resource.url) {
           return (
             <div className="resource-details-article">
-              <div className="resource-details-article-header">
-                <ExternalLink />
-                <span>External Article</span>
-              </div>
               <a
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="resource-details-article-link"
               >
-                {resource.url.length > 50 ? resource.url.substring(0, 50) + "..." : resource.url}
-              </a>
-              <p className="resource-details-article-note">Click the link above to view the article in a new tab</p>
-            </div>
-          );
-        }
-        if (!isPreview && resource.url) {
-          return (
-            <div className="resource-details-article">
-              <div className="resource-details-article-header">
-                <ExternalLink />
+                <ExternalLink size={16} />
                 <span>External Article</span>
-              </div>
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="resource-details-article-link"
-              >
-                {resource.url.length > 50 ? resource.url.substring(0, 50) + "..." : resource.url}
               </a>
               <p className="resource-details-article-note">Click the link above to view the article in a new tab</p>
             </div>
@@ -156,7 +161,8 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({ resource, onCl
       {resource.description && (
         <div className="resource-details-description">
           <h4>Description:</h4>
-          <p>{resource.description}</p>
+
+          <RichTextViewer content={resource.description} />
         </div>
       )}
     </div>
