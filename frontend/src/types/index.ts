@@ -10,15 +10,24 @@ export type PaginatedResponse<T> = {
 };
 
 // Products
-export const PRODUCTS = {
-  ecomm: "ecomm",
-} as const;
+const parseProductsList = (rawValue: string | undefined): string[] => {
+  const values = (rawValue ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 
-export type Product = (typeof PRODUCTS)[keyof typeof PRODUCTS];
+  if (values.length === 0) {
+    throw new Error("VITE_VALID_PRODUCTS is required and must contain at least one product");
+  }
 
-export const VALID_PRODUCTS = Object.values(PRODUCTS);
+  return [...new Set(values)];
+};
 
-export const DEFAULT_PRODUCT: Product = PRODUCTS.ecomm;
+export const VALID_PRODUCTS = parseProductsList(import.meta.env.VITE_VALID_PRODUCTS);
+
+export type Product = (typeof VALID_PRODUCTS)[number];
+
+export const DEFAULT_PRODUCT: Product = VALID_PRODUCTS[0];
 
 // Resource
 export const RESOURCE_TYPES = {

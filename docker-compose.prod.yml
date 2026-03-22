@@ -12,6 +12,7 @@ services:
     environment:
       - ENV_MODE=prod
       - PORT=8000
+      - VALID_PRODUCTS=${VALID_PRODUCTS:-ecomm}
       - GIN_MODE=release
       - CORS_ORIGINS=http://localhost:3000
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-learninghub-81cc6}
@@ -26,11 +27,13 @@ services:
       args:
         NODE_VERSION: 22
         PORT: 3000
+        VITE_VALID_PRODUCTS: ${VALID_PRODUCTS:-ecomm}
     container_name: frontend-prod
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - VITE_VALID_PRODUCTS=${VALID_PRODUCTS:-ecomm}
       - VITE_API_BASE_URL=/api/v1
       - BACKEND_HOST=backend
       - BACKEND_PORT=8000

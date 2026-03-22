@@ -319,7 +319,7 @@ func IsValidStorageURL(fileURL string) bool {
 
 // IsValidProduct checks if product name is valid
 func IsValidProduct(product string) bool {
-	for _, v := range constants.ValidProducts {
+	for _, v := range config.AppConfig.VALID_PRODUCTS {
 		if product == v {
 			return true
 		}

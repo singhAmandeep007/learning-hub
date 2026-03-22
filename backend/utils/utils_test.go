@@ -33,7 +33,8 @@ func newMockFile(data []byte) *mockFile {
 func init() {
 	// Initialize config for tests
 	config.AppConfig = &config.EnvConfig{
-		ENV_MODE: constants.EnvModeProd, // Default value
+		ENV_MODE:       constants.EnvModeProd, // Default value
+		VALID_PRODUCTS: []string{"ecomm"},
 	}
 }
 
@@ -383,7 +384,7 @@ func TestIsValidProduct(t *testing.T) {
 	}{
 		{
 			name:     "valid product Ecomm",
-			product:  constants.ProductEcomm,
+			product:  "ecomm",
 			expected: true,
 		},
 		{

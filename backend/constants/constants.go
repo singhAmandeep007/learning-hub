@@ -10,9 +10,6 @@ const (
 	CollectionSuffixResources = "_resources"
 	CollectionSuffixTags      = "_tags"
 
-	// Valid product names
-	ProductEcomm = "ecomm"
-
 	DefaultPageSize = 20
 	MaxPageSize     = 100
 	MaxFileSize     = 500 << 20 // 500MB
@@ -58,11 +55,6 @@ var ResourceTypes = []string{
 	ResourceTypeVideo,
 	ResourceTypePDF,
 	ResourceTypeArticle,
-}
-
-// ValidProducts ...
-var ValidProducts = []string{
-	ProductEcomm,
 }
 
 // GetResourcesCollectionName returns the collection name for resources for a given productMore actions

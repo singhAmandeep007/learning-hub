@@ -10,9 +10,17 @@ export default defineConfig(({ mode }) => {
   const port = env.VITE_PORT ? parseInt(env.VITE_PORT, 10) : 3000;
   const apiBaseURL = env.VITE_API_BASE_URL || "/api/v1";
   const proxyApiHost = env.VITE_PROXY_API_HOST || "http://localhost:8000";
+  const validProducts = (env.VITE_VALID_PRODUCTS || process.env.VALID_PRODUCTS || "").trim();
+
+  if (!validProducts) {
+    throw new Error("VITE_VALID_PRODUCTS (or VALID_PRODUCTS) is required");
+  }
 
   return {
     plugins: [react()],
+    define: {
+      "import.meta.env.VITE_VALID_PRODUCTS": JSON.stringify(validProducts),
+    },
     server: {
       port: port,
       strictPort: true,

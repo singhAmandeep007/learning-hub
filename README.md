@@ -114,6 +114,7 @@ The application is designed to manage learning resources across different produc
 ```bash
 ENV_MODE=dev                    # "dev" or "prod"
 PORT=8000                       # Server port
+VALID_PRODUCTS=ecomm            # Comma-separated valid products (shared across backend/frontend)
 ```
 
 **Authentication Methods:**
@@ -125,7 +126,10 @@ PORT=8000                       # Server port
 VITE_API_BASE_URL=/api/v1       # API base URL
 VITE_PORT=3000                  # Dev server port
 VITE_PROXY_API_HOST=http://localhost:8000  # Backend proxy for dev
+VITE_VALID_PRODUCTS=ecomm       # Comma-separated valid products (first value is default route product) Eg: "ecomm,admin,crm"
 ```
+
+When using Docker Compose, set only `VALID_PRODUCTS` in your shell or `.env` file at the `v1` root; it is mapped automatically to both backend and frontend.
 
 ## Database Structure
 

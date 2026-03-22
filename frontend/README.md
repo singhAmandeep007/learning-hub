@@ -16,6 +16,8 @@
 
 3. Toggle mocking in `.env.development` file by setting `VITE_IS_MOCKER` to `true` or `false`
 
+4. Ensure `VITE_VALID_PRODUCTS` is set (comma-separated). The first value is used as the frontend default product route.
+
 ## [Migrating SASS](https://sass-lang.com/documentation/breaking-changes/legacy-js-api/)
 
 ```bash

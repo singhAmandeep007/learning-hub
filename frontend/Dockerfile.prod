@@ -1,6 +1,7 @@
 # Build arguments
 ARG NODE_VERSION=22
 ARG PORT=3000
+ARG VITE_VALID_PRODUCTS=""
 
 # Build stage
 FROM node:${NODE_VERSION}-alpine AS builder
@@ -11,6 +12,8 @@ RUN apk update && apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
+
+ENV VITE_VALID_PRODUCTS=${VITE_VALID_PRODUCTS}
 
 # Copy package files and npm configuration
 COPY package*.json ./

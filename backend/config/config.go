@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 
 	"learninghub/constants"
 	"learninghub/pkg/logger"
@@ -13,6 +14,8 @@ type EnvConfig struct {
 	ENV_MODE string `env:"ENV_MODE"`
 	PORT     string `env:"PORT"`
 
+	VALID_PRODUCTS []string `env:"VALID_PRODUCTS"`
+
 	CORS_ORIGINS string `env:"CORS_ORIGINS"` // Comma-separated
 
 	FIREBASE_PROJECT_ID string `env:"FIREBASE_PROJECT_ID"`
@@ -22,6 +25,28 @@ type EnvConfig struct {
 
 	FIRESTORE_DB_ID         string `env:"FIRESTORE_DB_ID"`
 	FIREBASE_STORAGE_BUCKET string `env:"FIREBASE_STORAGE_BUCKET"`
+}
+
+func parseProductList(value string) []string {
+	parts := strings.Split(value, ",")
+	values := make([]string, 0, len(parts))
+	seen := make(map[string]struct{}, len(parts))
+
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed == "" {
+			continue
+		}
+
+		if _, exists := seen[trimmed]; exists {
+			continue
+		}
+
+		seen[trimmed] = struct{}{}
+		values = append(values, trimmed)
+	}
+
+	return values
 }
 
 // getEnvOrDefault retrieves an environment variable or returns a default value.
@@ -40,6 +65,8 @@ func LoadConfig() error {
 	config.ENV_MODE = getEnvOrDefault("ENV_MODE", constants.EnvModeProd)
 
 	config.PORT = getEnvOrDefault("PORT", "8000")
+
+	config.VALID_PRODUCTS = parseProductList(getEnvOrDefault("VALID_PRODUCTS", "")) // Default to empty if not set
 
 	config.CORS_ORIGINS = getEnvOrDefault("CORS_ORIGINS", "http://")
 

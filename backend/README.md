@@ -28,10 +28,10 @@ go mod download
 go mod tidy
 
 # Start the server in dev mode
-export ENV_MODE="dev" && air -c .air.toml
+export ENV_MODE="dev" VALID_PRODUCTS="ecomm" && air -c .air.toml
 
 # Start the server in prod mode
-export ENV_MODE="prod" && air -c .air.toml
+export ENV_MODE="prod" VALID_PRODUCTS="ecomm" && air -c .air.toml
 ```
 
 ## Running Tests

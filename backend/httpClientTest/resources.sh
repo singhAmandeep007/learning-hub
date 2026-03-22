@@ -1,9 +1,10 @@
 #!/bin/bash
 
-PRODUCT="ecomm" # Generic e-commerce product namespace
+DEFAULT_PRODUCT="ecomm"
+PRODUCT=""
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # Base URL and configuration
-BASE_URL="http://localhost:8000/api/v1/${PRODUCT}/resources"
+BASE_URL=""
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -237,6 +238,22 @@ make_request() {
     fi
 }
 
+# Function to choose product and initialize product-specific base URL
+initialize_product() {
+    echo -e "\n${YELLOW}Product Configuration${NC}"
+    read -p "Enter product namespace (default: ${DEFAULT_PRODUCT}): " selected_product
+
+    selected_product="$(echo "$selected_product" | xargs)"
+    if [ -z "$selected_product" ]; then
+        PRODUCT="$DEFAULT_PRODUCT"
+    else
+        PRODUCT="$selected_product"
+    fi
+
+    BASE_URL="http://localhost:8000/api/v1/${PRODUCT}/resources"
+    echo -e "${GREEN}Using product namespace: ${PRODUCT}${NC}"
+}
+
 # Function to seed resources with realistic e-commerce data
 seed_resources() {
     echo -e "\n${YELLOW}Seeding e-commerce resources...${NC}"
@@ -344,6 +361,7 @@ delete_resource() {
 # Function to display menu
 show_menu() {
     echo -e "\n${BLUE}=== E-commerce Resource Management ===${NC}"
+    echo -e "${YELLOW}Current product: ${PRODUCT}${NC}"
     echo "1. Seed E-commerce Resources (Realistic Data)"
     echo "2. Update Resource"
     echo "3. Delete Resource"
@@ -352,6 +370,8 @@ show_menu() {
 }
 
 # Main menu loop
+initialize_product
+
 while true; do
     show_menu
     read -p "Enter your choice (1-4): " choice

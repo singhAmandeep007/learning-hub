@@ -9,8 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
+	"learninghub/config"
 	"learninghub/constants"
 )
+
+const testValidProduct = "ecomm"
 
 func TestGetProductFromContext(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -24,9 +27,9 @@ func TestGetProductFromContext(t *testing.T) {
 		{
 			name: "Valid product in context",
 			setupContext: func(c *gin.Context) {
-				c.Set(constants.ProductContextKey, constants.ProductEcomm)
+				c.Set(constants.ProductContextKey, testValidProduct)
 			},
-			expectedProduct: constants.ProductEcomm,
+			expectedProduct: testValidProduct,
 			expectedExists:  true,
 		},
 		{
@@ -75,6 +78,10 @@ func TestGetProductFromContext(t *testing.T) {
 func TestProductValidationMiddlewareIntegration(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	config.AppConfig = &config.EnvConfig{
+		VALID_PRODUCTS: []string{testValidProduct},
+	}
+
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
@@ -89,13 +96,13 @@ func TestProductValidationMiddlewareIntegration(t *testing.T) {
 		// Verify product is available in handler
 		product, exists := GetProductFromContext(c)
 		assert.True(t, exists)
-		assert.Equal(t, constants.ProductEcomm, product)
+		assert.Equal(t, testValidProduct, product)
 
 		c.JSON(http.StatusOK, gin.H{"product": product})
 	})
 
 	// Create request with valid product
-	req, _ := http.NewRequest("GET", "/"+constants.ProductEcomm+"/resources", nil)
+	req, _ := http.NewRequest("GET", "/"+testValidProduct+"/resources", nil)
 	c.Request = req
 
 	// Execute request
@@ -109,5 +116,5 @@ func TestProductValidationMiddlewareIntegration(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, constants.ProductEcomm, response["product"])
+	assert.Equal(t, testValidProduct, response["product"])
 }
