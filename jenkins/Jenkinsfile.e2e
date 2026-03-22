@@ -19,7 +19,25 @@ pipeline {
 
     stage('Run E2E Docker Stack') {
       steps {
-        sh 'docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e'
+        sh '''
+          export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+          DOCKER_BIN="$(command -v docker || true)"
+          if [ -z "$DOCKER_BIN" ] && [ -x "/Applications/Docker.app/Contents/Resources/bin/docker" ]; then
+            DOCKER_BIN="/Applications/Docker.app/Contents/Resources/bin/docker"
+          fi
+          if [ -z "$DOCKER_BIN" ]; then
+            echo "docker binary not found in PATH or Docker Desktop default location"
+            exit 127
+          fi
+          "$DOCKER_BIN" version
+          "$DOCKER_BIN" compose version
+          if ! "$DOCKER_BIN" info >/dev/null 2>&1; then
+            echo "docker daemon is not reachable (permission or Docker Desktop not running)"
+            exit 1
+          fi
+          "$DOCKER_BIN" compose -f docker-compose.e2e.yml down -v --remove-orphans || true
+          "$DOCKER_BIN" compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
+        '''
       }
     }
   }
@@ -27,10 +45,19 @@ pipeline {
   post {
     always {
       sh '''
+        export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+        DOCKER_BIN="$(command -v docker || true)"
+        if [ -z "$DOCKER_BIN" ] && [ -x "/Applications/Docker.app/Contents/Resources/bin/docker" ]; then
+          DOCKER_BIN="/Applications/Docker.app/Contents/Resources/bin/docker"
+        fi
         mkdir -p e2e-artifacts
-        docker cp learninghub-e2e-runner:/app/result/playwright-report ./e2e-artifacts/playwright-report || true
-        docker cp learninghub-e2e-runner:/app/result/test-results ./e2e-artifacts/test-results || true
-        docker compose -f docker-compose.e2e.yml down -v --remove-orphans || true
+        if [ -n "$DOCKER_BIN" ]; then
+          "$DOCKER_BIN" compose -f docker-compose.e2e.yml cp e2e:/app/result/playwright-report ./e2e-artifacts/playwright-report || true
+          "$DOCKER_BIN" compose -f docker-compose.e2e.yml cp e2e:/app/result/test-results ./e2e-artifacts/test-results || true
+          "$DOCKER_BIN" compose -f docker-compose.e2e.yml down -v --remove-orphans || true
+        else
+          echo "docker binary unavailable during post actions; skipping docker artifact copy/cleanup"
+        fi
       '''
       archiveArtifacts artifacts: 'e2e-artifacts/**', allowEmptyArchive: true
     }
