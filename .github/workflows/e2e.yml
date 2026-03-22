@@ -1,0 +1,41 @@
+name: E2E Playwright
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      VALID_PRODUCTS: ecomm
+      E2E_PRODUCT: ecomm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build and run E2E Docker stack
+        run: docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
+
+      - name: Copy Playwright artifacts from e2e container
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p e2e-artifacts
+          docker cp learninghub-e2e-runner:/app/result/playwright-report ./e2e-artifacts/playwright-report || true
+          docker cp learninghub-e2e-runner:/app/result/test-results ./e2e-artifacts/test-results || true
+
+      - name: Upload Playwright artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-e2e-artifacts
+          path: e2e-artifacts
+          retention-days: 30
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v --remove-orphans

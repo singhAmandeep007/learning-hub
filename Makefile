@@ -4,7 +4,7 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-.PHONY: dev-local stop-services install-tools install-deps clean help
+.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop e2e-docker e2e-docker-stop e2e-local clean docker-clean status
 
 # Function to wait for a port to be open
 # Usage: $(call wait_for_port, <port_number>, <service_name>)
@@ -24,7 +24,7 @@ dev-local:
 	@cd backend && firebase emulators:start --only firestore,storage &
 	$(call wait_for_port, 4000, Firebase Emulators)
 	@echo "$(YELLOW)Starting backend server with Air...$(NC)"
-	@cd backend && ENV_MODE=dev CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173 FIREBASE_PROJECT_ID=learninghub-81cc6 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199 air -c .air.toml &
+	@cd backend && ENV_MODE=dev VALID_PRODUCTS=ecomm CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173 FIREBASE_PROJECT_ID=learninghub-81cc6 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199 air -c .air.toml &
 	$(call wait_for_port, 8000, Backend Server)
 	@echo "$(YELLOW)Setting up Node.js version...$(NC)"
 	@cd frontend && bash -c "source ~/.nvm/nvm.sh && nvm use"
@@ -85,6 +85,21 @@ docker-dev-stop:
 	@echo "🛑 Stopping all dev docker services..."
 	docker compose -f docker-compose.dev.yml down
 
+# Run dedicated e2e docker stack (frontend + backend + firebase + playwright)
+e2e-docker:
+	@echo "$(GREEN)🚀 Starting E2E Docker stack...$(NC)"
+	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
+	docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
+
+e2e-docker-stop:
+	@echo "🛑 Stopping E2E docker services..."
+	docker compose -f docker-compose.e2e.yml down -v --remove-orphans
+
+# Run e2e tests against locally running app services
+e2e-local:
+	@echo "$(GREEN)🧪 Running E2E tests against local services...$(NC)"
+	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm test
+
 # Clean build artifacts
 clean:
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
@@ -99,6 +114,9 @@ help:
 	@echo "  $(YELLOW)stop-services$(NC)      - Stop all running services"
 	@echo "  $(YELLOW)docker-dev$(NC)         - Start development environment with Docker"
 	@echo "  $(YELLOW)docker-dev-stop$(NC)    - Stop all dev docker services"
+	@echo "  $(YELLOW)e2e-docker$(NC)         - Run dedicated E2E Docker stack"
+	@echo "  $(YELLOW)e2e-docker-stop$(NC)    - Stop E2E docker services"
+	@echo "  $(YELLOW)e2e-local$(NC)          - Run E2E tests against local services"
 	@echo "  $(YELLOW)install-tools$(NC)      - Install Firebase CLI and Air globally"
 	@echo "  $(YELLOW)install-deps$(NC)       - Install all dependencies"
 	@echo "  $(YELLOW)clean$(NC)              - Clean build artifacts"

@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
   const apiBaseURL = env.VITE_API_BASE_URL || "/api/v1";
   const proxyApiHost = env.VITE_PROXY_API_HOST || "http://localhost:8000";
   const validProducts = (env.VITE_VALID_PRODUCTS || process.env.VALID_PRODUCTS || "").trim();
+  const allowedHosts = (env.VITE_ALLOWED_HOSTS || "localhost,127.0.0.1,frontend")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 
   if (!validProducts) {
     throw new Error("VITE_VALID_PRODUCTS (or VALID_PRODUCTS) is required");
@@ -25,6 +29,7 @@ export default defineConfig(({ mode }) => {
       port: port,
       strictPort: true,
       host: "0.0.0.0",
+      allowedHosts,
       ...(isDevMode && {
         proxy: {
           [apiBaseURL]: {

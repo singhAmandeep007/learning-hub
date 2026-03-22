@@ -1,0 +1,93 @@
+services:
+  firebase-emulator:
+    image: andreysenov/firebase-tools:14.2.0-node-22
+    container_name: learninghub-firebase-emulator
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/firebase.e2e.json:/home/node/firebase.json
+      - ./backend/.firebaserc:/home/node/.firebaserc
+      - ./backend/firestore.rules:/home/node/firestore.rules
+      - ./backend/firestore.indexes.json:/home/node/firestore.indexes.json
+    command: firebase emulators:start --only firestore --project learninghub-81cc6 --config firebase.json
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: learninghub-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_modules:/go/pkg/mod
+    environment:
+      - ENV_MODE=dev
+      - PORT=8000
+      - VALID_PRODUCTS=${VALID_PRODUCTS:-ecomm,admin,crm}
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - FIREBASE_PROJECT_ID=learninghub-81cc6
+      - FIRESTORE_EMULATOR_HOST=firebase-emulator:8080
+      - FIREBASE_STORAGE_EMULATOR_HOST=firebase-emulator:9199
+      - FIREBASE_DB_ID=learninghub
+      - FIREBASE_STORAGE_BUCKET=learninghub-81cc6.firebasestorage.app
+    command: sh -c "until curl -s http://firebase-emulator:8080 >/dev/null; do echo 'Waiting for Firebase...'; sleep 3; done && air -c .air.toml"
+    depends_on:
+      - firebase-emulator
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: learninghub-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_VALID_PRODUCTS=${VALID_PRODUCTS:-ecomm,admin,crm}
+      - VITE_PROXY_API_HOST=http://backend:8000
+      - VITE_PORT=3000
+      - VITE_API_BASE_URL=/api/v1
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=8000
+    command: sh -c "until curl -f http://backend:8000/health; do echo 'Waiting for Backend...'; sleep 5; done && npm run dev"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  e2e:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    container_name: learninghub-e2e-runner
+    environment:
+      - CI=true
+      - E2E_BASE_URL=http://frontend:3000
+      - E2E_API_BASE_URL=http://backend:8000
+      - E2E_PRODUCT=${E2E_PRODUCT:-ecomm}
+      - E2E_RESULT_DIR=result
+    volumes:
+      - ./e2e/result:/app/result
+    depends_on:
+      - frontend
+    command: sh -c "until curl -s http://frontend:3000 >/dev/null; do echo 'Waiting for Frontend...'; sleep 3; done && npm run test:ci"
+    init: true
+    ipc: host
+    networks:
+      - app-network
+
+volumes:
+  backend_modules:
+  frontend_modules:
+
+networks:
+  app-network:
+    driver: bridge

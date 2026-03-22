@@ -1,0 +1,38 @@
+pipeline {
+  agent any
+
+  environment {
+    VALID_PRODUCTS = 'ecomm'
+    E2E_PRODUCT = 'ecomm'
+  }
+
+  options {
+    timeout(time: 60, unit: 'MINUTES')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Run E2E Docker Stack') {
+      steps {
+        sh 'docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e'
+      }
+    }
+  }
+
+  post {
+    always {
+      sh '''
+        mkdir -p e2e-artifacts
+        docker cp learninghub-e2e-runner:/app/result/playwright-report ./e2e-artifacts/playwright-report || true
+        docker cp learninghub-e2e-runner:/app/result/test-results ./e2e-artifacts/test-results || true
+        docker compose -f docker-compose.e2e.yml down -v --remove-orphans || true
+      '''
+      archiveArtifacts artifacts: 'e2e-artifacts/**', allowEmptyArchive: true
+    }
+  }
+}

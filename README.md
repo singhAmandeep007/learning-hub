@@ -166,6 +166,39 @@ go test ./... -v           # Run all tests
 - Mock Service Worker (MSW) is configured for API mocking
 - React Query DevTools available in development mode
 
+## End-to-End Testing (Playwright)
+
+A dedicated `e2e/` module is available for full flow testing across frontend and backend.
+
+### Run with dedicated Docker stack (recommended)
+
+```bash
+make e2e-docker
+```
+
+This runs Firebase emulator, backend, frontend, and Playwright tests in dedicated containers.
+
+### Run against local services
+
+Start app services first:
+
+```bash
+make dev-local
+```
+
+Then in another terminal:
+
+```bash
+make e2e-local
+```
+
+### CI
+
+- GitHub Actions workflow: `.github/workflows/e2e.yml`
+- Jenkins pipeline: `jenkins/Jenkinsfile.e2e`
+
+Both use the standalone `docker-compose.e2e.yml` for a consistent environment across local and CI runs.
+
 ## Development Tips
 
 1. **Product Validation**: All routes require valid product parameter ("ecomm")
