@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -65,10 +68,15 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare Pages content
+        run: |
+          mkdir -p site/e2e-report
+          cp -R e2e-artifacts/playwright-report/. site/e2e-report/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: e2e-artifacts/playwright-report
+          path: site
 
       - name: Deploy to GitHub Pages
         id: deployment
