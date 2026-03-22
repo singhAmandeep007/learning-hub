@@ -35,6 +35,13 @@ pipeline {
             echo "docker daemon is not reachable (permission or Docker Desktop not running)"
             exit 1
           fi
+          echo "Docker usage before cleanup:"
+          "$DOCKER_BIN" system df || true
+          "$DOCKER_BIN" builder prune -af || true
+          "$DOCKER_BIN" image prune -af || true
+          "$DOCKER_BIN" volume prune -f || true
+          echo "Docker usage after cleanup:"
+          "$DOCKER_BIN" system df || true
           "$DOCKER_BIN" compose -f docker-compose.e2e.yml down -v --remove-orphans || true
           "$DOCKER_BIN" compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
         '''
