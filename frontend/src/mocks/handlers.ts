@@ -1,269 +1,208 @@
 import { http, HttpResponse } from "msw";
 
-import { DEFAULT_PRODUCT, type Resource, type Tag } from "../types";
+import { DEFAULT_PRODUCT, type Resource } from "../types";
 
 import { withDelay } from "./middleware";
+import type { TDb } from "./db";
 
 const BASE_URL = `/api/v1/${DEFAULT_PRODUCT}`;
 
-export const handlers = [
-  http.get(BASE_URL + "/resources", () => {
-    return HttpResponse.json({
-      data: resources,
-      hasMore: false,
-    });
+const applyResourceFilters = (resourcesToFilter: Resource[], requestUrl: string): Resource[] => {
+  const url = new URL(requestUrl);
 
-    return HttpResponse.json(
-      {
-        error: "invalid",
-        message: "something went wrong",
-      },
-      { status: 400 }
-    );
-  }),
+  const search = (url.searchParams.get("search") || "").trim().toLowerCase();
+  const type = (url.searchParams.get("type") || "").trim().toLowerCase();
+  const tagsQuery = (url.searchParams.get("tags") || "").trim();
+  const tags = tagsQuery
+    ? tagsQuery
+        .split(",")
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean)
+    : [];
 
-  http.get(BASE_URL + "/resources/:id", ({ params }) => {
-    const resource = resources.find((resource) => resource.id === params.id);
+  return resourcesToFilter.filter((resource) => {
+    if (type && type !== "all" && resource.type !== type) {
+      return false;
+    }
 
-    return HttpResponse.json(resource);
+    if (tags.length > 0 && !tags.every((tag) => resource.tags.map((value) => value.toLowerCase()).includes(tag))) {
+      return false;
+    }
 
-    return HttpResponse.json(
-      {
-        error: "invalid",
-        message: "something went wrong",
-      },
-      { status: 401 }
-    );
-  }),
+    if (!search) {
+      return true;
+    }
 
-  http.post(
-    BASE_URL + "/resources",
-    withDelay(1000, async ({ request }) => {
+    const title = resource.title.toLowerCase();
+    const description = resource.description.toLowerCase();
+    const resourceTags = resource.tags.join(" ").toLowerCase();
+
+    return title.includes(search) || description.includes(search) || resourceTags.includes(search);
+  });
+};
+
+const applyPagination = (resourcesToPaginate: Resource[], requestUrl: string) => {
+  const url = new URL(requestUrl);
+
+  const cursorValue = Number(url.searchParams.get("cursor") || "0");
+  const limitValue = Number(url.searchParams.get("limit") || String(10));
+
+  const cursor = Number.isFinite(cursorValue) && cursorValue > 0 ? Math.floor(cursorValue) : 0;
+  const limit = Number.isFinite(limitValue) && limitValue > 0 ? Math.floor(limitValue) : resourcesToPaginate.length;
+
+  const paginatedData = resourcesToPaginate.slice(cursor, cursor + limit);
+  const nextCursor = cursor + limit;
+
+  return {
+    data: paginatedData,
+    hasMore: nextCursor < resourcesToPaginate.length,
+    nextCursor: nextCursor < resourcesToPaginate.length ? String(nextCursor) : "",
+  };
+};
+
+export const setupHandlers = (db: TDb) => {
+  return [
+    http.get(BASE_URL + "/resources", ({ request }) => {
+      const resources = db.resource.getAll();
+
+      const filteredResources = applyResourceFilters(resources, request.url);
+      const paginatedResponse = applyPagination(filteredResources, request.url);
+
+      return HttpResponse.json({
+        data: paginatedResponse.data,
+        hasMore: paginatedResponse.hasMore,
+        nextCursor: paginatedResponse.nextCursor,
+      });
+    }),
+
+    http.get(BASE_URL + "/resources/:id", ({ params }) => {
+      const resource = db.resource.findFirst({
+        where: {
+          id: {
+            equals: String(params.id),
+          },
+        },
+      });
+
+      if (!resource) {
+        return HttpResponse.json(
+          {
+            error: "invalid",
+            message: "Resource not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      return HttpResponse.json(resource);
+    }),
+
+    http.post(
+      BASE_URL + "/resources",
+      withDelay(1000, async ({ request }) => {
+        const formData = await request.formData();
+
+        const newResource = {
+          title: formData.get("title") as string,
+          description: formData.get("description") as string,
+          type: formData.get("type") as Resource["type"],
+          url: (formData.get("url") as string) || "",
+          thumbnailUrl: (formData.get("thumbnailUrl") as string | undefined) || "",
+          tags: (formData.get("tags") as string)
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter((tag) => tag.length > 0),
+        };
+
+        const createdResource = db.resource.create(newResource);
+
+        return HttpResponse.json(createdResource, { status: 201 });
+      })
+    ),
+
+    http.patch(BASE_URL + "/resources/:id", async ({ params, request }) => {
       const formData = await request.formData();
 
-      const newResource: Resource = {
-        id: crypto.randomUUID(),
+      const resource = db.resource.findFirst({
+        where: {
+          id: {
+            equals: String(params.id),
+          },
+        },
+      });
 
-        title: formData.get("title") as string,
-        description: formData.get("description") as string,
+      if (!resource) {
+        return HttpResponse.json(
+          {
+            error: "invalid",
+            message: "Resource not found",
+          },
+          { status: 404 }
+        );
+      }
 
-        type: formData.get("type") as Resource["type"],
-        url: (formData.get("url") as string) || "",
-        thumbnailUrl: (formData.get("thumbnailUrl") as string | undefined) || "",
-        tags: (formData.get("tags") as string)
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter((tag) => tag.length > 0),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const updatedResource = {
+        ...resource,
+        ...(formData.get("title") ? { title: formData.get("title") as string } : {}),
+        ...(formData.get("description") ? { description: formData.get("description") as string } : {}),
+        ...(formData.get("tags")
+          ? {
+              tags: (formData.get("tags") as string)
+                .split(",")
+                .map((tag) => tag.trim())
+                .filter((tag) => tag.length > 0),
+            }
+          : {}),
+        ...(formData.get("url") ? { url: formData.get("url") as string } : {}),
+        ...(formData.get("thumbnailUrl") ? { thumbnailUrl: formData.get("thumbnailUrl") as string } : {}),
       };
 
-      resources.push(newResource);
-
-      return HttpResponse.json(newResource, { status: 201 });
-
-      return HttpResponse.json(
-        {
-          error: "invalid",
-          message: "something went wrong",
+      const updated = db.resource.update({
+        where: {
+          id: {
+            equals: String(params.id),
+          },
         },
-        { status: 500 }
-      );
-    })
-  ),
+        data: updatedResource,
+      });
 
-  http.patch(BASE_URL + "/resources/:id", async ({ params, request }) => {
-    const resource = resources.find((resource) => resource.id === params.id);
+      return HttpResponse.json(updated);
+    }),
 
-    if (!resource) {
-      return HttpResponse.json(
-        {
-          error: "invalid",
-          message: "Resource not found",
+    http.delete(BASE_URL + "/resources/:id", async ({ params }) => {
+      const resource = db.resource.findFirst({
+        where: {
+          id: {
+            equals: String(params.id),
+          },
         },
-        { status: 404 }
-      );
-    }
+      });
 
-    const formData = await request.formData();
-    console.log("Update resource formdata", formData);
+      if (!resource) {
+        return HttpResponse.json(
+          {
+            error: "invalid",
+            message: "Resource not found",
+          },
+          { status: 404 }
+        );
+      }
 
-    if (formData.get("title")) resource.title = formData.get("title") as string;
-    if (formData.get("description")) resource.description = formData.get("description") as string;
-    if (formData.get("tags")) {
-      resource.tags = (formData.get("tags") as string)
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
-    }
+      db.resource.delete({
+        where: {
+          id: {
+            equals: String(params.id),
+          },
+        },
+      });
 
-    return HttpResponse.json(resource);
-  }),
+      return HttpResponse.json({}, { status: 200 });
+    }),
 
-  http.delete(BASE_URL + "/resources/:id", async ({ params }) => {
-    resources = resources.filter((resource) => resource.id !== params.id);
+    http.get(BASE_URL + "/tags", () => {
+      const tags = db.tag.getAll();
 
-    return HttpResponse.json({}, { status: 200 });
-
-    return HttpResponse.json(
-      {
-        error: "invalid",
-        message: "something went wrong",
-      },
-      { status: 500 }
-    );
-  }),
-
-  http.get(BASE_URL + "/tags", () => {
-    return HttpResponse.json(tags);
-
-    // return HttpResponse.json(
-    //   {
-    //     error: "invalid",
-    //     message: "something went wrong",
-    //   },
-    //   { status: 500 }
-    // );
-  }),
-];
-
-let resources: Resource[] = [
-  {
-    id: "Axq25c4sGxlkry8ex0Kd",
-    title: "Test Video Tutorial 2",
-    description: "This is a test video tutorial 2",
-    type: "video",
-    url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    tags: ["test", "video", "tutorial"],
-    createdAt: "2025-06-03T04:48:28.571485Z",
-    updatedAt: "2025-06-03T04:48:28.571485Z",
-  },
-  {
-    id: "ePctsVoTC36XuiGbIEwZ",
-    title: "Test Video Tutorial 1",
-    description: "This is a test video tutorial 1",
-    type: "video",
-    url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    thumbnailUrl: "https://picsum.photos/id/237/536/354",
-    tags: ["test", "video", "tutorial"],
-    createdAt: "2025-06-03T04:48:28.522788Z",
-    updatedAt: "2025-06-03T04:48:28.522788Z",
-  },
-  {
-    id: "W3ScPIjfOJJm45M8nlWR",
-    title: "Test PDF Document 2",
-    description: "This is a test PDF document 2",
-    type: "pdf",
-    url: "https://s24.q4cdn.com/216390268/files/doc_downloads/test.pdf",
-    tags: ["test", "pdf", "documentation", "creativity", "preact", "react"],
-    createdAt: "2025-06-03T04:48:28.498451Z",
-    updatedAt: "2025-06-03T04:48:28.498451Z",
-  },
-  {
-    id: "GGzOhAHKEJva6L5ieS2j",
-    title: "Test PDF Document 1",
-    description: "This is a test PDF document 1",
-    type: "pdf",
-    url: "https://s24.q4cdn.com/216390268/files/doc_downloads/test.pdf",
-    thumbnailUrl: "https://picsum.photos/id/237/536/354",
-    tags: ["test", "pdf", "documentation"],
-    createdAt: "2025-06-03T04:48:28.471915Z",
-    updatedAt: "2025-06-03T04:48:28.471915Z",
-  },
-  {
-    id: "M2wtDTqlLOcxDyLKt0LE",
-    title: "Test Article 3",
-    description: "This is a test article 3",
-    type: "article",
-    url: "https://gist.github.com/jsturgis/3b19447b304616f18657?permalink_comment_id=3658531",
-    tags: ["test", "article", "blog", "productivity", "coding", "programming", "dev", "golang"],
-    createdAt: "2025-06-03T04:48:28.444762Z",
-    updatedAt: "2025-06-03T04:48:28.444762Z",
-  },
-  {
-    id: "A2prtnNWN1RTxeA3x4dl",
-    title: "Test Article 2",
-    description: "This is a test article 2",
-    type: "article",
-    url: "https://gist.github.com/jsturgis/3b19447b304616f18657?permalink_comment_id=3658531",
-    thumbnailUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
-    tags: ["test", "article", "blog", "productivity", "coding", "programming"],
-    createdAt: "2025-06-03T04:48:28.417062Z",
-    updatedAt: "2025-06-03T04:48:28.417062Z",
-  },
-  {
-    id: "Gx9Hp9hCp3El5b5BwQqo",
-    title: "Test Article 1",
-    description: "This is a test article 1",
-    type: "article",
-    url: "https://gist.github.com/jsturgis/3b19447b304616f18657?permalink_comment_id=3658531",
-    thumbnailUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
-    tags: ["test", "article", "blog"],
-    createdAt: "2025-06-03T04:48:28.385855Z",
-    updatedAt: "2025-06-03T04:48:28.385855Z",
-  },
-];
-
-// eslint-disable-next-line prefer-const
-let tags: Tag[] = [
-  {
-    name: "test",
-    usageCount: 7,
-  },
-  {
-    name: "blog",
-    usageCount: 3,
-  },
-  {
-    name: "article",
-    usageCount: 3,
-  },
-  {
-    name: "video",
-    usageCount: 2,
-  },
-  {
-    name: "tutorial",
-    usageCount: 2,
-  },
-  {
-    name: "programming",
-    usageCount: 2,
-  },
-  {
-    name: "productivity",
-    usageCount: 2,
-  },
-  {
-    name: "pdf",
-    usageCount: 2,
-  },
-  {
-    name: "documentation",
-    usageCount: 2,
-  },
-  {
-    name: "coding",
-    usageCount: 2,
-  },
-  {
-    name: "react",
-    usageCount: 1,
-  },
-  {
-    name: "preact",
-    usageCount: 1,
-  },
-  {
-    name: "golang",
-    usageCount: 1,
-  },
-  {
-    name: "dev",
-    usageCount: 1,
-  },
-  {
-    name: "creativity",
-    usageCount: 1,
-  },
-];
+      return HttpResponse.json(tags);
+    }),
+  ];
+};

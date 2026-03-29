@@ -1,4 +1,9 @@
 import { setupWorker } from "msw/browser";
-import { handlers } from "./handlers";
+import { setupHandlers } from "./handlers";
 
-export const worker = setupWorker(...handlers);
+import { db } from "./db";
+import { buildScenarios } from "./scenarioBuilder";
+
+buildScenarios(db).withResources(50);
+
+export const worker = setupWorker(...setupHandlers(db));
