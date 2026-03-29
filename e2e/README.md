@@ -53,6 +53,39 @@ npm run install:browsers
 E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=ecomm npm test
 ```
 
+## Visual regression
+
+Visual specs are in `tests/resources.visual.spec.ts`.
+The test runs a serial CRUD flow against the real backend and captures snapshots after:
+- empty state
+- create
+- view details
+- update
+- delete
+
+The suite clears backend state through APIs before/after each run so snapshots stay deterministic.
+
+Run with Docker from repo root:
+
+```bash
+make e2e-docker-vrt
+make e2e-docker-vrt-update
+```
+
+Run against locally running services from repo root:
+
+```bash
+make e2e-local-vrt
+make e2e-local-vrt-update
+```
+
+Or run directly inside `e2e/`:
+
+```bash
+npm run test:visual
+npm run test:visual:update
+```
+
 ## CI usage
 
 - GitHub Actions: `.github/workflows/e2e.yml`

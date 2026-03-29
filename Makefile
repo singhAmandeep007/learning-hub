@@ -4,7 +4,7 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop e2e-docker e2e-docker-stop e2e-local clean docker-clean status
+.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop e2e-docker e2e-docker-vrt e2e-docker-vrt-update e2e-docker-stop e2e-local e2e-local-vrt e2e-local-vrt-update clean docker-clean status
 
 # Function to wait for a port to be open
 # Usage: $(call wait_for_port, <port_number>, <service_name>)
@@ -91,6 +91,18 @@ e2e-docker:
 	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
 	docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
 
+# Run visual regression tests in Docker stack (real backend + frontend)
+e2e-docker-vrt:
+	@echo "$(GREEN)🖼️  Running visual regression tests in E2E Docker stack...$(NC)"
+	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
+	E2E_TEST_COMMAND="npm run test:visual" docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
+
+# Refresh visual snapshot baselines in Docker stack (real backend + frontend)
+e2e-docker-vrt-update:
+	@echo "$(GREEN)🔁 Updating visual regression snapshots in E2E Docker stack...$(NC)"
+	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
+	E2E_TEST_COMMAND="npm run test:visual:update" docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
+
 e2e-docker-stop:
 	@echo "🛑 Stopping E2E docker services..."
 	docker compose -f docker-compose.e2e.yml down -v --remove-orphans
@@ -99,6 +111,16 @@ e2e-docker-stop:
 e2e-local:
 	@echo "$(GREEN)🧪 Running E2E tests against local services...$(NC)"
 	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm test
+
+# Run visual regression tests against locally running services
+e2e-local-vrt:
+	@echo "$(GREEN)🖼️  Running visual regression tests against local services...$(NC)"
+	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm run test:visual
+
+# Update visual snapshot baselines against locally running services
+e2e-local-vrt-update:
+	@echo "$(GREEN)🔁 Updating visual regression snapshots against local services...$(NC)"
+	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm run test:visual:update
 
 # Clean build artifacts
 clean:
@@ -115,8 +137,12 @@ help:
 	@echo "  $(YELLOW)docker-dev$(NC)         - Start development environment with Docker"
 	@echo "  $(YELLOW)docker-dev-stop$(NC)    - Stop all dev docker services"
 	@echo "  $(YELLOW)e2e-docker$(NC)         - Run dedicated E2E Docker stack"
+	@echo "  $(YELLOW)e2e-docker-vrt$(NC)     - Run visual regression tests in E2E Docker stack"
+	@echo "  $(YELLOW)e2e-docker-vrt-update$(NC) - Update visual snapshots in E2E Docker stack"
 	@echo "  $(YELLOW)e2e-docker-stop$(NC)    - Stop E2E docker services"
 	@echo "  $(YELLOW)e2e-local$(NC)          - Run E2E tests against local services"
+	@echo "  $(YELLOW)e2e-local-vrt$(NC)      - Run visual regression tests against local services"
+	@echo "  $(YELLOW)e2e-local-vrt-update$(NC) - Update visual snapshots against local services"
 	@echo "  $(YELLOW)install-tools$(NC)      - Install Firebase CLI and Air globally"
 	@echo "  $(YELLOW)install-deps$(NC)       - Install all dependencies"
 	@echo "  $(YELLOW)clean$(NC)              - Clean build artifacts"

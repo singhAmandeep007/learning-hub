@@ -74,11 +74,13 @@ services:
       - E2E_API_BASE_URL=http://backend:8000
       - E2E_PRODUCT=${E2E_PRODUCT:-ecomm}
       - E2E_RESULT_DIR=result
+      - E2E_TEST_COMMAND=${E2E_TEST_COMMAND:-npm run test:ci}
     volumes:
       - ./e2e/result:/app/result
+      - ./e2e/tests/resources.visual.spec.ts-snapshots:/app/tests/resources.visual.spec.ts-snapshots
     depends_on:
       - frontend
-    command: sh -c "until curl -s http://frontend:3000 >/dev/null; do echo 'Waiting for Frontend...'; sleep 3; done && npm run test:ci"
+    command: sh -c "until curl -s http://frontend:3000 >/dev/null; do echo 'Waiting for Frontend...'; sleep 3; done && ${E2E_TEST_COMMAND:-npm run test:ci}"
     init: true
     ipc: host
     networks:

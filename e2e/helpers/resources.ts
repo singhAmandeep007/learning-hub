@@ -60,10 +60,30 @@ export async function createArticleResourceViaApi(request: APIRequestContext, ti
   return await expectJsonResponseWithSchema(
     response,
     201,
-    resourceResponseSchema.pick({ id: true, title: true, tags: true })
+    resourceResponseSchema.pick({ id: true, title: true, tags: true }),
   );
 }
 
 export async function deleteResourceViaApi(request: APIRequestContext, id: string) {
   await expectDeleteSucceeded(request, resourceByIdPath(id));
+}
+
+const resourceIdListResponseSchema = z.object({
+  data: z.array(resourceResponseSchema.pick({ id: true })),
+});
+
+export async function clearAllResourcesViaApi(request: APIRequestContext) {
+  // Re-fetch page 1 after each delete batch so pagination shifts do not skip records.
+  for (let i = 0; i < 20; i += 1) {
+    const listResponse = await request.get(`${apiBaseURL}${resourcesCollectionPath}?limit=100`);
+    const body = await expectJsonResponseWithSchema(listResponse, 200, resourceIdListResponseSchema);
+
+    if (body.data.length === 0) {
+      return;
+    }
+
+    await Promise.all(body.data.map((resource) => expectDeleteSucceeded(request, resourceByIdPath(resource.id))));
+  }
+
+  throw new Error("Unable to clear resources after 20 cleanup passes");
 }

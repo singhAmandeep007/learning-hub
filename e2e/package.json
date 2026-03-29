@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
+    "test:visual": "playwright test tests/resources.visual.spec.ts --project=chromium",
+    "test:visual:update": "playwright test tests/resources.visual.spec.ts --project=chromium --update-snapshots",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ci": "CI=true E2E_RETRIES=0 E2E_MAX_FAILURES=1 playwright test --max-failures=1",
