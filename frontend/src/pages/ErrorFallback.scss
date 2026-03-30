@@ -1,5 +1,5 @@
 @use "sass:color";
-@use "../styles/variables.scss" as *;
+@use "@learning-hub/ui/scss/tokens" as ui;
 
 .error-fallback {
   display: flex;
@@ -7,10 +7,10 @@
   align-items: center;
   justify-content: center;
   height: 100dvh;
-  gap: $spacing-2;
+  gap: ui.$lhui-spacing-2;
 
   .error-fallback-icon {
-    color: $error-color;
+    color: ui.$lhui-color-error;
   }
 
   .error-fallback-caption {
@@ -20,24 +20,8 @@
   .error-fallback-message {
     width: 50%;
     text-align: center;
-    color: $neutral-500;
+    color: ui.$lhui-color-neutral-500;
     white-space: pre-wrap;
     word-break: break-word;
-  }
-
-  .error-fallback-button {
-    margin-top: $spacing-8;
-    padding: $spacing-2 $spacing-4;
-    border-radius: $border-radius-md;
-    background: $primary-color;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-
-    transition: background $transition-normal;
-
-    &:hover {
-      background: color.adjust($primary-color, $lightness: 10%);
-    }
   }
 }

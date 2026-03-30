@@ -1,5 +1,3 @@
-@use "./styles/variables.scss" as *;
-
 /* basic reset */
 *,
 *::after,
@@ -12,9 +10,9 @@
 }
 
 html {
-  font-size: $font-size;
-  font-weight: $font-weight;
-  font-family: $font-sans;
+  font-size: var(--lhui-font-size);
+  font-weight: var(--lhui-font-weight);
+  font-family: var(--lhui-font-sans);
 }
 
 body {
@@ -29,7 +27,7 @@ body {
 
 a {
   text-decoration: none;
-  color: $primary-color;
+  color: var(--lhui-primary-color);
 }
 
 ul {
@@ -48,4 +46,19 @@ input {
   font: inherit;
   border: none;
   outline: none;
+}
+
+// Preview overlay and modal styles
+.preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--lhui-spacing-4);
+  z-index: 60;
 }

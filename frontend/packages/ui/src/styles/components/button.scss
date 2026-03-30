@@ -1,0 +1,83 @@
+@use "sass:color";
+@use "../../../scss/tokens" as t;
+
+.lhui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: t.$lhui-spacing-2;
+  border: 1px solid transparent;
+  border-radius: t.$lhui-radius-md;
+  font-family: t.$lhui-font-sans;
+  font-size: t.$lhui-font-size-base;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color t.$lhui-transition-fast ease,
+    border-color t.$lhui-transition-fast ease,
+    color t.$lhui-transition-fast ease,
+    box-shadow t.$lhui-transition-fast ease,
+    opacity t.$lhui-transition-fast ease;
+}
+
+.lhui-button:focus-visible {
+  outline: 2px solid t.$lhui-color-neutral-900;
+  outline-offset: 2px;
+}
+
+.lhui-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.lhui-button--size-sm {
+  min-height: 32px;
+  padding: 0 t.$lhui-spacing-3;
+  border-radius: t.$lhui-radius-md;
+}
+
+.lhui-button--size-md {
+  min-height: 40px;
+  padding: 0 t.$lhui-spacing-4;
+  border-radius: t.$lhui-radius-md;
+}
+
+.lhui-button--size-lg {
+  min-height: 48px;
+  padding: 0 t.$lhui-spacing-4;
+  border-radius: t.$lhui-radius-lg;
+}
+
+.lhui-button--intent-primary {
+  background: t.$lhui-color-primary;
+  color: white;
+  box-shadow: t.$lhui-shadow-sm;
+}
+
+.lhui-button--intent-primary:hover:not(:disabled) {
+  background: color.adjust(t.$lhui-color-primary, $lightness: -5%);
+}
+
+.lhui-button--intent-secondary {
+  background: t.$lhui-color-secondary;
+  color: white;
+}
+
+.lhui-button--intent-secondary:hover:not(:disabled) {
+  background: color.adjust(t.$lhui-color-secondary, $lightness: -5%);
+}
+
+.lhui-button--intent-ghost {
+  background: transparent;
+  color: t.$lhui-color-neutral-900;
+  border-color: t.$lhui-color-neutral-200;
+}
+
+.lhui-button--intent-ghost:hover:not(:disabled) {
+  background: t.$lhui-color-neutral-50;
+}
+
+.lhui-button--block {
+  width: 100%;
+}

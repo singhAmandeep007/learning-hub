@@ -1,0 +1,66 @@
+// Sass tokens for compile-time usage (e.g. color.adjust, math on spacing).
+// Keep these values in sync with src/styles/tokens.scss (CSS custom properties).
+
+$lhui-color-primary: #3088ff;
+$lhui-color-secondary: #14b8a6;
+$lhui-color-success: #16a34a;
+$lhui-color-error: #dc2626;
+$lhui-color-warning: #d97706;
+$lhui-color-info: #2563eb;
+
+$lhui-color-neutral-50: #f9fafb;
+$lhui-color-neutral-100: #f3f4f6;
+$lhui-color-neutral-200: #e5e7eb;
+$lhui-color-neutral-300: #d1d5db;
+$lhui-color-neutral-400: #9ca3af;
+$lhui-color-neutral-500: #6b7280;
+$lhui-color-neutral-600: #4b5563;
+$lhui-color-neutral-700: #374151;
+$lhui-color-neutral-800: #1f2937;
+$lhui-color-neutral-900: #111827;
+
+$lhui-radius-sm: 2px;
+$lhui-radius-md: 4px;
+$lhui-radius-lg: 8px;
+$lhui-radius-xl: 12px;
+$lhui-radius-2xl: 16px;
+$lhui-radius-full: 9999px;
+
+$lhui-spacing-1: 4px;
+$lhui-spacing-2: 8px;
+$lhui-spacing-3: 12px;
+$lhui-spacing-4: 16px;
+$lhui-spacing-5: 20px;
+$lhui-spacing-6: 24px;
+$lhui-spacing-8: 32px;
+$lhui-spacing-10: 40px;
+$lhui-spacing-12: 48px;
+$lhui-spacing-16: 64px;
+
+$lhui-breakpoint-sm: 640px;
+$lhui-breakpoint-md: 768px;
+$lhui-breakpoint-lg: 1024px;
+$lhui-breakpoint-xl: 1280px;
+$lhui-breakpoint-2xl: 1536px;
+
+$lhui-transition-fast: 150ms;
+$lhui-transition-normal: 220ms;
+$lhui-transition-slow: 500ms;
+
+$lhui-font-size-base: 14px;
+$lhui-font-sans:
+  "Inter",
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  Roboto,
+  "Helvetica Neue",
+  Arial,
+  sans-serif;
+
+$lhui-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+$lhui-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$lhui-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$lhui-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+$lhui-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);

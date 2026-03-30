@@ -1,29 +1,29 @@
 @use "sass:color";
-@use "../styles/variables.scss" as *;
+@use "@learning-hub/ui/scss/tokens" as ui;
 
 .resources {
   min-height: 100vh;
-  background-color: $neutral-50;
+  background-color: ui.$lhui-color-neutral-50;
 
   &-header {
     background-color: white;
-    box-shadow: $shadow-sm;
-    border-bottom: 1px solid $neutral-200;
+    box-shadow: ui.$lhui-shadow-sm;
+    border-bottom: 1px solid ui.$lhui-color-neutral-200;
   }
 
   &-header-container {
     max-width: 1120px;
     margin: 0 auto;
-    padding: 0 $spacing-4;
-    padding-top: $spacing-6;
-    padding-bottom: $spacing-6;
+    padding: 0 ui.$lhui-spacing-4;
+    padding-top: ui.$lhui-spacing-6;
+    padding-bottom: ui.$lhui-spacing-6;
   }
 
   &-header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: $spacing-2;
+    gap: ui.$lhui-spacing-2;
   }
 
   &-header-info {
@@ -33,32 +33,32 @@
   &-title {
     font-size: 20px;
     font-weight: 700;
-    color: $neutral-900;
-    margin-bottom: $spacing-1;
+    color: ui.$lhui-color-neutral-900;
+    margin-bottom: ui.$lhui-spacing-1;
   }
 
   &-subtitle {
-    color: $neutral-600;
+    color: ui.$lhui-color-neutral-600;
   }
 
   &-create-btn {
-    background-color: $primary-color;
+    background-color: ui.$lhui-color-primary;
     color: white;
-    padding: $spacing-2 $spacing-4;
-    border-radius: $border-radius-md;
+    padding: ui.$lhui-spacing-2 ui.$lhui-spacing-4;
+    border-radius: ui.$lhui-radius-md;
     border: none;
     cursor: pointer;
-    transition: background-color $transition-fast ease-in-out;
+    transition: background-color ui.$lhui-transition-fast ease-in-out;
     display: flex;
     align-items: center;
-    gap: $spacing-2;
+    gap: ui.$lhui-spacing-2;
     font-weight: 500;
 
     &:hover {
-      background-color: color.adjust($primary-color, $lightness: -5%);
+      background-color: color.adjust(ui.$lhui-color-primary, $lightness: -5%);
 
       &:disabled {
-        color: $neutral-400;
+        color: ui.$lhui-color-neutral-400;
       }
     }
 
@@ -74,24 +74,24 @@
   &-main {
     max-width: 1120px;
     margin: 0 auto;
-    padding: 0 $spacing-4;
-    padding-top: $spacing-6;
-    padding-bottom: $spacing-6;
+    padding: 0 ui.$lhui-spacing-4;
+    padding-top: ui.$lhui-spacing-6;
+    padding-bottom: ui.$lhui-spacing-6;
   }
 
   &-filters {
     background-color: white;
-    padding: $spacing-4;
-    border-radius: $border-radius-lg;
-    box-shadow: $shadow-sm;
-    border: 1px solid $neutral-200;
-    margin-bottom: $spacing-6;
+    padding: ui.$lhui-spacing-4;
+    border-radius: ui.$lhui-radius-lg;
+    box-shadow: ui.$lhui-shadow-sm;
+    border: 1px solid ui.$lhui-color-neutral-200;
+    margin-bottom: ui.$lhui-spacing-6;
   }
 
   &-filters-content {
     display: flex;
     flex-wrap: wrap;
-    gap: $spacing-4;
+    gap: ui.$lhui-spacing-4;
     flex-direction: column;
   }
 
@@ -103,35 +103,35 @@
   &-search-wrapper {
     position: relative;
     display: flex;
-    gap: $spacing-3;
+    gap: ui.$lhui-spacing-3;
   }
 
   &-search-icon {
     position: absolute;
-    left: $spacing-3;
+    left: ui.$lhui-spacing-3;
     top: 50%;
     transform: translateY(-50%);
-    color: $neutral-400;
+    color: ui.$lhui-color-neutral-400;
   }
 
   &-search-input {
     width: 100%;
-    padding-left: $spacing-8;
-    padding-right: $spacing-4;
-    padding-top: $spacing-2;
-    padding-bottom: $spacing-2;
-    border: 1px solid $neutral-300;
-    border-radius: $border-radius-md;
+    padding-left: ui.$lhui-spacing-8;
+    padding-right: ui.$lhui-spacing-4;
+    padding-top: ui.$lhui-spacing-2;
+    padding-bottom: ui.$lhui-spacing-2;
+    border: 1px solid ui.$lhui-color-neutral-300;
+    border-radius: ui.$lhui-radius-md;
     font-size: 12px;
 
     &:focus {
       outline: none;
-      border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+      border-color: ui.$lhui-color-primary;
+      box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
     }
 
     &::placeholder {
-      color: $neutral-400;
+      color: ui.$lhui-color-neutral-400;
     }
   }
 
@@ -142,17 +142,17 @@
   &-type-select {
     appearance: none;
 
-    padding: $spacing-2 $spacing-3;
-    padding-right: calc($spacing-3 + 20px);
-    border: 1px solid $neutral-300;
-    border-radius: $border-radius-md;
+    padding: ui.$lhui-spacing-2 ui.$lhui-spacing-3;
+    padding-right: calc(ui.$lhui-spacing-3 + 20px);
+    border: 1px solid ui.$lhui-color-neutral-300;
+    border-radius: ui.$lhui-radius-md;
     background-color: white;
     cursor: pointer;
 
     &:focus {
       outline: none;
-      border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+      border-color: ui.$lhui-color-primary;
+      box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
     }
   }
 
@@ -160,31 +160,31 @@
     content: "";
     position: absolute;
     top: 50%;
-    right: $spacing-2;
+    right: ui.$lhui-spacing-2;
     transform: translateY(-50%);
     width: 0;
     height: 0;
     border-left: 4px solid transparent;
     border-right: 4px solid transparent;
-    border-top: 5px solid $neutral-500;
+    border-top: 5px solid ui.$lhui-color-neutral-500;
     pointer-events: none;
   }
 
   &-search-btn {
-    background-color: $primary-color;
+    background-color: ui.$lhui-color-primary;
     color: white;
-    padding: $spacing-2 $spacing-4;
-    border-radius: $border-radius-md;
+    padding: ui.$lhui-spacing-2 ui.$lhui-spacing-4;
+    border-radius: ui.$lhui-radius-md;
     border: none;
     cursor: pointer;
-    transition: background-color $transition-fast ease-in-out;
+    transition: background-color ui.$lhui-transition-fast ease-in-out;
     display: flex;
     align-items: center;
-    gap: $spacing-2;
+    gap: ui.$lhui-spacing-2;
     font-weight: 500;
 
     &:hover {
-      background-color: color.adjust($primary-color, $lightness: -15%);
+      background-color: color.adjust(ui.$lhui-color-primary, $lightness: -15%);
     }
 
     &:disabled,
@@ -205,19 +205,19 @@
 
   &-clear-filters {
     font-size: 12px;
-    color: $neutral-500;
+    color: ui.$lhui-color-neutral-500;
     background: transparent;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: $spacing-1;
-    transition: color $transition-fast ease-in-out;
+    gap: ui.$lhui-spacing-1;
+    transition: color ui.$lhui-transition-fast ease-in-out;
 
     margin-right: 1rem;
 
     &:hover {
-      color: $neutral-700;
+      color: ui.$lhui-color-neutral-700;
     }
   }
 
@@ -228,15 +228,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: $spacing-6;
-    gap: $spacing-4;
+    margin-bottom: ui.$lhui-spacing-6;
+    gap: ui.$lhui-spacing-4;
 
     padding-right: 15px;
   }
 
   &-results-count {
     &-results-text {
-      color: $neutral-600;
+      color: ui.$lhui-color-neutral-600;
       margin: 0;
     }
   }
@@ -244,51 +244,51 @@
   &-pagination {
     display: flex;
     align-items: center;
-    gap: $spacing-2;
+    gap: ui.$lhui-spacing-2;
   }
 
   &-pagination-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: $spacing-1;
-    padding: $spacing-1 $spacing-2;
-    background: $neutral-50;
-    border: 1px solid $neutral-200;
-    border-radius: $border-radius-md;
-    color: $neutral-700;
+    gap: ui.$lhui-spacing-1;
+    padding: ui.$lhui-spacing-1 ui.$lhui-spacing-2;
+    background: ui.$lhui-color-neutral-50;
+    border: 1px solid ui.$lhui-color-neutral-200;
+    border-radius: ui.$lhui-radius-md;
+    color: ui.$lhui-color-neutral-700;
     cursor: pointer;
-    transition: all $transition-fast ease;
+    transition: all ui.$lhui-transition-fast ease;
 
     &:hover:not(:disabled) {
-      background: $neutral-100;
-      border-color: $neutral-300;
-      color: $neutral-800;
+      background: ui.$lhui-color-neutral-100;
+      border-color: ui.$lhui-color-neutral-300;
+      color: ui.$lhui-color-neutral-800;
     }
 
     &:active:not(:disabled) {
-      background: $neutral-200;
+      background: ui.$lhui-color-neutral-200;
       transform: translateY(1px);
     }
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-      background: $neutral-50;
-      color: $neutral-400;
+      background: ui.$lhui-color-neutral-50;
+      color: ui.$lhui-color-neutral-400;
     }
 
     &:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
-      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
+      border-color: ui.$lhui-color-primary;
     }
   }
 
   &-pagination-info {
-    padding: 0 $spacing-1;
-    font-size: $font-size;
-    color: $neutral-600;
+    padding: 0 ui.$lhui-spacing-1;
+    font-size: ui.$lhui-font-size-base;
+    color: ui.$lhui-color-neutral-600;
     font-weight: 500;
     white-space: nowrap;
   }
@@ -301,7 +301,7 @@
       position: relative;
       display: grid;
       grid-template-columns: 1fr;
-      gap: $spacing-6;
+      gap: ui.$lhui-spacing-6;
       margin-right: 15px;
 
       &.loading {
@@ -309,11 +309,11 @@
         pointer-events: none;
       }
 
-      @media (min-width: $breakpoint-md) {
+      @media (min-width: ui.$lhui-breakpoint-md) {
         grid-template-columns: repeat(2, 1fr);
       }
 
-      @media (min-width: $breakpoint-lg) {
+      @media (min-width: ui.$lhui-breakpoint-lg) {
         grid-template-columns: repeat(3, 1fr);
       }
     }
@@ -321,24 +321,24 @@
 
   &-empty-state {
     text-align: center;
-    padding: $spacing-10 0;
+    padding: ui.$lhui-spacing-10 0;
   }
 
   &-empty-state-icon {
     width: 42px;
     height: 42px;
-    color: $neutral-400;
-    margin: 0 auto $spacing-4;
+    color: ui.$lhui-color-neutral-400;
+    margin: 0 auto ui.$lhui-spacing-4;
   }
 
   &-empty-state-title {
     font-size: 15px;
     font-weight: 500;
-    color: $neutral-900;
-    margin-bottom: $spacing-2;
+    color: ui.$lhui-color-neutral-900;
+    margin-bottom: ui.$lhui-spacing-2;
   }
 
   &-empty-state-text {
-    color: $neutral-600;
+    color: ui.$lhui-color-neutral-600;
   }
 }

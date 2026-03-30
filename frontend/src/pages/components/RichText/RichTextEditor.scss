@@ -1,27 +1,27 @@
 @use "sass:color";
-@use "../../../styles/variables.scss" as *;
+@use "@learning-hub/ui/scss/tokens" as ui;
 
 .richtext-editor {
-  border: 1px solid $neutral-300;
-  border-radius: $border-radius-md;
+  border: 1px solid ui.$lhui-color-neutral-300;
+  border-radius: ui.$lhui-radius-md;
   background: white;
   padding: 1px;
   transition:
-    border-color $transition-fast,
-    box-shadow $transition-fast;
+    border-color ui.$lhui-transition-fast,
+    box-shadow ui.$lhui-transition-fast;
 
   &:focus-within {
-    border-color: $primary-color;
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    border-color: ui.$lhui-color-primary;
+    box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
   }
 
   .toolbar {
     display: flex;
     align-items: center;
-    gap: $spacing-1;
-    padding: $spacing-2 $spacing-3;
-    border-bottom: 1px solid $neutral-200;
-    background: $neutral-50;
+    gap: ui.$lhui-spacing-1;
+    padding: ui.$lhui-spacing-2 ui.$lhui-spacing-3;
+    border-bottom: 1px solid ui.$lhui-color-neutral-200;
+    background: ui.$lhui-color-neutral-50;
     flex-wrap: wrap;
 
     button {
@@ -32,18 +32,18 @@
       height: 32px;
       border: none;
       background: white;
-      border-radius: $border-radius-md;
+      border-radius: ui.$lhui-radius-md;
       cursor: pointer;
-      color: $neutral-500;
-      transition: all $transition-fast;
+      color: ui.$lhui-color-neutral-500;
+      transition: all ui.$lhui-transition-fast;
 
       &:hover:not(:disabled) {
-        background: $neutral-100;
-        color: $neutral-700;
+        background: ui.$lhui-color-neutral-100;
+        color: ui.$lhui-color-neutral-700;
       }
 
       &.active {
-        background: $primary-color;
+        background: ui.$lhui-color-primary;
         color: white;
       }
 
@@ -56,8 +56,8 @@
     .separator {
       width: 1px;
       height: 20px;
-      background: $neutral-300;
-      margin: 0 $spacing-1;
+      background: ui.$lhui-color-neutral-300;
+      margin: 0 ui.$lhui-spacing-1;
     }
   }
 
@@ -66,16 +66,16 @@
     overflow-y: scroll;
 
     .ProseMirror {
-      padding: $spacing-4;
+      padding: ui.$lhui-spacing-4;
       min-height: 120px;
-      font-size: $font-size;
+      font-size: ui.$lhui-font-size-base;
       line-height: 1.6;
-      color: $neutral-800;
+      color: ui.$lhui-color-neutral-800;
       outline: none;
 
       &[data-placeholder]:empty::before {
         content: attr(data-placeholder);
-        color: $neutral-400;
+        color: ui.$lhui-color-neutral-400;
         font-style: italic;
         pointer-events: none;
         position: absolute;
@@ -86,8 +86,8 @@
       h2,
       h3 {
         font-weight: 600;
-        margin: $spacing-4 0 $spacing-2 0;
-        color: $neutral-800;
+        margin: ui.$lhui-spacing-4 0 ui.$lhui-spacing-2 0;
+        color: ui.$lhui-color-neutral-800;
         line-height: 1.3;
 
         &:first-child {
@@ -106,7 +106,7 @@
       }
 
       p {
-        margin: $spacing-2 0;
+        margin: ui.$lhui-spacing-2 0;
 
         &:first-child {
           margin-top: 0;
@@ -131,11 +131,11 @@
 
       ul,
       ol {
-        margin: $spacing-2 0;
-        padding-left: $spacing-6;
+        margin: ui.$lhui-spacing-2 0;
+        padding-left: ui.$lhui-spacing-6;
 
         li {
-          margin: $spacing-1 0;
+          margin: ui.$lhui-spacing-1 0;
         }
       }
 
@@ -149,13 +149,13 @@
 
       // Code blocks
       pre {
-        background: $neutral-100;
-        border: 1px solid $neutral-200;
-        border-radius: $border-radius-md;
-        padding: $spacing-3;
-        margin: $spacing-3 0;
+        background: ui.$lhui-color-neutral-100;
+        border: 1px solid ui.$lhui-color-neutral-200;
+        border-radius: ui.$lhui-radius-md;
+        padding: ui.$lhui-spacing-3;
+        margin: ui.$lhui-spacing-3 0;
         overflow-x: auto;
-        font-family: $font-mono;
+        font-family: ui.$lhui-font-mono;
         font-size: 13px;
         line-height: 1.4;
 
@@ -163,7 +163,7 @@
           background: none;
           padding: 0;
           border-radius: 0;
-          color: $neutral-800;
+          color: ui.$lhui-color-neutral-800;
         }
 
         &:first-child {
@@ -177,48 +177,48 @@
 
       // Inline code
       code {
-        background: $neutral-100;
-        color: $neutral-800;
-        padding: 2px $spacing-1;
-        border-radius: $border-radius-sm;
-        font-family: $font-mono;
+        background: ui.$lhui-color-neutral-100;
+        color: ui.$lhui-color-neutral-800;
+        padding: 2px ui.$lhui-spacing-1;
+        border-radius: ui.$lhui-radius-sm;
+        font-family: ui.$lhui-font-mono;
         font-size: 13px;
       }
 
       a {
-        color: $primary-color;
+        color: ui.$lhui-color-primary;
         text-decoration: underline;
         cursor: pointer;
 
         &:hover {
-          color: color.adjust($primary-color, $lightness: -10%);
+          color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
         }
       }
 
       // Selection
       ::selection {
-        background: rgba($primary-color, 0.2);
+        background: rgba(ui.$lhui-color-primary, 0.2);
       }
     }
   }
 
   // Error state
   &.error {
-    border-color: $error-color;
+    border-color: ui.$lhui-color-error;
 
     &:focus-within {
-      border-color: $error-color;
-      box-shadow: 0 0 0 3px rgba($error-color, 0.1);
+      border-color: ui.$lhui-color-error;
+      box-shadow: 0 0 0 3px rgba(ui.$lhui-color-error, 0.1);
     }
   }
 
   // Disabled state
   &.disabled {
     opacity: 0.6;
-    background: $neutral-50;
+    background: ui.$lhui-color-neutral-50;
 
     .toolbar {
-      background: $neutral-100;
+      background: ui.$lhui-color-neutral-100;
 
       button {
         pointer-events: none;
@@ -227,12 +227,12 @@
     }
 
     .ProseMirror {
-      background: $neutral-50;
-      color: $neutral-500;
+      background: ui.$lhui-color-neutral-50;
+      color: ui.$lhui-color-neutral-500;
       cursor: not-allowed;
 
       &[data-placeholder]:empty::before {
-        color: $neutral-300;
+        color: ui.$lhui-color-neutral-300;
       }
     }
   }
@@ -253,98 +253,98 @@
 
 .link-dialog {
   background: white;
-  border-radius: $border-radius-lg;
-  padding: $spacing-4;
+  border-radius: ui.$lhui-radius-lg;
+  padding: ui.$lhui-spacing-4;
   width: 90%;
   max-width: 400px;
-  box-shadow: $shadow-xl;
+  box-shadow: ui.$lhui-shadow-xl;
 
   h3 {
     font-size: 17px;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: $spacing-2;
-    color: $neutral-800;
+    gap: ui.$lhui-spacing-2;
+    color: ui.$lhui-color-neutral-800;
 
-    margin-bottom: $spacing-4;
+    margin-bottom: ui.$lhui-spacing-4;
   }
 
   .form-group {
-    margin-bottom: $spacing-4;
+    margin-bottom: ui.$lhui-spacing-4;
 
     label {
       display: block;
       margin-bottom: 6px;
       font-size: 12px;
       font-weight: 500;
-      color: $neutral-700;
+      color: ui.$lhui-color-neutral-700;
     }
 
     input {
       width: 100%;
-      padding: $spacing-2 $spacing-3;
-      border: 1px solid $neutral-300;
-      border-radius: $border-radius-md;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-3;
+      border: 1px solid ui.$lhui-color-neutral-300;
+      border-radius: ui.$lhui-radius-md;
       font-size: 12px;
       transition:
-        border-color $transition-fast,
-        box-shadow $transition-fast;
+        border-color ui.$lhui-transition-fast,
+        box-shadow ui.$lhui-transition-fast;
 
       &:focus {
         outline: none;
-        border-color: $primary-color;
-        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        border-color: ui.$lhui-color-primary;
+        box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
       }
     }
   }
 
   .dialog-buttons {
     display: flex;
-    gap: $spacing-3;
+    gap: ui.$lhui-spacing-3;
     justify-content: flex-end;
     margin-top: 20px;
 
     &-button {
       display: inline-flex;
       align-items: center;
-      gap: $spacing-2;
-      padding: $spacing-2 $spacing-4;
-      border-radius: $border-radius-md;
+      gap: ui.$lhui-spacing-2;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-4;
+      border-radius: ui.$lhui-radius-md;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: all $transition-fast;
+      transition: all ui.$lhui-transition-fast;
       border: 1px solid;
 
       &-primary {
-        background-color: $primary-color;
+        background-color: ui.$lhui-color-primary;
         color: white;
-        border-color: $primary-color;
+        border-color: ui.$lhui-color-primary;
 
         &:hover {
-          background-color: color.adjust($primary-color, $lightness: -10%);
-          border-color: color.adjust($primary-color, $lightness: -10%);
+          background-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
+          border-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
         }
       }
 
       &-secondary {
         background-color: white;
-        color: $neutral-700;
-        border-color: $neutral-300;
+        color: ui.$lhui-color-neutral-700;
+        border-color: ui.$lhui-color-neutral-300;
 
         &:hover {
-          background-color: $neutral-50;
+          background-color: ui.$lhui-color-neutral-50;
         }
       }
 
       &-outline {
         background-color: white;
-        color: $primary-color;
-        border-color: $primary-color;
+        color: ui.$lhui-color-primary;
+        border-color: ui.$lhui-color-primary;
 
         &:hover {
-          background-color: rgba($primary-color, 0.05);
+          background-color: rgba(ui.$lhui-color-primary, 0.05);
         }
       }
 
@@ -362,10 +362,10 @@
 }
 
 // Mobile responsive
-@media (max-width: $breakpoint-md) {
+@media (max-width: ui.$lhui-breakpoint-md) {
   .richtext-editor {
     .toolbar {
-      padding: $spacing-2 $spacing-2;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-2;
       gap: 2px;
 
       button {
@@ -375,7 +375,7 @@
     }
 
     .editor-content .ProseMirror {
-      padding: $spacing-3;
+      padding: ui.$lhui-spacing-3;
       min-height: 100px;
     }
   }

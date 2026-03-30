@@ -1,7 +1,9 @@
 import { createContext } from "react";
 
-export interface ReactQueryFlashContextType {
-  addNotification: (message: string, type?: "success" | "error" | "info" | "warning", duration?: number) => void;
+export type FlashNotificationType = "success" | "error" | "info" | "warning";
+
+export interface FlashContextType {
+  addNotification: (message: string, type?: FlashNotificationType, duration?: number) => void;
   showSuccess: (message: string, duration?: number) => void;
   showError: (message: string, duration?: number) => void;
   showInfo: (message: string, duration?: number) => void;
@@ -12,4 +14,4 @@ export interface ReactQueryFlashContextType {
   showMutationError: (error: unknown, customMessage?: string, duration?: number) => void;
 }
 
-export const ReactQueryFlashContext = createContext<ReactQueryFlashContextType | undefined>(undefined);
+export const FlashContext = createContext<FlashContextType | undefined>(undefined);

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Button } from "@learning-hub/ui";
 import { Video, File, ExternalLink, FileText, Eye, Edit3, Trash2, Tag } from "lucide-react";
 
 import { type Resource, RESOURCE_TYPES, type ResourceType } from "../../../types";
@@ -55,30 +56,36 @@ export const ResourceCard = ({ resource, onEdit, onDelete }: ResourceCardProps) 
             <span className="resource-card-type-label">{resource.type}</span>
           </div>
           <div className="resource-card-actions">
-            <button
+            <Button
               onClick={handleShowDetails}
               className="resource-card-action-btn resource-card-action-btn-view"
               title="View Resource"
               type="button"
+              intent="ghost"
+              size="sm"
             >
               <Eye className="resource-card-action-icon" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleEdit}
               className="resource-card-action-btn resource-card-action-btn-edit"
               title="Edit Resource"
               type="button"
+              intent="ghost"
+              size="sm"
             >
               <Edit3 className="resource-card-action-icon" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleDelete}
               className="resource-card-action-btn resource-card-action-btn-delete"
               title="Delete Resource"
               type="button"
+              intent="ghost"
+              size="sm"
             >
               <Trash2 className="resource-card-action-icon" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -121,7 +128,7 @@ export const ResourceCard = ({ resource, onEdit, onDelete }: ResourceCardProps) 
       </div>
 
       {showDetails && (
-        <div className="create-update-resource-preview-overlay">
+        <div className="preview-overlay">
           <ResourceDetails
             resource={resource}
             onClose={handleCloseDetails}

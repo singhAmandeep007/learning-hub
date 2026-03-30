@@ -1,0 +1,112 @@
+@use "sass:color";
+@use "../../../scss/tokens" as t;
+
+.lhui-scrollable-tags__container {
+  display: flex;
+  align-items: center;
+  gap: t.$lhui-spacing-2;
+  position: relative;
+  flex: 1;
+  width: 0;
+}
+
+.lhui-scrollable-tags__items {
+  display: flex;
+  gap: t.$lhui-spacing-1;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  padding: t.$lhui-spacing-1 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-wrap: nowrap;
+}
+
+.lhui-scrollable-tags__items::-webkit-scrollbar {
+  display: none;
+}
+
+.lhui-scrollable-tags__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px t.$lhui-spacing-2;
+  font-size: 10px;
+  border-radius: t.$lhui-radius-full;
+  border: none;
+  cursor: pointer;
+  transition: all t.$lhui-transition-fast ease-in-out;
+  background-color: t.$lhui-color-neutral-100;
+  color: t.$lhui-color-neutral-700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lhui-scrollable-tags__item:hover {
+  background-color: t.$lhui-color-neutral-200;
+}
+
+.lhui-scrollable-tags__item--active {
+  background-color: t.$lhui-color-primary;
+  color: t.$lhui-color-neutral-50;
+}
+
+.lhui-scrollable-tags__item--active:hover {
+  background-color: color.adjust(t.$lhui-color-primary, $lightness: -5%);
+}
+
+.lhui-scrollable-tags__item--active .lhui-scrollable-tags__item-count {
+  background-color: t.$lhui-color-neutral-50;
+  color: t.$lhui-color-primary;
+}
+
+.lhui-scrollable-tags__item-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  height: 1rem;
+  border-radius: t.$lhui-radius-full;
+  background-color: t.$lhui-color-neutral-300;
+  margin-left: t.$lhui-spacing-2;
+  flex-shrink: 0;
+  padding: t.$lhui-spacing-2;
+}
+
+.lhui-scrollable-tags__scroll-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: t.$lhui-radius-full;
+  background-color: t.$lhui-color-neutral-100;
+  color: t.$lhui-color-neutral-600;
+  cursor: pointer;
+  transition: all t.$lhui-transition-fast ease-in-out;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.lhui-scrollable-tags__scroll-button:hover {
+  background-color: t.$lhui-color-neutral-200;
+  color: t.$lhui-color-neutral-700;
+}
+
+.lhui-scrollable-tags__scroll-button:active {
+  transform: scale(0.95);
+}
+
+.lhui-scrollable-tags__scroll-button--left {
+  margin-right: t.$lhui-spacing-1;
+}
+
+.lhui-scrollable-tags__scroll-button--right {
+  margin-left: t.$lhui-spacing-1;
+}
+
+.lhui-scrollable-tags__scroll-icon {
+  width: 1rem;
+  height: 1rem;
+}

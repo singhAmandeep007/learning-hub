@@ -1,5 +1,5 @@
 @use "sass:color";
-@use "../../../styles/variables.scss" as *;
+@use "@learning-hub/ui/scss/tokens" as ui;
 
 .create-update-resource-form {
   position: fixed;
@@ -11,22 +11,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: $spacing-4;
+  padding: ui.$lhui-spacing-4;
   z-index: 50;
 
   &-container {
     background-color: white;
-    border-radius: $border-radius-lg;
+    border-radius: ui.$lhui-radius-lg;
     max-width: 550px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: $shadow-xl;
+    box-shadow: ui.$lhui-shadow-xl;
   }
 
   &-header {
-    padding: $spacing-6;
-    border-bottom: 1px solid $neutral-200;
+    padding: ui.$lhui-spacing-6;
+    border-bottom: 1px solid ui.$lhui-color-neutral-200;
   }
 
   &-title {
@@ -34,51 +34,51 @@
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: $spacing-2;
-    color: $neutral-800;
+    gap: ui.$lhui-spacing-2;
+    color: ui.$lhui-color-neutral-800;
   }
 
   &-content {
-    padding: $spacing-6;
+    padding: ui.$lhui-spacing-6;
     display: flex;
     flex-direction: column;
-    gap: $spacing-6;
+    gap: ui.$lhui-spacing-6;
   }
 
   .form-field {
     display: flex;
     flex-direction: column;
-    gap: $spacing-2;
+    gap: ui.$lhui-spacing-2;
 
     &-label {
       font-size: 12px;
       font-weight: 500;
-      color: $neutral-700;
+      color: ui.$lhui-color-neutral-700;
     }
 
     &-input,
     &-textarea {
       width: 100%;
-      padding: $spacing-2 $spacing-3;
-      border: 1px solid $neutral-300;
-      border-radius: $border-radius-md;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-3;
+      border: 1px solid ui.$lhui-color-neutral-300;
+      border-radius: ui.$lhui-radius-md;
       font-size: 12px;
       transition:
-        border-color $transition-fast,
-        box-shadow $transition-fast;
+        border-color ui.$lhui-transition-fast,
+        box-shadow ui.$lhui-transition-fast;
 
       &:focus {
         outline: none;
-        border-color: $primary-color;
-        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        border-color: ui.$lhui-color-primary;
+        box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
       }
 
       &-error {
-        border-color: $error-color;
+        border-color: ui.$lhui-color-error;
 
         &:focus {
-          border-color: $error-color;
-          box-shadow: 0 0 0 3px rgba($error-color, 0.1);
+          border-color: ui.$lhui-color-error;
+          box-shadow: 0 0 0 3px rgba(ui.$lhui-color-error, 0.1);
         }
       }
     }
@@ -90,8 +90,8 @@
 
     &-error {
       font-size: 10px;
-      color: $error-color;
-      margin-top: $spacing-1;
+      color: ui.$lhui-color-error;
+      margin-top: ui.$lhui-spacing-1;
     }
   }
 
@@ -99,29 +99,29 @@
   .resource-type-selector {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: $spacing-2;
+    gap: ui.$lhui-spacing-2;
 
     &-option {
-      padding: $spacing-3;
-      border: 1px solid $neutral-300;
-      border-radius: $border-radius-md;
+      padding: ui.$lhui-spacing-3;
+      border: 1px solid ui.$lhui-color-neutral-300;
+      border-radius: ui.$lhui-radius-md;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: $spacing-2;
+      gap: ui.$lhui-spacing-2;
       background-color: white;
       cursor: pointer;
-      transition: all $transition-fast;
+      transition: all ui.$lhui-transition-fast;
 
       &:hover {
-        border-color: $neutral-400;
-        background-color: $neutral-50;
+        border-color: ui.$lhui-color-neutral-400;
+        background-color: ui.$lhui-color-neutral-50;
       }
 
       &-active {
-        border-color: $primary-color;
-        background-color: rgba($primary-color, 0.05);
-        color: $primary-color;
+        border-color: ui.$lhui-color-primary;
+        background-color: rgba(ui.$lhui-color-primary, 0.05);
+        color: ui.$lhui-color-primary;
       }
 
       &:disabled,
@@ -143,29 +143,29 @@
 
   // File upload styles
   .file-upload {
-    border: 2px dashed $neutral-300;
-    border-radius: $border-radius-lg;
-    padding: $spacing-6;
+    border: 2px dashed ui.$lhui-color-neutral-300;
+    border-radius: ui.$lhui-radius-lg;
+    padding: ui.$lhui-spacing-6;
     text-align: center;
-    transition: all $transition-fast;
+    transition: all ui.$lhui-transition-fast;
     position: relative;
 
     &-drag-over {
-      border-color: $primary-color;
-      background-color: rgba($primary-color, 0.05);
+      border-color: ui.$lhui-color-primary;
+      background-color: rgba(ui.$lhui-color-primary, 0.05);
     }
 
     &-icon {
       width: 2rem;
       height: 2rem;
-      color: $neutral-400;
-      margin: 0 auto $spacing-2;
+      color: ui.$lhui-color-neutral-400;
+      margin: 0 auto ui.$lhui-spacing-2;
     }
 
     &-text {
       font-size: 12px;
-      color: $neutral-600;
-      margin-bottom: $spacing-2;
+      color: ui.$lhui-color-neutral-600;
+      margin-bottom: ui.$lhui-spacing-2;
     }
 
     &-input {
@@ -182,43 +182,43 @@
 
     &-button {
       display: inline-block;
-      padding: $spacing-2 $spacing-4;
-      background-color: $primary-color;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-4;
+      background-color: ui.$lhui-color-primary;
       color: white;
-      border-radius: $border-radius-md;
+      border-radius: ui.$lhui-radius-md;
       cursor: pointer;
-      transition: background-color $transition-fast;
+      transition: background-color ui.$lhui-transition-fast;
       font-size: 12px;
       font-weight: 500;
       border: none;
 
       &:hover {
-        background-color: color.adjust($primary-color, $lightness: -10%);
+        background-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
       }
     }
 
     &-selected-info {
-      margin-top: $spacing-2;
+      margin-top: ui.$lhui-spacing-2;
       font-size: 12px;
       font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: $spacing-2;
-      color: $success-color;
+      gap: ui.$lhui-spacing-2;
+      color: ui.$lhui-color-success;
     }
 
     &-remove-button {
       background: none;
       border: none;
-      color: $error-color;
+      color: ui.$lhui-color-error;
       cursor: pointer;
-      padding: $spacing-1;
+      padding: ui.$lhui-spacing-1;
       display: flex;
       align-items: center;
 
       &:hover {
-        color: color.adjust($error-color, $lightness: -10%);
+        color: color.adjust(ui.$lhui-color-error, $lightness: -10%);
       }
     }
   }
@@ -226,7 +226,7 @@
   // Thumbnail upload styles
   .thumbnail-upload {
     display: flex;
-    gap: $spacing-4;
+    gap: ui.$lhui-spacing-4;
     align-items: flex-start;
 
     &-input-container {
@@ -235,36 +235,36 @@
 
     &-input {
       width: 100%;
-      padding: $spacing-2 $spacing-3;
-      border: 1px solid $neutral-300;
-      border-radius: $border-radius-md;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-3;
+      border: 1px solid ui.$lhui-color-neutral-300;
+      border-radius: ui.$lhui-radius-md;
       font-size: 12px;
 
       &:focus {
         outline: none;
-        border-color: $primary-color;
-        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        border-color: ui.$lhui-color-primary;
+        box-shadow: 0 0 0 3px rgba(ui.$lhui-color-primary, 0.1);
       }
 
       &::file-selector-button {
         display: inline-flex;
         align-items: center;
-        gap: $spacing-2;
-        padding: $spacing-2 $spacing-4;
-        border-radius: $border-radius-md;
+        gap: ui.$lhui-spacing-2;
+        padding: ui.$lhui-spacing-2 ui.$lhui-spacing-4;
+        border-radius: ui.$lhui-radius-md;
         font-size: 12px;
         font-weight: 500;
         cursor: pointer;
-        transition: all $transition-fast;
+        transition: all ui.$lhui-transition-fast;
         border: 1px solid;
 
-        background-color: $primary-color;
+        background-color: ui.$lhui-color-primary;
         color: white;
-        border-color: $primary-color;
+        border-color: ui.$lhui-color-primary;
 
         &:hover {
-          background-color: color.adjust($primary-color, $lightness: -10%);
-          border-color: color.adjust($primary-color, $lightness: -10%);
+          background-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
+          border-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
         }
       }
 
@@ -282,8 +282,8 @@
     &-preview {
       width: 70px;
       height: 70px;
-      border: 1px solid $neutral-300;
-      border-radius: $border-radius-md;
+      border: 1px solid ui.$lhui-color-neutral-300;
+      border-radius: ui.$lhui-radius-md;
       overflow: hidden;
       flex-shrink: 0;
 
@@ -306,7 +306,7 @@
       right: 4px;
       background-color: rgba(0, 0, 0, 0.5);
       border: none;
-      border-radius: $border-radius-md;
+      border-radius: ui.$lhui-radius-md;
       width: 24px;
       height: 24px;
       display: flex;
@@ -316,8 +316,8 @@
       color: white;
       opacity: 0;
       transition:
-        opacity $transition-fast,
-        background-color $transition-fast;
+        opacity ui.$lhui-transition-fast,
+        background-color ui.$lhui-transition-fast;
 
       &:hover {
         background-color: rgba(0, 0, 0, 0.7);
@@ -329,50 +329,50 @@
   .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: $spacing-3;
-    padding: $spacing-4;
-    border-top: 1px solid $neutral-200;
+    gap: ui.$lhui-spacing-3;
+    padding: ui.$lhui-spacing-4;
+    border-top: 1px solid ui.$lhui-color-neutral-200;
 
     &-button {
       display: inline-flex;
       align-items: center;
-      gap: $spacing-2;
-      padding: $spacing-2 $spacing-4;
-      border-radius: $border-radius-md;
+      gap: ui.$lhui-spacing-2;
+      padding: ui.$lhui-spacing-2 ui.$lhui-spacing-4;
+      border-radius: ui.$lhui-radius-md;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: all $transition-fast;
+      transition: all ui.$lhui-transition-fast;
       border: 1px solid;
 
       &-primary {
-        background-color: $primary-color;
+        background-color: ui.$lhui-color-primary;
         color: white;
-        border-color: $primary-color;
+        border-color: ui.$lhui-color-primary;
 
         &:hover {
-          background-color: color.adjust($primary-color, $lightness: -10%);
-          border-color: color.adjust($primary-color, $lightness: -10%);
+          background-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
+          border-color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
         }
       }
 
       &-secondary {
         background-color: white;
-        color: $neutral-700;
-        border-color: $neutral-300;
+        color: ui.$lhui-color-neutral-700;
+        border-color: ui.$lhui-color-neutral-300;
 
         &:hover {
-          background-color: $neutral-50;
+          background-color: ui.$lhui-color-neutral-50;
         }
       }
 
       &-outline {
         background-color: white;
-        color: $primary-color;
-        border-color: $primary-color;
+        color: ui.$lhui-color-primary;
+        border-color: ui.$lhui-color-primary;
 
         &:hover {
-          background-color: rgba($primary-color, 0.05);
+          background-color: rgba(ui.$lhui-color-primary, 0.05);
         }
       }
 
@@ -389,44 +389,29 @@
   }
 }
 
-// Preview overlay and modal styles
-.create-update-resource-preview-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-4;
-  z-index: 60;
-}
-
 // Responsive styles
-@media (max-width: $breakpoint-md) {
+@media (max-width: ui.$lhui-breakpoint-md) {
   .create-update-resource-form {
-    padding: $spacing-2;
+    padding: ui.$lhui-spacing-2;
 
     &-container {
       max-height: 95vh;
     }
 
     &-content {
-      padding: $spacing-4;
-      gap: $spacing-4;
+      padding: ui.$lhui-spacing-4;
+      gap: ui.$lhui-spacing-4;
     }
   }
 }
 
-@media (max-width: $breakpoint-sm) {
+@media (max-width: ui.$lhui-breakpoint-sm) {
   .create-update-resource-form {
-    padding: $spacing-1;
+    padding: ui.$lhui-spacing-1;
 
     &-header,
     &-content {
-      padding: $spacing-3;
+      padding: ui.$lhui-spacing-3;
     }
 
     &-title {
@@ -435,12 +420,12 @@
 
     .resource-type-selector {
       grid-template-columns: 1fr;
-      gap: $spacing-2;
+      gap: ui.$lhui-spacing-2;
 
       &-option {
         flex-direction: row;
         justify-content: flex-start;
-        padding: $spacing-3;
+        padding: ui.$lhui-spacing-3;
       }
     }
 

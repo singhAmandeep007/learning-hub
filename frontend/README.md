@@ -32,6 +32,36 @@ sass-migrator module path-to-scss-file.scss
 npm install package-name --registry=https://registry.npmjs.org --save-exact
 ```
 
+## Internal UI library (`@learning-hub/ui`)
+
+This workspace now includes an internal component library in `packages/ui`.
+
+```bash
+npm run ui:build
+npm run ui:storybook
+npm run ui:build-storybook
+```
+
+Release/version flow:
+
+```bash
+npm run ui:changeset
+npm run ui:version
+npm run ui:publish:dry
+npm run ui:publish
+```
+
+Use in the frontend app:
+
+```tsx
+import { Button } from "@learning-hub/ui";
+import "@learning-hub/ui/styles.css";
+```
+
+```sass
+@use "@learning-hub/ui/styles/tokens" as ui;
+```
+
 ## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

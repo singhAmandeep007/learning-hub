@@ -1,52 +1,48 @@
 @use "sass:color";
-@use "../../../styles/variables.scss" as *;
+@use "@learning-hub/ui/scss/tokens" as ui;
 
 .resource-details {
   background-color: white;
-  border-radius: $border-radius-lg;
+  border-radius: var(--lhui-radius-lg);
   max-width: 840px;
   width: 100%;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: $shadow-xl;
+  box-shadow: var(--lhui-shadow-xl);
 
   &-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: $spacing-4 $spacing-6;
-    border-bottom: 1px solid $neutral-200;
-    background-color: $neutral-50;
+    padding: var(--lhui-spacing-4) var(--lhui-spacing-6);
+    border-bottom: 1px solid var(--lhui-color-neutral-200);
+    background-color: var(--lhui-color-neutral-50);
   }
 
   &-title {
     font-size: 15px;
     font-weight: 600;
-    color: $neutral-800;
+    color: var(--lhui-color-neutral-800);
     margin: 0;
   }
 
   &-close {
-    background: none;
     border: none;
-    color: $neutral-500;
-    cursor: pointer;
-    padding: $spacing-2;
-    border-radius: $border-radius-md;
-    transition: all $transition-fast;
+    color: var(--lhui-color-neutral-500);
+    transition: all var(--lhui-transition-fast);
 
     &:hover {
-      background-color: $neutral-200;
-      color: $neutral-700;
+      background-color: var(--lhui-color-neutral-200);
+      color: var(--lhui-color-neutral-700);
     }
   }
 
   &-content {
     flex: 1;
     overflow: auto;
-    padding: $spacing-6;
+    padding: var(--lhui-spacing-6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,14 +52,14 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    border-radius: $border-radius-md;
+    border-radius: var(--lhui-radius-md);
   }
 
   &-pdf {
     width: 100%;
     height: 300px;
     border: none;
-    border-radius: $border-radius-md;
+    border-radius: var(--lhui-radius-md);
 
     &-fallback {
       display: flex;
@@ -76,21 +72,21 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: $spacing-2;
+        gap: var(--lhui-spacing-2);
         font-size: 16px;
-        color: $primary-color;
+        color: var(--lhui-color-primary);
         text-decoration: none;
         font-weight: 500;
-        margin-bottom: $spacing-4;
+        margin-bottom: var(--lhui-spacing-4);
         word-break: break-all;
 
         &:hover {
-          color: color.adjust($primary-color, $lightness: -10%);
+          color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
         }
       }
 
       &-note {
-        color: $neutral-600;
+        color: var(--lhui-color-neutral-600);
         font-size: 12px;
       }
     }
@@ -98,48 +94,48 @@
 
   &-article {
     text-align: center;
-    padding: $spacing-8;
+    padding: var(--lhui-spacing-8);
 
     &-link {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: $spacing-2;
+      gap: var(--lhui-spacing-2);
       font-size: 15px;
-      color: $primary-color;
+      color: var(--lhui-color-primary);
       text-decoration: none;
       font-weight: 500;
-      margin-bottom: $spacing-4;
+      margin-bottom: var(--lhui-spacing-4);
       word-break: break-all;
 
       &:hover {
-        color: color.adjust($primary-color, $lightness: -10%);
+        color: color.adjust(ui.$lhui-color-primary, $lightness: -10%);
       }
     }
 
     &-note {
-      color: $neutral-600;
+      color: var(--lhui-color-neutral-600);
       font-size: 12px;
     }
   }
 
   &-placeholder {
     text-align: center;
-    color: $neutral-500;
-    padding: $spacing-8;
+    color: var(--lhui-color-neutral-500);
+    padding: var(--lhui-spacing-8);
   }
 
   &-placeholder-icon {
     width: 48px;
     height: 48px;
-    margin: 0 auto $spacing-4;
-    color: $neutral-400;
+    margin: 0 auto var(--lhui-spacing-4);
+    color: var(--lhui-color-neutral-400);
   }
 
   &-description {
-    padding: $spacing-4 $spacing-6;
-    border-top: 1px solid $neutral-200;
-    background-color: $neutral-50;
+    padding: var(--lhui-spacing-4) var(--lhui-spacing-6);
+    border-top: 1px solid var(--lhui-color-neutral-200);
+    background-color: var(--lhui-color-neutral-50);
 
     max-height: 300px;
     overflow-y: auto;
@@ -147,24 +143,24 @@
     h4 {
       font-size: 13px;
       font-weight: 600;
-      color: $neutral-700;
-      margin: 0 0 $spacing-2 0;
+      color: var(--lhui-color-neutral-700);
+      margin: 0 0 var(--lhui-spacing-2) 0;
     }
 
     p {
       font-size: 13px;
-      color: $neutral-600;
+      color: var(--lhui-color-neutral-600);
       line-height: 1.5;
       margin: 0;
     }
   }
 
-  @media (max-width: $breakpoint-md) {
+  @media (max-width: ui.$lhui-breakpoint-md) {
     max-width: 95vw;
     max-height: 95vh;
 
     &-content {
-      padding: $spacing-4;
+      padding: var(--lhui-spacing-4);
     }
 
     &-pdf {
@@ -172,17 +168,17 @@
     }
   }
 
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: ui.$lhui-breakpoint-sm) {
     &-header {
-      padding: $spacing-3;
+      padding: var(--lhui-spacing-3);
     }
 
     &-content {
-      padding: $spacing-3;
+      padding: var(--lhui-spacing-3);
     }
 
     &-description {
-      padding: $spacing-3;
+      padding: var(--lhui-spacing-3);
     }
 
     &-pdf {

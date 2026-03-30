@@ -1,8 +1,6 @@
-@use "styles/variables.scss" as *;
-
 .app {
   min-height: 100vh;
-  font-family: $font-sans;
+  font-family: var(--lhui-font-sans);
 }
 
 .loading {
@@ -21,8 +19,8 @@
     content: "";
     width: 48px;
     height: 48px;
-    border: 6px solid $neutral-200;
-    border-top: 6px solid $primary-color;
+    border: 6px solid var(--lhui-neutral-200);
+    border-top: 6px solid var(--lhui-primary-color);
     border-radius: 50%;
     animation: spinner 1s linear infinite;
     display: block;
@@ -39,13 +37,13 @@
 
   h1 {
     font-size: 16px;
-    margin-bottom: $spacing-2;
-    margin-top: $spacing-2;
+    margin-bottom: var(--lhui-spacing-2);
+    margin-top: var(--lhui-spacing-2);
   }
 
   p {
     font-size: 14px;
-    color: $neutral-600;
+    color: var(--lhui-neutral-600);
   }
 }
 

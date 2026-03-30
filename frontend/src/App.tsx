@@ -9,7 +9,7 @@ import { Resources } from "./pages/Resources";
 import { ErrorFallback } from "./pages/ErrorFallback";
 import { NotFound } from "./pages/NotFound";
 
-import { ReactQueryFlashProvider } from "./components/Flash";
+import { ReactQueryFlashProvider } from "@learning-hub/ui";
 import { VALID_PRODUCTS, type Product, DEFAULT_PRODUCT } from "./types";
 
 import styles from "./App.module.scss";

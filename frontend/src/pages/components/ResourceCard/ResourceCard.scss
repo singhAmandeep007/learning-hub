@@ -1,86 +1,75 @@
-@use "sass:color";
-@use "../../../styles/variables.scss" as *;
-
 .resource-card {
-  background-color: white;
-  border: 1px solid $neutral-200;
-  border-radius: $border-radius-lg;
-  padding: $spacing-4;
-  transition: box-shadow $transition-fast ease-in-out;
+  background-color: var(--lhui-color-neutral-50);
+  border: 1px solid var(--lhui-color-neutral-200);
+  border-radius: var(--lhui-radius-lg);
+  padding: var(--lhui-spacing-4);
+  transition: box-shadow var(--lhui-transition-fast) ease-in-out;
 
   &:hover {
-    box-shadow: $shadow-md;
+    box-shadow: var(--lhui-shadow-md);
   }
 
   &-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: $spacing-3;
+    margin-bottom: var(--lhui-spacing-3);
   }
 
   &-type {
     display: flex;
     align-items: center;
-    gap: $spacing-2;
+    gap: var(--lhui-spacing-2);
   }
 
   &-type-icon {
     width: 17px;
     height: 17px;
 
-    &--video {
-      color: $error-color;
+    &-video {
+      color: var(--lhui-color-error);
     }
 
-    &--pdf {
-      color: $primary-color;
+    &-pdf {
+      color: var(--lhui-color-primary);
     }
 
-    &--article {
-      color: $success-color;
+    &-article {
+      color: var(--lhui-color-success);
     }
   }
 
   &-type-label {
     font-size: 12px;
     font-weight: 500;
-    color: $neutral-500;
+    color: var(--lhui-color-neutral-500);
     text-transform: capitalize;
   }
 
   &-actions {
     display: flex;
-    gap: $spacing-1;
+    gap: var(--lhui-spacing-1);
   }
 
   &-action-btn {
-    padding: $spacing-1;
-    color: $neutral-400;
-    background: transparent;
+    padding: var(--lhui-spacing-1) !important;
+    color: var(--lhui-color-neutral-400);
     border: none;
-    border-radius: $border-radius-md;
-    cursor: pointer;
-    transition: color $transition-fast ease-in-out;
+    border-radius: var(--lhui-radius-md);
 
     &:hover {
       &.resource-card-action-btn-view,
       &.resource-card-action-btn-edit {
-        color: $primary-color;
+        color: var(--lhui-color-primary);
       }
 
       &.resource-card-action-btn-delete {
-        color: $error-color;
+        color: var(--lhui-color-error);
       }
 
       &:disabled {
-        color: $neutral-400;
+        color: var(--lhui-color-neutral-400);
       }
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
     }
   }
 
@@ -90,7 +79,7 @@
   }
 
   &-thumbnail {
-    margin-bottom: $spacing-3;
+    margin-bottom: var(--lhui-spacing-3);
   }
 
   &-thumbnail-fallback {
@@ -99,8 +88,8 @@
     justify-content: center;
     align-items: center;
 
-    background: $neutral-100;
-    border-radius: 3px;
+    background: var(--lhui-color-neutral-100);
+    border-radius: var(--lhui-radius-md);
 
     svg {
       width: 42px;
@@ -112,13 +101,13 @@
     width: 100%;
     height: 15em;
     object-fit: cover;
-    border-radius: $border-radius-md;
+    border-radius: var(--lhui-radius-md);
   }
 
   &-title {
     font-weight: 600;
-    color: $neutral-900;
-    margin-bottom: $spacing-2;
+    color: var(--lhui-color-neutral-900);
+    margin-bottom: var(--lhui-spacing-2);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -126,44 +115,33 @@
     line-height: 1.4;
   }
 
-  &-description {
-    font-size: 12px;
-    color: $neutral-600;
-    margin-bottom: $spacing-3;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.5;
-  }
-
   &-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: $spacing-1;
-    margin-bottom: $spacing-3;
+    gap: var(--lhui-spacing-1);
+    margin-bottom: var(--lhui-spacing-3);
   }
 
   &-tag {
     display: inline-flex;
     align-items: center;
-    padding: $spacing-1 $spacing-2;
-    background-color: rgba($primary-color, 0.1);
-    color: color.adjust($primary-color, $lightness: -15%);
+    padding: var(--lhui-spacing-1) var(--lhui-spacing-2);
+    background-color: rgba(var(--lhui-color-primary), 0.1);
+    color: var(--lhui-color-primary);
     font-size: 10px;
-    border-radius: $border-radius-full;
+    border-radius: var(--lhui-radius-full);
     font-weight: 500;
   }
 
   &-tag-icon {
     width: 10px;
     height: 10px;
-    margin-right: $spacing-1;
+    margin-right: var(--lhui-spacing-1);
   }
 
   &-dates {
     font-size: 10px;
-    color: $neutral-400;
+    color: var(--lhui-color-neutral-400);
     line-height: 1.4;
   }
 }

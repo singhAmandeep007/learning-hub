@@ -1,3 +1,4 @@
+import { Button } from "@learning-hub/ui";
 import { X, Video, File, ExternalLink, FileText } from "lucide-react";
 
 import { type Resource } from "../../../types";
@@ -149,13 +150,15 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({ resource, onCl
     <div className="resource-details">
       <div className="resource-details-header">
         <h3 className="resource-details-title">{resource.title || `Resource ${isPreview ? "Preview" : "Details"}`}</h3>
-        <button
+        <Button
           onClick={onClose}
           className="resource-details-close"
           aria-label="Close preview"
+          type="button"
+          intent="ghost"
         >
           <X size={16} />
-        </button>
+        </Button>
       </div>
       <div className="resource-details-content">{renderContent()}</div>
       {resource.description && (

@@ -1,80 +1,79 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-
+import { useState, useRef, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 
-import "./SearchSelectInput.scss";
+import { withPrefix } from "../constants";
 
-export interface Item {
+export interface SearchSelectItem {
   id: string;
   name: string;
-  isNew?: boolean; // flag to identify newly added tags
+  isNew?: boolean;
 }
 
-interface SearchSelectInputProps {
-  items: Item[];
-  onSelectedItemsChange: (selectedItems: Item[]) => void;
-  initialSelectedItems?: Item[];
+export interface SearchSelectInputProps {
+  items: SearchSelectItem[];
+  onSelectedItemsChange: (selectedItems: SearchSelectItem[]) => void;
+  initialSelectedItems?: SearchSelectItem[];
   placeholder?: string;
-  allowNewTags?: boolean; // allow adding new tags that are not in the list
+  allowNewItems?: boolean; // allow adding new tags that are not in the list
 }
 
-export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
+const wrapperClass = withPrefix("search-select-input");
+
+export function SearchSelectInput({
   items,
   onSelectedItemsChange,
   initialSelectedItems = [],
   placeholder = "Search and select items...",
-  allowNewTags = false, // default to false
-}) => {
+  allowNewItems = false,
+}: SearchSelectInputProps) {
   const [inputValue, setInputValue] = useState<string>("");
-  const [selectedItems, setSelectedItems] = useState<Item[]>(initialSelectedItems);
-  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const [selectedItems, setSelectedItems] = useState<SearchSelectItem[]>(initialSelectedItems);
+  const [filteredItems, setFilteredItems] = useState<SearchSelectItem[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listId = `${wrapperClass}-listbox`;
 
-  const getNewTagId = useCallback(
-    (tagName: string) => `new-${tagName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+  const getNewItemId = useCallback(
+    (itemName: string) => `new-${itemName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
     []
   );
 
   // filter items based on input value
   useEffect(() => {
-    const lowerCaseInput = inputValue.toLowerCase().trim();
-    let newFilteredItems: Item[] = [];
+    const normalizedInput = inputValue.toLowerCase().trim();
+    let newFilteredItems: SearchSelectItem[] = [];
 
     if (inputValue.length > 0) {
       // filter existing items based on search input
       newFilteredItems = items.filter(
         (item) =>
-          item.name.toLowerCase().includes(lowerCaseInput) && !selectedItems.some((selected) => selected.id === item.id)
+          item.name.toLowerCase().includes(normalizedInput) &&
+          !selectedItems.some((selected) => selected.id === item.id)
       );
 
       // check if input value exactly matches any existing (non-selected) item
       const exactMatchExists = items.some(
         (item) =>
-          item.name.toLowerCase() === lowerCaseInput && !selectedItems.some((selected) => selected.id === item.id)
+          item.name.toLowerCase() === normalizedInput && !selectedItems.some((selected) => selected.id === item.id)
       );
       // Check if input value exactly matches any already selected item (to avoid duplicate 'add new' option)
-      const alreadySelectedExactMatch = selectedItems.some((item) => item.name.toLowerCase() === lowerCaseInput);
+      const alreadySelectedExactMatch = selectedItems.some((item) => item.name.toLowerCase() === normalizedInput);
 
       // if allowNewTags is true AND no exact match found among all items (available or selected)
       // AND the input is not just whitespace
-      if (
-        allowNewTags &&
-        inputValue.trim().length > 0 && // Ensure not just whitespace
-        !exactMatchExists &&
-        !alreadySelectedExactMatch
-      ) {
+      // Ensure not just whitespace
+      if (allowNewItems && inputValue.trim().length > 0 && !exactMatchExists && !alreadySelectedExactMatch) {
         // add a "create new" option if no existing item matches exactly
         // and ensure it's not a duplicate of an already selected 'new' tag
-        const isNewTagAlreadySelected = selectedItems.some(
-          (item) => item.isNew && item.name.toLowerCase() === lowerCaseInput
+        const isNewItemAlreadySelected = selectedItems.some(
+          (item) => item.isNew && item.name.toLowerCase() === normalizedInput
         );
 
-        if (!isNewTagAlreadySelected) {
+        if (!isNewItemAlreadySelected) {
           newFilteredItems.unshift({
-            id: getNewTagId(inputValue.trim()), // use a temporary ID
+            id: getNewItemId(inputValue.trim()), // use a temporary ID
             name: `Add "${inputValue.trim()}"`, // display text for adding new tag
             isNew: true, // mark it as a new tag option
           });
@@ -86,7 +85,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
     }
 
     setFilteredItems(newFilteredItems);
-  }, [inputValue, items, selectedItems, allowNewTags, getNewTagId]);
+  }, [inputValue, items, selectedItems, allowNewItems, getNewItemId]);
 
   // Handle clicks outside the component to close the dropdown
   useEffect(() => {
@@ -103,20 +102,16 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
     };
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
   const handleItemSelect = useCallback(
-    (item: Item) => {
-      let itemToAdd: Item;
+    (item: SearchSelectItem) => {
+      let itemToAdd: SearchSelectItem;
 
       if (item.isNew) {
         // If it's the "Add new" option, create a new item object
         itemToAdd = {
-          id: getNewTagId(inputValue.trim()),
+          id: getNewItemId(inputValue.trim()),
           name: inputValue.trim(),
-          isNew: true, // Mark it as a genuinely new, selected tag
+          isNew: true, // Mark it as a genuinely new, selected
         };
       } else {
         itemToAdd = item;
@@ -132,7 +127,7 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
       setInputValue(""); // Clear input after selection
       inputRef.current?.focus(); // Keep focus on the input
     },
-    [selectedItems, onSelectedItemsChange, inputValue, getNewTagId]
+    [selectedItems, onSelectedItemsChange, inputValue, getNewItemId]
   );
 
   const handleRemoveItem = useCallback(
@@ -147,19 +142,19 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
 
   return (
     <div
-      className="search-select-input-wrapper"
+      className={`${wrapperClass}__wrapper`}
       ref={wrapperRef}
     >
-      <div className="selected-items-container">
+      <div className={`${wrapperClass}__selected-items`}>
         {selectedItems.map((item) => (
           <div
             key={item.id}
-            className={`selected-item-tag ${item.isNew ? "selected-item-tag-new" : ""}`}
+            className={`${wrapperClass}__selected-item-tag ${item.isNew ? `${wrapperClass}__selected-item-tag--new` : ""}`}
           >
             <span>{item.name}</span>
             <button
               type="button"
-              className="remove-item-button"
+              className={`${wrapperClass}__remove-item-button`}
               onClick={() => handleRemoveItem(item.id)}
               aria-label={`Remove ${item.name}`}
             >
@@ -167,22 +162,27 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
             </button>
           </div>
         ))}
+
         <input
           ref={inputRef}
           type="text"
-          className="search-input"
+          className={`${wrapperClass}__search-input`}
+          role="combobox"
+          aria-expanded={isDropdownOpen}
+          aria-controls={listId}
+          aria-autocomplete="list"
           placeholder={selectedItems.length === 0 ? placeholder : ""}
           value={inputValue}
-          onChange={handleInputChange}
+          onChange={(event) => setInputValue(event.target.value)}
           onFocus={() => setIsDropdownOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === "Backspace" && inputValue === "" && selectedItems.length > 0) {
+          onKeyDown={(event) => {
+            if (event.key === "Backspace" && inputValue === "" && selectedItems.length > 0) {
               // Remove last selected item on backspace if input is empty
               handleRemoveItem(selectedItems[selectedItems.length - 1].id);
-            } else if (e.key === "Enter" && isDropdownOpen && filteredItems.length > 0) {
+            } else if (event.key === "Enter" && isDropdownOpen && filteredItems.length > 0) {
               // If Enter is pressed and dropdown is open, select the first item
               // This is typically the "Add new" option if it's visible, or the first filtered item
-              e.preventDefault(); // Prevent form submission if applicable
+              event.preventDefault(); // Prevent form submission if applicable
               handleItemSelect(filteredItems[0]);
             }
           }}
@@ -190,11 +190,17 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
       </div>
 
       {isDropdownOpen && filteredItems.length > 0 && (
-        <ul className="dropdown-list">
+        <ul
+          className={`${wrapperClass}__dropdown-list`}
+          role="listbox"
+          id={listId}
+        >
           {filteredItems.map((item) => (
             <li
               key={item.id}
-              className={`dropdown-item ${item.isNew ? "dropdown-item-new" : ""}`}
+              className={`${wrapperClass}__dropdown-item ${item.isNew ? `${wrapperClass}__dropdown-item--new` : ""}`}
+              role="option"
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => handleItemSelect(item)}
             >
               {item.name}
@@ -203,10 +209,10 @@ export const SearchSelectInput: React.FC<SearchSelectInputProps> = ({
         </ul>
       )}
 
-      {isDropdownOpen && filteredItems.length === 0 && inputValue.length > 0 && !allowNewTags && (
-        <div className="no-results">No matching items found.</div>
+      {isDropdownOpen && filteredItems.length === 0 && inputValue.length > 0 && !allowNewItems && (
+        <div className={`${wrapperClass}__no-results`}>No matching items found.</div>
       )}
       {/* If allowNewTags is true, "No matching items" message is replaced by the "Add new" option */}
     </div>
   );
-};
+}

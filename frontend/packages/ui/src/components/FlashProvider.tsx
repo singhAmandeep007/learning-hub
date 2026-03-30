@@ -1,37 +1,51 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
-import { ReactQueryFlashContext } from "./flashContext";
 
-import "./Flash.scss";
+import { withPrefix } from "../constants";
+import { FlashContext, type FlashNotificationType } from "./FlashContext";
 
 interface Notification {
   id: string;
   message: string;
-  type: "success" | "error" | "info" | "warning";
+  type: FlashNotificationType;
   duration?: number;
 }
 
-export const ReactQueryFlashProvider: React.FC<{
-  children: React.ReactNode;
-}> = ({ children }) => {
+interface ApiErrorShape {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+const extractErrorMessage = (error: unknown, fallbackMessage: string): string => {
+  if (!error || typeof error !== "object") {
+    return fallbackMessage;
+  }
+
+  const typedError = error as ApiErrorShape;
+  return typedError.response?.data?.message || typedError.message || fallbackMessage;
+};
+
+const baseClass = withPrefix("flash");
+
+export function FlashProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const addNotification = useCallback(
-    (message: string, type: Notification["type"] = "info", duration: number = 4000) => {
-      const newNotification: Notification = {
-        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-        message,
-        type,
-        duration,
-      };
-      setNotifications((prev) => [...prev, newNotification]);
-    },
-    []
-  );
+  const addNotification = useCallback((message: string, type: FlashNotificationType = "info", duration = 4000) => {
+    const newNotification: Notification = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+      message,
+      type,
+      duration,
+    };
+    setNotifications((prev) => [...prev, newNotification]);
+  }, []);
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
   }, []);
 
   const showSuccess = useCallback(
@@ -70,8 +84,8 @@ export const ReactQueryFlashProvider: React.FC<{
   );
 
   const showQueryError = useCallback(
-    (error: any, customMessage?: string, duration = 5000) => {
-      const errorMessage = customMessage || error?.response?.data?.message || error?.message || "Failed to load data";
+    (error: unknown, customMessage?: string, duration = 5000) => {
+      const errorMessage = customMessage || extractErrorMessage(error, "Failed to load data");
       addNotification(errorMessage, "error", duration);
     },
     [addNotification]
@@ -85,8 +99,8 @@ export const ReactQueryFlashProvider: React.FC<{
   );
 
   const showMutationError = useCallback(
-    (error: any, customMessage?: string, duration = 5000) => {
-      const errorMessage = customMessage || error?.response?.data?.message || error?.message || "Operation failed";
+    (error: unknown, customMessage?: string, duration = 5000) => {
+      const errorMessage = customMessage || extractErrorMessage(error, "Operation failed");
       addNotification(errorMessage, "error", duration);
     },
     [addNotification]
@@ -118,27 +132,27 @@ export const ReactQueryFlashProvider: React.FC<{
   );
 
   return (
-    <ReactQueryFlashContext.Provider value={contextValue}>
+    <FlashContext.Provider value={contextValue}>
       {children}
-      <div className="rq-flash-container">
+      <div className={`${baseClass}__container`}>
         {notifications.map((notification) => (
-          <ReactQueryFlashNotification
+          <FlashNotification
             key={notification.id}
             notification={notification}
             onClose={() => removeNotification(notification.id)}
           />
         ))}
       </div>
-    </ReactQueryFlashContext.Provider>
+    </FlashContext.Provider>
   );
-};
+}
 
-interface ReactQueryFlashNotificationProps {
+interface FlashNotificationProps {
   notification: Notification;
   onClose: () => void;
 }
 
-const ReactQueryFlashNotification: React.FC<ReactQueryFlashNotificationProps> = ({ notification, onClose }) => {
+function FlashNotification({ notification, onClose }: FlashNotificationProps) {
   const { message, type, duration } = notification;
 
   useEffect(() => {
@@ -146,37 +160,42 @@ const ReactQueryFlashNotification: React.FC<ReactQueryFlashNotificationProps> = 
       const timer = setTimeout(onClose, duration);
       return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, [duration, onClose]);
 
   const getIcon = () => {
     switch (type) {
       case "success":
-        return <CheckCircle className="rq-flash-icon" />;
+        return <CheckCircle className={`${baseClass}__icon`} />;
       case "error":
-        return <AlertCircle className="rq-flash-icon" />;
+        return <AlertCircle className={`${baseClass}__icon`} />;
       case "warning":
-        return <AlertTriangle className="rq-flash-icon" />;
+        return <AlertTriangle className={`${baseClass}__icon`} />;
       case "info":
       default:
-        return <Info className="rq-flash-icon" />;
+        return <Info className={`${baseClass}__icon`} />;
     }
   };
 
   return (
     <div
-      className={`rq-flash-notification rq-flash-notification-${type}`}
+      className={`${baseClass}__notification ${baseClass}__notification--${type}`}
       role="alert"
       aria-live="polite"
     >
       {getIcon()}
-      <p className="rq-flash-message">{message}</p>
+      <p className={`${baseClass}__message`}>{message}</p>
       <button
         onClick={onClose}
-        className="rq-flash-close"
+        className={`${baseClass}__close`}
         aria-label="Close notification"
+        type="button"
       >
         <X size={16} />
       </button>
     </div>
   );
-};
+}
+
+export const ReactQueryFlashProvider = FlashProvider;

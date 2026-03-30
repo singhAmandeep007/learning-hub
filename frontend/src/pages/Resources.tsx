@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { Plus, Search, X, FileText, ChevronRight, ChevronLeft } from "lucide-react";
+import { Button, ScrollableTags, type ScrollableTagItem } from "@learning-hub/ui";
 
 import { ResourceCard } from "./components/ResourceCard";
-import { ScrollableTags } from "./components/ScrollableTags";
 import { CreateUpdateResourceForm } from "./components/CreateUpdateResourceForm";
 
 import { useTags } from "../services/tags";
@@ -17,6 +17,10 @@ export const Resources = () => {
   const { data: tags = [], isFetching: isFetchingTags, isSuccess: hasFetchedTags } = useTags();
 
   const loadedTags = useMemo(() => tags.map((tag) => tag.name), [tags]);
+  const tagItems = useMemo<ScrollableTagItem[]>(
+    () => tags.map((tag) => ({ id: tag.name, label: tag.name, count: tag.usageCount })),
+    [tags]
+  );
 
   const {
     searchInput,
@@ -107,7 +111,7 @@ export const Resources = () => {
                 Find tutorials, guides, and resources to help you get the most out of the App.
               </p>
             </div>
-            <button
+            <Button
               onClick={() => setShowCreateForm(true)}
               className="resources-create-btn"
               type="button"
@@ -117,7 +121,7 @@ export const Resources = () => {
                 size={16}
               />
               Create
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -159,28 +163,28 @@ export const Resources = () => {
                   </select>
                 </div>
 
-                <button
+                <Button
                   className="resources-search-btn"
                   onClick={handleSearch}
                   disabled={isSearchDisabled}
                   type="button"
                 >
                   Search
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="resources-tag-filters-container">
               {/* Tag Filter */}
               <ScrollableTags
-                tags={tags}
-                selectedTags={selectedTags}
-                setSelectedTags={setSelectedTags}
+                items={tagItems}
+                selectedItemIds={selectedTags}
+                onSelectedItemIdsChange={setSelectedTags}
               />
 
               {/* Clear Filters */}
               {hasActiveFilters && (
-                <button
+                <Button
                   onClick={handleClearFilters}
                   className="resources-clear-filters"
                   type="button"
@@ -190,7 +194,7 @@ export const Resources = () => {
                     size={12}
                   />
                   Clear
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -208,25 +212,25 @@ export const Resources = () => {
           {/* Pagination Controls */}
           {!isLoadingResources && (currentPage > 1 || resources.hasMore) && (
             <div className="resources-pagination">
-              <button
+              <Button
                 disabled={currentPage <= 1 || isFetchingResources}
                 className="resources-pagination-btn resources-pagination-prev"
                 onClick={handlePrevPage}
                 type="button"
               >
                 <ChevronLeft size={16} />
-              </button>
+              </Button>
 
               <span className="resources-pagination-info">Page {currentPage}</span>
 
-              <button
+              <Button
                 disabled={!resources.hasMore || isFetchingResources}
                 className="resources-pagination-btn resources-pagination-next"
                 onClick={handleNextPage}
                 type="button"
               >
                 <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { isRouteErrorResponse, useRouteError } from "react-router";
+import { Button } from "@learning-hub/ui";
 
 import { TriangleAlert } from "lucide-react";
 
@@ -33,12 +34,12 @@ export const ErrorFallback = () => {
       <div className="error-fallback-message">
         <pre>{errorMessage}</pre>
       </div>
-      <button
-        className="error-fallback-button"
+      <Button
         onClick={() => (window.location.href = "/")}
+        type="button"
       >
         Reload App
-      </button>
+      </Button>
     </div>
   );
 };

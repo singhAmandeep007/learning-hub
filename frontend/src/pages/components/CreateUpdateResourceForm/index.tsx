@@ -9,7 +9,7 @@ import {
   type UpdateResourcePayload,
 } from "../../../types";
 
-import { SearchSelectInput, type Item } from "../../../components/SearchSelectInput";
+import { Button, SearchSelectInput, type SearchSelectItem } from "@learning-hub/ui";
 import { RichTextEditor } from "../RichText";
 
 import { ResourceDetails } from "../ResourceDetails";
@@ -213,7 +213,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
     // eslint-disable-next-line
   }, [formData, resource, createResource]);
 
-  const handleTagsChange = useCallback((selectedItems: Item[]) => {
+  const handleTagsChange = useCallback((selectedItems: SearchSelectItem[]) => {
     setFormData((prev) => ({
       ...prev,
       tags: selectedItems.map((item) => item.name),
@@ -291,7 +291,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
               <label className="form-field-label">Resource Type *</label>
               <div className="resource-type-selector">
                 {Object.values(RESOURCE_TYPES).map((type) => (
-                  <button
+                  <Button
                     key={type}
                     type="button"
                     onClick={() => {
@@ -304,7 +304,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                   >
                     {getTypeIcon(type)}
                     <span className="resource-type-selector-label">{type}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
               {validationErrors.type && <span className="form-field-error">{validationErrors.type}</span>}
@@ -318,7 +318,7 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                 placeholder="Search and select tags..."
                 onSelectedItemsChange={handleTagsChange}
                 initialSelectedItems={formData.tags?.map((tag) => ({ id: tag, name: tag })) || []}
-                allowNewTags
+                allowNewItems
               />
               {validationErrors.tags && <span className="form-field-error">{validationErrors.tags}</span>}
             </div>
@@ -357,14 +357,15 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                   {formData.file && (
                     <div className="file-upload-selected-info">
                       <span>Selected: {formData.file.name}</span>
-                      <button
+                      <Button
                         onClick={() => handleRemoveFile("file")}
                         className="file-upload-remove-button"
                         aria-label="Remove file"
                         disabled={isDisabled}
+                        type="button"
                       >
                         <Trash2 />
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -410,16 +411,17 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
                       alt="Thumbnail preview"
                       className="thumbnail-upload-image"
                     />
-                    <button
+                    <Button
                       className="thumbnail-upload-remove"
                       onClick={() => {
                         handleRemoveFile("thumbnail");
                       }}
                       aria-label="Remove thumbnail"
                       disabled={isDisabled || !!resource}
+                      type="button"
                     >
                       <X size={16} />
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -428,16 +430,16 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
 
           {/* Form Actions */}
           <div className="form-actions">
-            <button
+            <Button
               type="button"
               onClick={onCancel}
               className="form-actions-button form-actions-button-secondary"
             >
               Cancel
-            </button>
+            </Button>
 
             {canPreview() && (
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowPreview(true)}
                 className="form-actions-button form-actions-button-outline"
@@ -445,10 +447,10 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
               >
                 <Eye size={16} />
                 Preview
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
               type="button"
               onClick={handleSubmit}
               className="form-actions-button form-actions-button-primary"
@@ -456,14 +458,14 @@ export const CreateUpdateResourceForm: React.FC<CreateUpdateResourceProps> = ({ 
             >
               <Save size={16} />
               {resource ? "Update Resource" : "Create Resource"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Preview Modal */}
       {showPreview && (
-        <div className="create-update-resource-preview-overlay">
+        <div className="preview-overlay">
           <ResourceDetails
             resource={formData}
             onClose={() => setShowPreview(false)}
