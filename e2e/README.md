@@ -86,6 +86,14 @@ npm run test:visual
 npm run test:visual:update
 ```
 
+By default, these commands run visual tests for all configured Playwright projects (chromium, firefox, webkit) to match CI behavior.
+If you only need a fast local smoke pass, run Chromium-only commands:
+
+```bash
+npm run test:visual:chromium
+npm run test:visual:update:chromium
+```
+
 ## CI usage
 
 - GitHub Actions: `.github/workflows/e2e.yml`

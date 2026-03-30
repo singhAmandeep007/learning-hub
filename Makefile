@@ -91,13 +91,13 @@ e2e-docker:
 	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
 	docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
 
-# Run visual regression tests in Docker stack (real backend + frontend)
+# Run visual regression tests in Docker stack (real backend + frontend, all Playwright projects)
 e2e-docker-vrt:
 	@echo "$(GREEN)🖼️  Running visual regression tests in E2E Docker stack...$(NC)"
 	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
 	E2E_TEST_COMMAND="npm run test:visual" docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from e2e
 
-# Refresh visual snapshot baselines in Docker stack (real backend + frontend)
+# Refresh visual snapshot baselines in Docker stack (real backend +frontend, all Playwright projects)
 e2e-docker-vrt-update:
 	@echo "$(GREEN)🔁 Updating visual regression snapshots in E2E Docker stack...$(NC)"
 	docker compose -f docker-compose.e2e.yml down -v 2>/dev/null || true
@@ -112,12 +112,12 @@ e2e-local:
 	@echo "$(GREEN)🧪 Running E2E tests against local services...$(NC)"
 	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm test
 
-# Run visual regression tests against locally running services
+# Run visual regression tests against locally running services (all Playwright projects)
 e2e-local-vrt:
 	@echo "$(GREEN)🖼️  Running visual regression tests against local services...$(NC)"
 	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm run test:visual
 
-# Update visual snapshot baselines against locally running services
+# Update visual snapshot baselines against locally running services (all Playwright projects)
 e2e-local-vrt-update:
 	@echo "$(GREEN)🔁 Updating visual regression snapshots against local services...$(NC)"
 	@cd e2e && npm ci && npm run install:browsers && E2E_BASE_URL=http://localhost:3000 E2E_API_BASE_URL=http://localhost:8000 E2E_PRODUCT=$${E2E_PRODUCT:-ecomm} npm run test:visual:update
