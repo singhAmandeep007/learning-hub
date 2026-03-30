@@ -1,0 +1,48 @@
+name: API Contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            api-contract/package-lock.json
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Lint OpenAPI contract
+        run: make contract-lint
+
+      - name: Generate contract artifacts
+        run: make contract-types
+
+      - name: Verify generated artifacts are committed
+        run: |
+          git update-index -q --refresh
+          git diff --exit-code -- \
+            frontend/src/types/api-contract.generated.ts \
+            e2e/helpers/types/api-contract.generated.ts \
+            backend/contract/types.gen.go

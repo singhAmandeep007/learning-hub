@@ -4,7 +4,7 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop e2e-docker e2e-docker-vrt e2e-docker-vrt-update e2e-docker-stop e2e-local e2e-local-vrt e2e-local-vrt-update clean docker-clean status
+.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop e2e-docker e2e-docker-vrt e2e-docker-vrt-update e2e-docker-stop e2e-local e2e-local-vrt e2e-local-vrt-update contract-types contract-lint clean docker-clean status
 
 # Function to wait for a port to be open
 # Usage: $(call wait_for_port, <port_number>, <service_name>)
@@ -58,8 +58,23 @@ install-tools:
 install-deps:
 	@echo "$(GREEN)Installing frontend dependencies...$(NC)"
 	@cd frontend && npm install
+	@echo "$(GREEN)Installing API contract dependencies...$(NC)"
+	@cd api-contract && npm install
 	@echo "$(GREEN)Installing backend dependencies...$(NC)"
 	@cd backend && go mod download && go mod verify
+	@echo "$(GREEN)Installing e2e dependencies...$(NC)"
+	@cd e2e && npm install
+
+# Validate OpenAPI contract
+contract-lint:
+	@echo "$(GREEN)Linting API contract...$(NC)"
+	@cd api-contract && npm install && npm run lint
+
+# Generate contract types for consumer packages
+contract-types:
+	@echo "$(GREEN)Generating API contract types for frontend and e2e...$(NC)"
+	@cd api-contract && npm install && npm run generate
+	@echo "$(GREEN)Contract types generated successfully$(NC)"
 
 # Docker dev environment
 docker-dev:
@@ -145,6 +160,8 @@ help:
 	@echo "  $(YELLOW)e2e-local-vrt-update$(NC) - Update visual snapshots against local services"
 	@echo "  $(YELLOW)install-tools$(NC)      - Install Firebase CLI and Air globally"
 	@echo "  $(YELLOW)install-deps$(NC)       - Install all dependencies"
+	@echo "  $(YELLOW)contract-lint$(NC)      - Lint OpenAPI contract"
+	@echo "  $(YELLOW)contract-types$(NC)     - Generate API contract types for frontend/e2e"
 	@echo "  $(YELLOW)clean$(NC)              - Clean build artifacts"
 	@echo "  $(YELLOW)help$(NC)               - Show this help message"
 

@@ -1,6 +1,9 @@
+import type { components } from "./api-contract.generated";
+
 export type ErrorResponse = {
   error: string;
   message?: string;
+  details?: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -38,17 +41,7 @@ export const RESOURCE_TYPES = {
 
 export type ResourceType = (typeof RESOURCE_TYPES)[keyof typeof RESOURCE_TYPES];
 
-export type Resource = {
-  id: string;
-  title: string;
-  description: string;
-  type: ResourceType;
-  url: string;
-  thumbnailUrl?: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-};
+export type Resource = components["schemas"]["Resource"];
 
 export type ResourcesFilters = {
   type?: ResourceType | "all";
@@ -87,9 +80,6 @@ export type UpdateResourceResponse = Resource;
 export type DeleteResourcePayload = Pick<Resource, "id">;
 
 // Tag
-export type Tag = {
-  name: string;
-  usageCount: number;
-};
+export type Tag = components["schemas"]["Tag"];
 
 export type GetTagsResponse = Tag[];

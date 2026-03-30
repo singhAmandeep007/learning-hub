@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
+    "typecheck": "tsc --noEmit",
     "test:visual": "playwright test tests/resources.visual.spec.ts --project=chromium",
     "test:visual:update": "playwright test tests/resources.visual.spec.ts --project=chromium --update-snapshots",
     "test:headed": "playwright test --headed",
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/node": "^24.7.2",
+    "typescript": "~5.8.3",
     "zod": "^4.1.11"
   }
 }

@@ -1,0 +1,47 @@
+version: 1
+scenarios:
+  - name: create_article_success
+    endpoint: POST /api/v1/{product}/resources
+    description: Creates an article resource with url and comma-separated tags
+    request:
+      contentType: multipart/form-data
+      formData:
+        title: Getting Started with Checkout
+        description: "<p>Checkout overview</p>"
+        type: article
+        url: https://example.com/article/checkout
+        tags: checkout,onboarding
+    expected:
+      status: 201
+      responseSchema: Resource
+
+  - name: list_resources_with_filters
+    endpoint: GET /api/v1/{product}/resources
+    description: Lists resources by type, tags and search keyword
+    request:
+      query:
+        type: article
+        tags: onboarding,checkout
+        search: checkout
+        limit: "20"
+    expected:
+      status: 200
+      responseSchema: PaginatedResourceResponse
+
+  - name: update_resource_url_success
+    endpoint: PATCH /api/v1/{product}/resources/{id}
+    description: Updates an existing resource url by ID
+    request:
+      contentType: multipart/form-data
+      formData:
+        url: https://example.com/article/checkout-v2
+    expected:
+      status: 200
+      responseSchema: Resource
+
+  - name: delete_resource_success
+    endpoint: DELETE /api/v1/{product}/resources/{id}
+    description: Deletes an existing resource by ID
+    expected:
+      status: 200
+      responseSchema: DeleteResourceResponse

@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"learninghub/constants"
+	contract "learninghub/contract"
 	"learninghub/db"
 	"learninghub/errors"
 	"learninghub/middleware"
@@ -124,9 +125,13 @@ func GetResources(c *gin.Context) {
 	// AND we have exactly 'limit' resources after filtering
 	hasMore := len(docs) > limit && len(resources) == limit
 
-	response := models.PaginatedResponse{
-		Data:    resources,
+	response := contract.PaginatedResourceResponse{
+		Data:    make([]contract.Resource, 0, len(resources)),
 		HasMore: hasMore,
+	}
+
+	for _, resource := range resources {
+		response.Data = append(response.Data, mapResourceToContract(resource))
 	}
 
 	// Set next cursor only if there are more items
@@ -135,7 +140,8 @@ func GetResources(c *gin.Context) {
 		if cursor != "" {
 			currentOffset, _ = strconv.Atoi(cursor)
 		}
-		response.NextCursor = strconv.Itoa(currentOffset + limit)
+		nextCursor := strconv.Itoa(currentOffset + limit)
+		response.NextCursor = &nextCursor
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -188,7 +194,7 @@ func GetResource(c *gin.Context) {
 		resource.ThumbnailURL = signedThumbnailURL
 	}
 
-	c.JSON(http.StatusOK, resource)
+	c.JSON(http.StatusOK, mapResourceToContract(resource))
 }
 
 // CreateResource handles POST /resources
@@ -347,7 +353,7 @@ func CreateResource(c *gin.Context) {
 		resource.ThumbnailURL = signedThumbnailURL
 	}
 
-	c.JSON(http.StatusCreated, resource)
+	c.JSON(http.StatusCreated, mapResourceToContract(resource))
 }
 
 // UpdateResource handles PATCH /resources/:id
@@ -549,7 +555,7 @@ func UpdateResource(c *gin.Context) {
 		updatedResource.ThumbnailURL = signedThumbnailURL
 	}
 
-	c.JSON(http.StatusOK, updatedResource)
+	c.JSON(http.StatusOK, mapResourceToContract(updatedResource))
 }
 
 // DeleteResource handles DELETE /resource/:id
@@ -604,7 +610,7 @@ func DeleteResource(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Resource deleted successfully"})
+	c.JSON(http.StatusOK, contract.DeleteResourceResponse{Message: "Resource deleted successfully"})
 }
 
 // handleMultipartFormError handles errors from ParseMultipartForm
