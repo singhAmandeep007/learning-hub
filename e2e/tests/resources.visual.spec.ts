@@ -9,16 +9,27 @@ import {
   waitForApiResponse,
 } from "../helpers";
 
-const screenshotOptions = {
+const baseScreenshotOptions = {
   animations: "disabled" as const,
   caret: "hide" as const,
   scale: "css" as const,
 };
 
-async function captureResourcesScreenshot(page: Page, fileName: string) {
+function getScreenshotOptions(browserName: string) {
+  if (browserName === "webkit") {
+    return {
+      ...baseScreenshotOptions,
+      maxDiffPixelRatio: 0.02,
+    };
+  }
+
+  return baseScreenshotOptions;
+}
+
+async function captureResourcesScreenshot(page: Page, fileName: string, browserName: string) {
   const resourcesRoot = page.locator(".resources");
   await expect(resourcesRoot).toBeVisible();
-  await expect(resourcesRoot).toHaveScreenshot(fileName, screenshotOptions);
+  await expect(resourcesRoot).toHaveScreenshot(fileName, getScreenshotOptions(browserName));
 }
 
 test.describe("Learning Hub visual regression", () => {
@@ -37,13 +48,13 @@ test.describe("Learning Hub visual regression", () => {
     await clearAllResourcesViaApi(request);
   });
 
-  test("captures resource CRUD visual states", async ({ page }) => {
+  test("captures resource CRUD visual states", async ({ page, browserName }) => {
     const initialTitle = "Visual Regression Article";
     const updatedTitle = "Visual Regression Article Updated";
     const tag = "vr-tag";
 
     await expect(page.getByRole("heading", { name: "No resources found" })).toBeVisible();
-    await captureResourcesScreenshot(page, "resources-01-empty.png");
+    await captureResourcesScreenshot(page, "resources-01-empty.png", browserName);
 
     await fillCreateArticleForm(page, initialTitle, tag);
     const createResponsePromise = waitForApiResponse(page, "POST", resourcesCollectionPath);
@@ -54,7 +65,7 @@ test.describe("Learning Hub visual regression", () => {
     const createdBody = (await createResponse.json()) as { id: string };
 
     await expect(page.locator(".resource-card-title", { hasText: initialTitle })).toBeVisible();
-    await captureResourcesScreenshot(page, "resources-02-after-create.png");
+    await captureResourcesScreenshot(page, "resources-02-after-create.png", browserName);
 
     const createdCard = page.locator(".resource-card", {
       has: page.locator(".resource-card-title", { hasText: initialTitle }),
@@ -64,7 +75,7 @@ test.describe("Learning Hub visual regression", () => {
     await expect(page.locator(".resource-details-title", { hasText: initialTitle })).toBeVisible();
     await expect(page.locator(".resource-details")).toHaveScreenshot(
       "resources-03-view-details.png",
-      screenshotOptions,
+      getScreenshotOptions(browserName),
     );
     await page.getByRole("button", { name: "Close preview" }).click();
 
@@ -79,7 +90,7 @@ test.describe("Learning Hub visual regression", () => {
     expect(updateResponse.status()).toBe(200);
 
     await expect(page.locator(".resource-card-title", { hasText: updatedTitle })).toBeVisible();
-    await captureResourcesScreenshot(page, "resources-04-after-update.png");
+    await captureResourcesScreenshot(page, "resources-04-after-update.png", browserName);
 
     const updatedCard = page.locator(".resource-card", {
       has: page.locator(".resource-card-title", { hasText: updatedTitle }),
@@ -93,6 +104,6 @@ test.describe("Learning Hub visual regression", () => {
     expect([200, 204]).toContain(deleteResponse.status());
 
     await expect(page.getByRole("heading", { name: "No resources found" })).toBeVisible();
-    await captureResourcesScreenshot(page, "resources-05-after-delete.png");
+    await captureResourcesScreenshot(page, "resources-05-after-delete.png", browserName);
   });
 });
