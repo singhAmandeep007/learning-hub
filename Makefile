@@ -4,7 +4,7 @@ YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop e2e-docker e2e-docker-vrt e2e-docker-vrt-update e2e-docker-stop e2e-local e2e-local-vrt e2e-local-vrt-update contract-types contract-lint clean docker-clean status
+.PHONY: help dev-local stop-services install-tools install-deps docker-dev docker-dev-no-cache docker-dev-stop docker-dev-nginx docker-dev-nginx-stop e2e-docker e2e-docker-vrt e2e-docker-vrt-update e2e-docker-stop e2e-local e2e-local-vrt e2e-local-vrt-update contract-types contract-lint clean docker-clean status
 
 # Function to wait for a port to be open
 # Usage: $(call wait_for_port, <port_number>, <service_name>)
@@ -100,6 +100,16 @@ docker-dev-stop:
 	@echo "🛑 Stopping all dev docker services..."
 	docker compose -f docker-compose.dev.yml down
 
+# Docker development environment with Nginx frontend
+docker-dev-nginx:
+	@echo "$(GREEN)🚀 Starting development environment with Nginx frontend...$(NC)"
+	docker compose -f docker-compose.dev.nginx.yml down -v 2>/dev/null || true
+	docker compose -f docker-compose.dev.nginx.yml up --build
+
+docker-dev-nginx-stop:
+	@echo "🛑 Stopping dev nginx docker services..."
+	docker compose -f docker-compose.dev.nginx.yml down -v --remove-orphans
+
 # Run dedicated e2e docker stack (frontend + backend + firebase + playwright)
 e2e-docker:
 	@echo "$(GREEN)🚀 Starting E2E Docker stack...$(NC)"
@@ -151,6 +161,8 @@ help:
 	@echo "  $(YELLOW)stop-services$(NC)      - Stop all running services"
 	@echo "  $(YELLOW)docker-dev$(NC)         - Start development environment with Docker"
 	@echo "  $(YELLOW)docker-dev-stop$(NC)    - Stop all dev docker services"
+	@echo "  $(YELLOW)docker-dev-nginx$(NC)   - Start development stack with Nginx frontend"
+	@echo "  $(YELLOW)docker-dev-nginx-stop$(NC) - Stop development stack with Nginx frontend"
 	@echo "  $(YELLOW)e2e-docker$(NC)         - Run dedicated E2E Docker stack"
 	@echo "  $(YELLOW)e2e-docker-vrt$(NC)     - Run visual regression tests in E2E Docker stack"
 	@echo "  $(YELLOW)e2e-docker-vrt-update$(NC) - Update visual snapshots in E2E Docker stack"

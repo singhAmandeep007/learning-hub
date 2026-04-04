@@ -60,7 +60,7 @@ type CreateResourceRequest struct {
 	File        *openapi_types.File `json:"file,omitempty"`
 
 	// Tags Comma-separated tags
-	Tags         *string             `json:"tags,omitempty"`
+	Tags         string              `json:"tags"`
 	Thumbnail    *openapi_types.File `json:"thumbnail,omitempty"`
 	ThumbnailUrl *string             `json:"thumbnailUrl,omitempty"`
 	Title        string              `json:"title"`

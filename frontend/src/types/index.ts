@@ -45,11 +45,28 @@ export type GetResourceParams = Pick<Resource, "id">;
 
 export type GetResourceResponse = Resource;
 
-export type CreateResourcePayload = components["schemas"]["CreateResourceRequest"];
+export type CreateResourcePayload = Omit<components["schemas"]["CreateResourceRequest"], "file" | "thumbnail"> & {
+  /** * Overwrites previous string types to strictly allow:
+   * - File: For new uploads
+   * - null: To remove existing media
+   * - undefined: To leave existing media unchanged (via Partial)
+   */
+  file?: File;
+  thumbnail?: File;
+};
 
 export type CreateResourceResponse = Resource;
 
-export type UpdateResourcePayload = Partial<CreateResourcePayload> & Pick<Resource, "id">;
+export type UpdateResourcePayload = Omit<Partial<CreateResourcePayload>, "file" | "thumbnail"> &
+  Pick<Resource, "id"> & {
+    /** * Overwrites previous string types to strictly allow:
+     * - File: For new uploads
+     * - null: To remove existing media
+     * - undefined: To leave existing media unchanged (via Partial)
+     */
+    file?: File;
+    thumbnail?: File;
+  };
 
 export type UpdateResourceResponse = Resource;
 

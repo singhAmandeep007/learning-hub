@@ -2,14 +2,14 @@
   "name": "@learning-hub/api-contract",
   "private": true,
   "version": "0.1.0",
-  "description": "Central API contract for Learning Hub (OpenAPI + generated types + scenarios)",
+  "description": "Central API contract for Learning Hub (OpenAPI + generated types)",
   "license": "MIT",
   "scripts": {
     "lint": "redocly lint ./openapi/openapi.yaml",
     "generate": "npm run generate:frontend && npm run generate:e2e && npm run generate:backend",
     "generate:frontend": "openapi-typescript ./openapi/openapi.yaml -o ../frontend/src/types/api-contract.generated.ts",
     "generate:e2e": "openapi-typescript ./openapi/openapi.yaml -o ../e2e/helpers/types/api-contract.generated.ts",
-    "generate:backend": "cd ../backend && mkdir -p contract && go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0 -generate types -package contract ../api-contract/openapi/openapi.yaml > contract/types.gen.go && gofmt -w contract/types.gen.go"
+    "generate:backend": "cd ../backend && mkdir -p contract && go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0 -generate types -package contract ../api-contract/openapi/openapi.yaml > contract/types.gen.go && cp ../api-contract/openapi/openapi.yaml contract/openapi.yaml && gofmt -w contract/types.gen.go"
   },
   "devDependencies": {
     "@redocly/cli": "^2.2.0",

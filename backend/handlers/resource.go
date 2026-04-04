@@ -63,8 +63,11 @@ func GetResources(c *gin.Context) {
 	}
 
 	var validTypeFilter string
-	if utils.IsValidResourceType(typeFilter) {
-		validTypeFilter = typeFilter
+	if typeFilter != "" {
+		typeParam := contract.ListResourcesParamsType(typeFilter)
+		if typeParam.Valid() && typeParam != contract.ListResourcesParamsTypeAll {
+			validTypeFilter = typeFilter
+		}
 	}
 
 	// Execute query with limit + 1 to check for more results
@@ -258,25 +261,25 @@ func CreateResource(c *gin.Context) {
 	}
 
 	// Validate required fields
-	if resource.Title == "" || resource.Description == "" || resource.Type == "" {
-		errors.RespondWithError(c, errors.ErrMissingRequired, "Title, description, and type are required")
+	if resource.Title == "" || resource.Description == "" || resource.Type == "" || len(resource.Tags) == 0 {
+		errors.RespondWithError(c, errors.ErrMissingRequired, "Title, description, type, and tags are required")
 		return
 	}
 
 	// Validate resource type
-	if !utils.IsValidResourceType(resource.Type) {
+	if !contract.ResourceType(resource.Type).Valid() {
 		errors.RespondWithError(c, errors.ErrUnsupportedType, "Type must be 'video', 'pdf', or 'article'")
 		return
 	}
 
 	// Check if resource type is article AND url is not provided
-	if resource.Type == constants.ResourceTypeArticle && resource.URL == "" {
+	if resource.Type == string(contract.ResourceTypeArticle) && resource.URL == "" {
 		errors.RespondWithError(c, errors.ErrMissingRequired, "URL must be provided for 'article' type")
 		return
 	}
 
 	// Handle file uploads for video and pdf types if url is not provided
-	if (resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF) && resource.URL == "" {
+	if (resource.Type == string(contract.ResourceTypeVideo) || resource.Type == string(contract.ResourceTypePdf)) && resource.URL == "" {
 		file, header, err := c.Request.FormFile(constants.FormFieldFile)
 		if err != nil {
 			errors.RespondWithErrorDetails(c, errors.ErrMissingRequired, fmt.Sprintf("File is required for %s resources", resource.Type), err.Error())
@@ -410,7 +413,7 @@ func UpdateResource(c *gin.Context) {
 	if resourceType, typeExists := c.GetPostForm(constants.FormFieldType); typeExists {
 		updatedResource.Type = resourceType
 		// Validate resource type
-		if !utils.IsValidResourceType(updatedResource.Type) {
+		if !contract.ResourceType(updatedResource.Type).Valid() {
 			errors.RespondWithError(c, errors.ErrUnsupportedType, "Type must be 'video', 'pdf', or 'article'")
 			return
 		}
@@ -449,7 +452,7 @@ func UpdateResource(c *gin.Context) {
 		updatedResource.URL = urlFromForm
 	}
 
-	if fileExists && (existingResource.Type == constants.ResourceTypeVideo || existingResource.Type == constants.ResourceTypePDF) {
+	if fileExists && (existingResource.Type == string(contract.ResourceTypeVideo) || existingResource.Type == string(contract.ResourceTypePdf)) {
 		// User provided a new file to upload
 		if file, header, err := c.Request.FormFile(constants.FormFieldFile); err == nil {
 			defer file.Close()
@@ -631,9 +634,9 @@ func handleMultipartFormError(c *gin.Context, err error) {
 // based on the resource type.
 func fileTypeErrorDetail(resourceType string) string {
 	switch resourceType {
-	case constants.ResourceTypeVideo:
+	case string(contract.ResourceTypeVideo):
 		return "Only MP4 and WebM video formats are supported"
-	case constants.ResourceTypePDF:
+	case string(contract.ResourceTypePdf):
 		return "Only PDF files are supported"
 	case constants.ResourceTypeImage:
 		return "The uploaded file is not a supported image format"

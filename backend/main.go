@@ -130,5 +130,10 @@ func setupRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
 
+	// API contract docs
+	r.GET("/openapi.yaml", handlers.ServeOpenAPISpec)
+	r.GET("/swagger", handlers.ServeSwaggerUI)
+	r.GET("/swagger/", handlers.ServeSwaggerUI)
+
 	return r
 }

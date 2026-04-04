@@ -14,6 +14,7 @@ import (
 
 	"learninghub/config"
 	"learninghub/constants"
+	contract "learninghub/contract"
 	"learninghub/db"
 	"learninghub/firebase"
 	"learninghub/pkg/logger"
@@ -304,12 +305,7 @@ func parseStorageURL(fileURL string) (bucketName, objectName string, err error) 
 
 // IsValidResourceType check if resource type is valid
 func IsValidResourceType(t string) bool {
-	for _, v := range constants.ResourceTypes {
-		if t == v {
-			return true
-		}
-	}
-	return false
+	return contract.ResourceType(t).Valid()
 }
 
 // IsValidStorageURL checks if url points to resource stored in storage
@@ -532,7 +528,7 @@ func ValidateFileContent(file multipart.File, expectedType string) *FileValidati
 	var isValid bool
 	switch expectedType {
 
-	case constants.ResourceTypeVideo:
+	case string(contract.ResourceTypeVideo):
 		// Use an explicit allowlist — "video/*" is too broad and would accept
 		// obscure or potentially dangerous video sub-types.
 		isValid = allowedVideoMIMEs[detectedMIME]
@@ -542,7 +538,7 @@ func ValidateFileContent(file multipart.File, expectedType string) *FileValidati
 			))
 		}
 
-	case constants.ResourceTypePDF:
+	case string(contract.ResourceTypePdf):
 		// First confirm magic bytes identify this as a real PDF
 		isValid = mtype.Is("application/pdf")
 		if !isValid {

@@ -43,6 +43,18 @@ go test ./...
 go test -cover ./...
 ```
 
+## API Documentation
+
+When the backend is running, contract docs are available at:
+
+- `http://localhost:8000/swagger`
+- `http://localhost:8000/openapi.yaml`
+
+Notes:
+
+- In `ENV_MODE=prod`, Swagger UI is read-only (`Try it out` is disabled).
+- In non-prod environments, interactive requests remain enabled.
+
 ## Create build
 
 ```bash

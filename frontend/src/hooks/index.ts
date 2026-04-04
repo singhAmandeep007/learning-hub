@@ -230,7 +230,7 @@ export function useResourceFilters({
     return {
       ...(activeSearch ? { search: activeSearch } : {}),
       ...(selectedType && selectedType !== "all" ? { type: selectedType } : {}),
-      ...(selectedTags.length > 0 ? { tags: selectedTags } : {}),
+      ...(selectedTags.length > 0 ? { tags: selectedTags.join(",") } : {}),
       ...(calculatedCursor !== null ? { cursor: String(calculatedCursor), limit: String(ITEMS_PER_PAGE) } : {}),
     };
   }, [activeSearch, selectedType, selectedTags, currentPage, calculateCursor]);

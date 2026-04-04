@@ -37,6 +37,16 @@ export default defineConfig(({ mode }) => {
             changeOrigin: true,
             secure: false,
           },
+          "/swagger": {
+            target: proxyApiHost,
+            changeOrigin: true,
+            secure: false,
+          },
+          "/openapi.yaml": {
+            target: proxyApiHost,
+            changeOrigin: true,
+            secure: false,
+          },
         },
       }),
     },
