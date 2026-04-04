@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router";
 
 import { useReactQueryFlash } from "../components/Flash/useReactQueryFlash";
 
-import { type ResourcesFilters, type Tag, RESOURCE_TYPES } from "../types";
+import { type ResourcesFiltersType, type Tag, RESOURCE_TYPES } from "../types";
 
 export function useQueryWithFlash<TData, TError = Error>(
   options: UseQueryOptions<TData, TError> & {
@@ -149,7 +149,7 @@ export function useResourceFilters({
     return tags ? tags.split(",").filter(Boolean) : [];
   };
   const getUrlType = () => {
-    const type = searchParams.get("type") as ResourcesFilters["type"];
+    const type = searchParams.get("type") as ResourcesFiltersType;
     return type && [...Object.values(RESOURCE_TYPES), "all"].includes(type) ? type : "all";
   };
 
@@ -159,7 +159,7 @@ export function useResourceFilters({
 
   // Filter state
   const [selectedTags, setSelectedTagsState] = useState<Tag["name"][]>([]);
-  const [selectedType, setSelectedTypeState] = useState<ResourcesFilters["type"]>(() => getUrlType());
+  const [selectedType, setSelectedTypeState] = useState<ResourcesFiltersType>(() => getUrlType());
   const [currentPage, setCurrentPageState] = useState(1);
 
   const [hasInitializedTags, setHasInitializedTags] = useState(false);
@@ -254,7 +254,7 @@ export function useResourceFilters({
     setSelectedTagsState(tags);
   }, []);
 
-  const setSelectedType = useCallback((type: ResourcesFilters["type"]) => {
+  const setSelectedType = useCallback((type: ResourcesFiltersType) => {
     setSelectedTypeState(type);
   }, []);
 

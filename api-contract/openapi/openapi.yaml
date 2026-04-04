@@ -267,7 +267,7 @@ components:
 
     CreateResourceRequest:
       type: object
-      required: [title, description, type]
+      required: [title, description, type, tags]
       properties:
         title:
           type: string

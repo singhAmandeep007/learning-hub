@@ -1,16 +1,8 @@
-import type { components } from "./api-contract.generated";
+import type { components, operations } from "./api-contract.generated";
 
-export type ErrorResponse = {
-  error: string;
-  message?: string;
-  details?: string;
-};
+export type ErrorResponse = components["schemas"]["ErrorResponse"];
 
-export type PaginatedResponse<T> = {
-  data: T[];
-  hasMore: boolean;
-  nextCursor?: string;
-};
+export type PaginatedResourceResponse = components["schemas"]["PaginatedResourceResponse"];
 
 // Products
 const parseProductsList = (rawValue: string | undefined): string[] => {
@@ -43,33 +35,17 @@ export type ResourceType = (typeof RESOURCE_TYPES)[keyof typeof RESOURCE_TYPES];
 
 export type Resource = components["schemas"]["Resource"];
 
-export type ResourcesFilters = {
-  type?: ResourceType | "all";
-  tags?: string[];
-  search?: string;
-};
+export type GetResourcesParams = operations["listResources"]["parameters"]["query"];
 
-export type GetResourcesParams = ResourcesFilters & {
-  limit?: string;
-  cursor?: string;
-};
+export type ResourcesFiltersType = Resource["type"] | "all";
 
-export type GetResourcesResponse = PaginatedResponse<Resource>;
+export type GetResourcesResponse = PaginatedResourceResponse;
 
 export type GetResourceParams = Pick<Resource, "id">;
 
 export type GetResourceResponse = Resource;
 
-export type CreateResourcePayload = {
-  title: string;
-  description: string;
-  type: ResourceType;
-  tags: string;
-  url?: string;
-  thumbnailUrl?: string;
-  file?: File;
-  thumbnail?: File;
-};
+export type CreateResourcePayload = components["schemas"]["CreateResourceRequest"];
 
 export type CreateResourceResponse = Resource;
 

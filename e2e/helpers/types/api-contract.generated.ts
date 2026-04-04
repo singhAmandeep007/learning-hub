@@ -93,7 +93,7 @@ export interface components {
             description: string;
             type: components["schemas"]["ResourceType"];
             /** @description Comma-separated tags */
-            tags?: string;
+            tags: string;
             /** Format: uri */
             url?: string;
             /** Format: uri */

@@ -2,8 +2,7 @@ import { httpClient } from "../httpClient";
 import { getProductFromUrl } from "../utils";
 
 import {
-  type PaginatedResponse,
-  type Resource,
+  type PaginatedResourceResponse,
   type GetResourcesParams,
   type GetResourceParams,
   type GetResourceResponse,
@@ -31,9 +30,9 @@ const toFormData = (payload: Partial<CreateResourcePayload>): FormData => {
 
 export const resourcesApi = {
   // Get all resources with optional pagination and filtering
-  getAll: async (params?: GetResourcesParams, options?: RequestInit): Promise<PaginatedResponse<Resource>> => {
+  getAll: async (params?: GetResourcesParams, options?: RequestInit): Promise<PaginatedResourceResponse> => {
     const product = getProductFromUrl();
-    return httpClient.get<PaginatedResponse<Resource>>(`/${product}/resources`, params, options);
+    return httpClient.get<PaginatedResourceResponse>(`/${product}/resources`, params, options);
   },
 
   getById: async (params: GetResourceParams, options?: RequestInit): Promise<GetResourceResponse> => {
