@@ -19,6 +19,7 @@ A comprehensive learning platform that provides resources in the form of videos,
 
 ```
 learninghub/
+├── api-contract/      # OpenAPI contract and generated type pipeline
 ├── frontend/          # React frontend application
 ├── backend/           # Go backend application
 ├── jenkinsfiles/      # Jenkins pipeline definitions
@@ -63,8 +64,16 @@ make stop-services # Stop all running services
 # Docker development
 make docker-dev    # Build and run with Docker Compose
 
+# Docker development using Nginx as frontend server (no Vite dev server)
+make docker-dev-nginx
+
 # Stop services
 make docker-dev-stop # Stop all dev docker services
+make docker-dev-nginx-stop # Stop dev stack with Nginx frontend
+
+# API contract workflow
+make contract-lint   # Validate OpenAPI contract
+make contract-types  # Generate shared contract types for frontend and e2e
 ```
 
 ## Architecture Overview

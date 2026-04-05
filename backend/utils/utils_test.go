@@ -14,6 +14,7 @@ import (
 
 	"learninghub/config"
 	"learninghub/constants"
+	contract "learninghub/contract"
 	"learninghub/firebase"
 )
 
@@ -333,17 +334,17 @@ func TestIsValidResourceType(t *testing.T) {
 	}{
 		{
 			name:         "valid video type",
-			resourceType: constants.ResourceTypeVideo,
+			resourceType: string(contract.ResourceTypeVideo),
 			expected:     true,
 		},
 		{
 			name:         "valid pdf type",
-			resourceType: constants.ResourceTypePDF,
+			resourceType: string(contract.ResourceTypePdf),
 			expected:     true,
 		},
 		{
 			name:         "valid article type",
-			resourceType: constants.ResourceTypeArticle,
+			resourceType: string(contract.ResourceTypeArticle),
 			expected:     true,
 		},
 		{
@@ -536,7 +537,7 @@ func TestValidateFileContent(t *testing.T) {
 		}
 		defer file.Close()
 
-		result := ValidateFileContent(file, constants.ResourceTypePDF)
+		result := ValidateFileContent(file, string(contract.ResourceTypePdf))
 		assert.True(t, result.IsValid, "PDF file should be valid")
 		assert.Equal(t, "application/pdf", result.DetectedMIME)
 		assert.Empty(t, result.Error)
@@ -549,7 +550,7 @@ func TestValidateFileContent(t *testing.T) {
 		}
 		defer file.Close()
 
-		result := ValidateFileContent(file, constants.ResourceTypeVideo)
+		result := ValidateFileContent(file, string(contract.ResourceTypeVideo))
 		assert.True(t, result.IsValid, "MP4 video should be valid")
 		assert.True(t, strings.HasPrefix(result.DetectedMIME, "video/"), "Should detect as video type")
 		assert.Empty(t, result.Error)
@@ -562,7 +563,7 @@ func TestValidateFileContent(t *testing.T) {
 		}
 		defer file.Close()
 
-		result := ValidateFileContent(file, constants.ResourceTypeVideo)
+		result := ValidateFileContent(file, string(contract.ResourceTypeVideo))
 		assert.True(t, result.IsValid, "WebM video should be valid")
 		assert.True(t, strings.HasPrefix(result.DetectedMIME, "video/"), "Should detect as video type")
 		assert.Empty(t, result.Error)
@@ -615,7 +616,7 @@ func TestValidateFileContent(t *testing.T) {
 		}
 		defer file.Close()
 
-		result := ValidateFileContent(file, constants.ResourceTypeVideo)
+		result := ValidateFileContent(file, string(contract.ResourceTypeVideo))
 		assert.False(t, result.IsValid, "PDF should not validate as video")
 		assert.Contains(t, result.Error, "is not supported")
 	})
@@ -627,7 +628,7 @@ func TestValidateFileContent(t *testing.T) {
 		}
 		defer file.Close()
 
-		result := ValidateFileContent(file, constants.ResourceTypePDF)
+		result := ValidateFileContent(file, string(contract.ResourceTypePdf))
 		assert.False(t, result.IsValid, "Video should not validate as PDF")
 		assert.Contains(t, result.Error, "does not match expected type")
 	})
@@ -639,7 +640,7 @@ func TestValidateFileContent(t *testing.T) {
 		}
 		defer file.Close()
 
-		result := ValidateFileContent(file, constants.ResourceTypePDF)
+		result := ValidateFileContent(file, string(contract.ResourceTypePdf))
 		assert.False(t, result.IsValid, "Image should not validate as PDF")
 		assert.Contains(t, result.Error, "does not match expected type")
 	})
@@ -666,7 +667,7 @@ func TestValidateFileContent(t *testing.T) {
 		defer file.Close()
 
 		// Validate the file
-		result := ValidateFileContent(file, constants.ResourceTypeVideo)
+		result := ValidateFileContent(file, string(contract.ResourceTypeVideo))
 		assert.True(t, result.IsValid)
 
 		// Check that we can read from the beginning

@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"learninghub/constants"
+	contract "learninghub/contract"
 	"learninghub/db"
 	"learninghub/errors"
 	"learninghub/middleware"
@@ -62,8 +63,11 @@ func GetResources(c *gin.Context) {
 	}
 
 	var validTypeFilter string
-	if utils.IsValidResourceType(typeFilter) {
-		validTypeFilter = typeFilter
+	if typeFilter != "" {
+		typeParam := contract.ListResourcesParamsType(typeFilter)
+		if typeParam.Valid() && typeParam != contract.ListResourcesParamsTypeAll {
+			validTypeFilter = typeFilter
+		}
 	}
 
 	// Execute query with limit + 1 to check for more results
@@ -124,9 +128,13 @@ func GetResources(c *gin.Context) {
 	// AND we have exactly 'limit' resources after filtering
 	hasMore := len(docs) > limit && len(resources) == limit
 
-	response := models.PaginatedResponse{
-		Data:    resources,
+	response := contract.PaginatedResourceResponse{
+		Data:    make([]contract.Resource, 0, len(resources)),
 		HasMore: hasMore,
+	}
+
+	for _, resource := range resources {
+		response.Data = append(response.Data, mapResourceToContract(resource))
 	}
 
 	// Set next cursor only if there are more items
@@ -135,7 +143,8 @@ func GetResources(c *gin.Context) {
 		if cursor != "" {
 			currentOffset, _ = strconv.Atoi(cursor)
 		}
-		response.NextCursor = strconv.Itoa(currentOffset + limit)
+		nextCursor := strconv.Itoa(currentOffset + limit)
+		response.NextCursor = &nextCursor
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -188,7 +197,7 @@ func GetResource(c *gin.Context) {
 		resource.ThumbnailURL = signedThumbnailURL
 	}
 
-	c.JSON(http.StatusOK, resource)
+	c.JSON(http.StatusOK, mapResourceToContract(resource))
 }
 
 // CreateResource handles POST /resources
@@ -252,25 +261,25 @@ func CreateResource(c *gin.Context) {
 	}
 
 	// Validate required fields
-	if resource.Title == "" || resource.Description == "" || resource.Type == "" {
-		errors.RespondWithError(c, errors.ErrMissingRequired, "Title, description, and type are required")
+	if resource.Title == "" || resource.Description == "" || resource.Type == "" || len(resource.Tags) == 0 {
+		errors.RespondWithError(c, errors.ErrMissingRequired, "Title, description, type, and tags are required")
 		return
 	}
 
 	// Validate resource type
-	if !utils.IsValidResourceType(resource.Type) {
+	if !contract.ResourceType(resource.Type).Valid() {
 		errors.RespondWithError(c, errors.ErrUnsupportedType, "Type must be 'video', 'pdf', or 'article'")
 		return
 	}
 
 	// Check if resource type is article AND url is not provided
-	if resource.Type == constants.ResourceTypeArticle && resource.URL == "" {
+	if resource.Type == string(contract.ResourceTypeArticle) && resource.URL == "" {
 		errors.RespondWithError(c, errors.ErrMissingRequired, "URL must be provided for 'article' type")
 		return
 	}
 
 	// Handle file uploads for video and pdf types if url is not provided
-	if (resource.Type == constants.ResourceTypeVideo || resource.Type == constants.ResourceTypePDF) && resource.URL == "" {
+	if (resource.Type == string(contract.ResourceTypeVideo) || resource.Type == string(contract.ResourceTypePdf)) && resource.URL == "" {
 		file, header, err := c.Request.FormFile(constants.FormFieldFile)
 		if err != nil {
 			errors.RespondWithErrorDetails(c, errors.ErrMissingRequired, fmt.Sprintf("File is required for %s resources", resource.Type), err.Error())
@@ -347,7 +356,7 @@ func CreateResource(c *gin.Context) {
 		resource.ThumbnailURL = signedThumbnailURL
 	}
 
-	c.JSON(http.StatusCreated, resource)
+	c.JSON(http.StatusCreated, mapResourceToContract(resource))
 }
 
 // UpdateResource handles PATCH /resources/:id
@@ -404,7 +413,7 @@ func UpdateResource(c *gin.Context) {
 	if resourceType, typeExists := c.GetPostForm(constants.FormFieldType); typeExists {
 		updatedResource.Type = resourceType
 		// Validate resource type
-		if !utils.IsValidResourceType(updatedResource.Type) {
+		if !contract.ResourceType(updatedResource.Type).Valid() {
 			errors.RespondWithError(c, errors.ErrUnsupportedType, "Type must be 'video', 'pdf', or 'article'")
 			return
 		}
@@ -443,7 +452,7 @@ func UpdateResource(c *gin.Context) {
 		updatedResource.URL = urlFromForm
 	}
 
-	if fileExists && (existingResource.Type == constants.ResourceTypeVideo || existingResource.Type == constants.ResourceTypePDF) {
+	if fileExists && (existingResource.Type == string(contract.ResourceTypeVideo) || existingResource.Type == string(contract.ResourceTypePdf)) {
 		// User provided a new file to upload
 		if file, header, err := c.Request.FormFile(constants.FormFieldFile); err == nil {
 			defer file.Close()
@@ -549,7 +558,7 @@ func UpdateResource(c *gin.Context) {
 		updatedResource.ThumbnailURL = signedThumbnailURL
 	}
 
-	c.JSON(http.StatusOK, updatedResource)
+	c.JSON(http.StatusOK, mapResourceToContract(updatedResource))
 }
 
 // DeleteResource handles DELETE /resource/:id
@@ -604,7 +613,7 @@ func DeleteResource(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Resource deleted successfully"})
+	c.JSON(http.StatusOK, contract.DeleteResourceResponse{Message: "Resource deleted successfully"})
 }
 
 // handleMultipartFormError handles errors from ParseMultipartForm
@@ -625,9 +634,9 @@ func handleMultipartFormError(c *gin.Context, err error) {
 // based on the resource type.
 func fileTypeErrorDetail(resourceType string) string {
 	switch resourceType {
-	case constants.ResourceTypeVideo:
+	case string(contract.ResourceTypeVideo):
 		return "Only MP4 and WebM video formats are supported"
-	case constants.ResourceTypePDF:
+	case string(contract.ResourceTypePdf):
 		return "Only PDF files are supported"
 	case constants.ResourceTypeImage:
 		return "The uploaded file is not a supported image format"

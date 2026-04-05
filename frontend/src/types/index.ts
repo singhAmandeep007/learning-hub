@@ -1,13 +1,8 @@
-export type ErrorResponse = {
-  error: string;
-  message?: string;
-};
+import type { components, operations } from "./api-contract.generated";
 
-export type PaginatedResponse<T> = {
-  data: T[];
-  hasMore: boolean;
-  nextCursor?: string;
-};
+export type ErrorResponse = components["schemas"]["ErrorResponse"];
+
+export type PaginatedResourceResponse = components["schemas"]["PaginatedResourceResponse"];
 
 // Products
 const parseProductsList = (rawValue: string | undefined): string[] => {
@@ -38,58 +33,46 @@ export const RESOURCE_TYPES = {
 
 export type ResourceType = (typeof RESOURCE_TYPES)[keyof typeof RESOURCE_TYPES];
 
-export type Resource = {
-  id: string;
-  title: string;
-  description: string;
-  type: ResourceType;
-  url: string;
-  thumbnailUrl?: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-};
+export type Resource = components["schemas"]["Resource"];
 
-export type ResourcesFilters = {
-  type?: ResourceType | "all";
-  tags?: string[];
-  search?: string;
-};
+export type GetResourcesParams = operations["listResources"]["parameters"]["query"];
 
-export type GetResourcesParams = ResourcesFilters & {
-  limit?: string;
-  cursor?: string;
-};
+export type ResourcesFiltersType = Resource["type"] | "all";
 
-export type GetResourcesResponse = PaginatedResponse<Resource>;
+export type GetResourcesResponse = PaginatedResourceResponse;
 
 export type GetResourceParams = Pick<Resource, "id">;
 
 export type GetResourceResponse = Resource;
 
-export type CreateResourcePayload = {
-  title: string;
-  description: string;
-  type: ResourceType;
-  tags: string;
-  url?: string;
-  thumbnailUrl?: string;
+export type CreateResourcePayload = Omit<components["schemas"]["CreateResourceRequest"], "file" | "thumbnail"> & {
+  /** * Overwrites previous string types to strictly allow:
+   * - File: For new uploads
+   * - null: To remove existing media
+   * - undefined: To leave existing media unchanged (via Partial)
+   */
   file?: File;
   thumbnail?: File;
 };
 
 export type CreateResourceResponse = Resource;
 
-export type UpdateResourcePayload = Partial<CreateResourcePayload> & Pick<Resource, "id">;
+export type UpdateResourcePayload = Omit<Partial<CreateResourcePayload>, "file" | "thumbnail"> &
+  Pick<Resource, "id"> & {
+    /** * Overwrites previous string types to strictly allow:
+     * - File: For new uploads
+     * - null: To remove existing media
+     * - undefined: To leave existing media unchanged (via Partial)
+     */
+    file?: File;
+    thumbnail?: File;
+  };
 
 export type UpdateResourceResponse = Resource;
 
 export type DeleteResourcePayload = Pick<Resource, "id">;
 
 // Tag
-export type Tag = {
-  name: string;
-  usageCount: number;
-};
+export type Tag = components["schemas"]["Tag"];
 
 export type GetTagsResponse = Tag[];

@@ -1,0 +1,86 @@
+services:
+  firebase-emulator:
+    image: andreysenov/firebase-tools:14.2.0-node-22
+    container_name: learninghub-firebase-emulator-dev-nginx
+    ports:
+      - "4000:4000"
+      - "8080:8080"
+      - "9199:9199"
+    volumes:
+      - ./backend/firebase.json:/home/node/firebase.json
+      - ./backend/.firebaserc:/home/node/.firebaserc
+      - ./backend/firestore.rules:/home/node/firestore.rules
+      - ./backend/storage.rules:/home/node/storage.rules
+      - ./backend/firestore.indexes.json:/home/node/firestore.indexes.json
+    command: firebase emulators:start --project learninghub-81cc6
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: learninghub-backend-dev-nginx
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_modules:/go/pkg/mod
+    environment:
+      - ENV_MODE=dev
+      - PORT=8000
+      - VALID_PRODUCTS=${VALID_PRODUCTS:-ecomm,admin,crm}
+      - CORS_ORIGINS=http://localhost:3000
+      - FIREBASE_PROJECT_ID=learninghub-81cc6
+      - FIRESTORE_EMULATOR_HOST=firebase-emulator:8080
+      - FIREBASE_STORAGE_EMULATOR_HOST=firebase-emulator:9199
+      - FIREBASE_DB_ID=learninghub
+      - FIREBASE_STORAGE_BUCKET=learninghub-81cc6.firebasestorage.app
+    command: sh -c "until curl -f http://firebase-emulator:4000; do echo 'Waiting for Firebase...'; sleep 5; done && air -c .air.toml"
+    depends_on:
+      - firebase-emulator
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NODE_VERSION: 22
+        PORT: 3000
+        VITE_VALID_PRODUCTS: ${VALID_PRODUCTS:-ecomm,admin,crm}
+    container_name: learninghub-frontend-dev-nginx
+    environment:
+      - NODE_ENV=development
+      - BACKEND_HOST=backend
+      - BACKEND_PORT=8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  backend_modules:
+
+networks:
+  app-network:
+    driver: bridge

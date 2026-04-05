@@ -5,6 +5,7 @@ go 1.23.8
 require (
 	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/gin-gonic/gin v1.10.0
+	github.com/oapi-codegen/runtime v1.1.2
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1

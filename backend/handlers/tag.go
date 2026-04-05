@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	contract "learninghub/contract"
 	"learninghub/db"
 	"learninghub/errors"
 	"learninghub/middleware"
@@ -34,14 +35,14 @@ func GetTags(c *gin.Context) {
 		return
 	}
 
-	tags := make([]models.Tag, 0, len(docs))
+	tags := make([]contract.Tag, 0, len(docs))
 	for _, doc := range docs {
 		var tag models.Tag
 		if err := doc.DataTo(&tag); err != nil {
 			logger.Infof("Warning: Failed to unmarshal tag document ID %s: %v\n", doc.Ref.ID, err)
 			continue
 		}
-		tags = append(tags, tag)
+		tags = append(tags, mapTagToContract(tag))
 	}
 
 	c.JSON(http.StatusOK, tags)

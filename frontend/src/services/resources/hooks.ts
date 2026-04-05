@@ -2,8 +2,7 @@ import { useQueryClient, type UseQueryOptions, type UseMutationOptions, type Que
 
 import { resourcesApi } from "./api";
 import {
-  type PaginatedResponse,
-  type Resource,
+  type PaginatedResourceResponse,
   type GetResourcesParams,
   type GetResourceParams,
   type GetResourceResponse,
@@ -30,7 +29,7 @@ export const resourcesKeys = {
 export function useResources(
   params?: GetResourcesParams,
   options?: Omit<
-    UseQueryOptions<PaginatedResponse<Resource>, Error, PaginatedResponse<Resource>, QueryKey>,
+    UseQueryOptions<PaginatedResourceResponse, Error, PaginatedResourceResponse, QueryKey>,
     "queryKey" | "queryFn"
   >
 ) {

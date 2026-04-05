@@ -17,11 +17,8 @@ const (
 	ProductContextKey = "product"
 	ProductParamKey   = "product"
 
-	// Resource Types
-	ResourceTypeVideo   = "video"
-	ResourceTypePDF     = "pdf"
-	ResourceTypeArticle = "article"
-	ResourceTypeImage   = "image"
+	// Internal resource type (not part of public API enum)
+	ResourceTypeImage = "image"
 
 	// Query Parameter Names
 	QueryParamType   = "type"
@@ -49,13 +46,6 @@ const (
 	// Error message prefixes
 	ErrFileValidationFailed = "file validation failed"
 )
-
-// ResourceTypes ...
-var ResourceTypes = []string{
-	ResourceTypeVideo,
-	ResourceTypePDF,
-	ResourceTypeArticle,
-}
 
 // GetResourcesCollectionName returns the collection name for resources for a given productMore actions
 // product_name + "_resources"

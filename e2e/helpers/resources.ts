@@ -3,6 +3,9 @@ import { z } from "zod";
 
 import { apiBaseURL, resourceByIdPath, resourcesCollectionPath } from "./config";
 import { expectDeleteSucceeded, expectJsonResponseWithSchema } from "./api";
+import type { components } from "./types/api-contract.generated";
+
+type Resource = components["schemas"]["Resource"];
 
 export const resourceResponseSchema = z.object({
   id: z.string().min(1),
@@ -12,7 +15,7 @@ export const resourceResponseSchema = z.object({
   url: z.string().url(),
 });
 
-export type ResourceResponse = z.infer<typeof resourceResponseSchema>;
+export type ResourceResponse = Pick<Resource, "id" | "title" | "tags" | "type" | "url">;
 
 export async function fillCreateArticleForm(page: Page, title: string, tag: string) {
   await page.getByRole("button", { name: "Create" }).click();
